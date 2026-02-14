@@ -175,6 +175,10 @@ class Product extends Model
     {
         return $this->hasMany(StockCountItem::class);
     }
+    public function baseunit(): HasOne
+    {
+        return $this->hasOne(ProductBaseUnit::class, 'product_id');
+    }
 
     /* ===========================
      * 📊 STOCK ACCESSORS (جديد)
@@ -283,8 +287,8 @@ class Product extends Model
                 'code' => $unit->unit_code,
                 'label' => $unit->label,
                 'conversion_factor' => $unit->conversion_factor,
-                'selling_price' => $unit->selling_price,
-                'purchase_price' => $unit->purchase_price,
+                    'selling_price' => $unit->selling_price,
+                    'purchase_price' => $unit->purchase_price,
                 'is_default' => $unit->is_default,
                 'is_base' => $unit->is_base,
                 'is_active' => $unit->is_active,

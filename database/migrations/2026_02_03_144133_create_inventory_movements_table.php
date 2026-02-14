@@ -17,15 +17,19 @@ return new class extends Migration
             // معلومات الحركة الأساسية
             $table->string('movement_number', 50)->unique()->comment('رقم الحركة');
             $table->enum('movement_type', [
-                'purchase',      // شراء
-                'sale',          // بيع
-                'return_in',     // مرتجع وارد
-                'return_out',    // مرتجع صادر
-                'transfer_in',   // تحويل وارد
-                'transfer_out',  // تحويل صادر
-                'adjustment',    // تسوية
-                'damage',        // تالف
-                'expired'        // منتهي الصلاحية
+                'purchase',              // شراء
+                'sale',                  // بيع
+                'return_in',             // مرتجع وارد
+                'return_out',            // مرتجع صادر
+                'transfer_in',           // تحويل وارد
+                'transfer_out',          // تحويل صادر
+                'adjustment',            // تسوية
+                'damage',                // تالف
+                'expired',               // منتهي الصلاحية
+                'return_from_transfer',  // ✅ عكس تحويل (وارد)
+                'transfer_reversed',     // ✅ عكس تحويل (صادر)
+                'production',            // ✅ إنتاج
+                'consumption'            // ✅ استهلاك
             ])->comment('نوع الحركة');
             
             // العلاقات الأساسية
@@ -49,7 +53,7 @@ return new class extends Migration
             $table->decimal('quantity_before', 15, 3)->default(0)->comment('الكمية قبل الحركة');
             $table->decimal('quantity_after', 15, 3)->default(0)->comment('الكمية بعد الحركة');
 
-            // التكاليف والأسعار
+            // ✅ التكاليف والأسعار
             $table->decimal('unit_cost', 15, 2)->default(0)->comment('تكلفة الوحدة');
             $table->decimal('unit_price', 15, 2)->default(0)->comment('سعر الوحدة');
             $table->decimal('total_cost', 15, 2)->default(0)->comment('إجمالي التكلفة');
@@ -61,6 +65,9 @@ return new class extends Migration
             $table->string('batch_number', 100)->nullable()->comment('رقم الدفعة');
             $table->text('notes')->nullable()->comment('ملاحظات');
             $table->text('reason')->nullable()->comment('السبب (للتسويات والتالف)');
+            
+            // ✅ الأرشفة
+            $table->boolean('archived')->default(false)->comment('هل الحركة مؤرشفة؟');
             
             // معلومات المستخدم
             $table->foreignId('created_by')->nullable()->constrained('users');
@@ -76,10 +83,12 @@ return new class extends Migration
             $table->index('product_id');
             $table->index('warehouse_id');
             $table->index('quantity_change');
+            $table->index('archived'); // ✅ Index للأرشفة
             $table->index(['product_id', 'warehouse_id']);
             $table->index(['movement_type', 'movement_date']);
-            $table->index(['reference_type', 'reference_id'], 'idx_reference'); // ✅ دلوقتي الأعمدة موجودة
+            $table->index(['reference_type', 'reference_id'], 'idx_reference');
             $table->index(['warehouse_id', 'product_id', 'movement_date'], 'idx_movement_lookup');
+            $table->index(['warehouse_id', 'archived', 'movement_date'], 'idx_warehouse_active'); // ✅ للاستعلامات السريعة
         });
     }
 

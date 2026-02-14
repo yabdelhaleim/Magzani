@@ -12,9 +12,6 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
 use RuntimeException;
 
-/**
- * 🎯 خدمة إدارة أسعار المنتجات - النظام الجديد
- */
 class ProductPricingService
 {
     private const CHUNK_SIZE = 500;
@@ -132,6 +129,7 @@ class ProductPricingService
                     'p.name',
                     'p.code',
                     'p.category',
+                    'pbu.id as base_unit_id', // 🔥 إضافة base_unit_id
                     'pbu.base_unit_code',
                     'pbu.base_unit_label',
                     'pbu.base_purchase_price',
@@ -148,6 +146,7 @@ class ProductPricingService
                     'name' => $row->name,
                     'code' => $row->code,
                     'category' => $row->category,
+                    'base_unit_id' => $row->base_unit_id, // 🔥 إضافة base_unit_id
                     'base_unit_code' => $row->base_unit_code,
                     'base_unit_label' => $row->base_unit_label,
                     'base_purchase_price' => round((float)$row->base_purchase_price, 2),
@@ -208,7 +207,6 @@ class ProductPricingService
             throw new RuntimeException('لم يتم تحديد أي منتجات');
         }
 
-        // ✅ حساب الربح وسعر البيع
         $profit = $this->calculateProfit($purchasePrice, $profitValue, $profitType);
         $sellingPrice = round($purchasePrice + $profit, 2);
 
@@ -217,7 +215,7 @@ class ProductPricingService
             $category,
             $purchasePrice,
             $sellingPrice,
-            $profit, // ✅ تمرير المتغير
+            $profit,
             $profitValue,
             $profitType,
             $selectedProductIds,
@@ -233,14 +231,14 @@ class ProductPricingService
             $chunks = array_chunk($selectedProductIds, self::CHUNK_SIZE);
             $updatedCount = 0;
 
-            foreach ($chunks as $index => $chunk) {
+            foreach ($chunks as $chunk) {
                 $chunkUpdated = $this->processUpdateChunk(
                     $chunk,
                     $category,
                     $baseUnit,
                     $purchasePrice,
                     $sellingPrice,
-                    $profit, // ✅ تمرير المتغير
+                    $profit,
                     $profitValue,
                     $profitType,
                     $changeReason
@@ -279,7 +277,7 @@ class ProductPricingService
         string $baseUnit,
         float $purchasePrice,
         float $sellingPrice,
-        float $profit, // ✅ إضافة المتغير
+        float $profit,
         float $profitValue,
         string $profitType,
         ?string $changeReason
@@ -295,6 +293,7 @@ class ProductPricingService
                 ->first();
 
             if (!$baseUnitRecord) {
+                Log::warning('⚠️ لم يتم العثور على وحدة أساسية', ['product_id' => $productId]);
                 continue;
             }
 
@@ -304,8 +303,8 @@ class ProductPricingService
                 $diffPercentage = (($sellingPrice - $baseUnitRecord->base_selling_price) / $baseUnitRecord->base_selling_price) * 100;
             }
 
-            // حفظ السجل التاريخي
-            PriceChangeHistory::create([
+            // 🔥 حفظ السجل التاريخي قبل التحديث
+            $historyRecord = PriceChangeHistory::create([
                 'product_id' => $productId,
                 'base_unit_id' => $baseUnitRecord->id,
                 'old_base_purchase_price' => $baseUnitRecord->base_purchase_price,
@@ -313,14 +312,14 @@ class ProductPricingService
                 'old_base_selling_price' => $baseUnitRecord->base_selling_price,
                 'new_base_selling_price' => $sellingPrice,
                 'diff_percentage' => round($diffPercentage, 2),
-                'change_reason' => $changeReason ?? 'تحديث جماعي',
+                'change_reason' => $changeReason ?? 'تحديث جماعي للأسعار',
                 'changed_by' => $userId,
                 'changed_at' => $now,
-                'affected_selling_units' => 0, // سيتم تحديثه بواسطة Observer
-                'selling_units_updated' => false, // سيتم تحديثه بواسطة Observer
+                'affected_selling_units' => 0,
+                'selling_units_updated' => false,
             ]);
 
-            // تحديث الوحدة الأساسية
+            // 🔥 تحديث الوحدة الأساسية
             $baseUnitRecord->update([
                 'base_purchase_price' => $purchasePrice,
                 'base_selling_price' => $sellingPrice,
@@ -328,7 +327,7 @@ class ProductPricingService
                 'updated_by' => $userId,
             ]);
 
-            // تحديث المنتج نفسه
+            // 🔥 تحديث المنتج نفسه
             Product::where('id', $productId)->update([
                 'purchase_price' => $purchasePrice,
                 'selling_price' => $sellingPrice,
@@ -336,12 +335,62 @@ class ProductPricingService
                 'updated_at' => $now,
             ]);
 
-            // 🔥 التحديث التلقائي لوحدات البيع سيحصل عبر Observer
+            // 🔥 التأكد من وجود selling unit للوحدة الأساسية
+            $this->ensureBaseSellingUnitExists($baseUnitRecord);
+
+            // 🔥 تحديث عدد الوحدات المتأثرة في السجل التاريخي
+            $affectedCount = ProductSellingUnit::where('base_unit_id', $baseUnitRecord->id)
+                ->where('auto_calculate_price', true)
+                ->where('is_active', true)
+                ->count();
+
+            $historyRecord->update([
+                'affected_selling_units' => $affectedCount,
+                'selling_units_updated' => true,
+            ]);
 
             $updatedCount++;
         }
 
         return $updatedCount;
+    }
+
+    /**
+     * 🔥 التأكد من وجود Selling Unit للوحدة الأساسية
+     */
+    protected function ensureBaseSellingUnitExists(ProductBaseUnit $baseUnit): void
+    {
+        // التحقق من وجود selling unit للوحدة الأساسية
+        $existingBaseUnit = ProductSellingUnit::where('product_id', $baseUnit->product_id)
+            ->where('base_unit_id', $baseUnit->id)
+            ->where('is_base', true)
+            ->first();
+
+        if (!$existingBaseUnit) {
+            // إنشاء selling unit للوحدة الأساسية
+            ProductSellingUnit::create([
+                'product_id' => $baseUnit->product_id,
+                'base_unit_id' => $baseUnit->id, // 🔥 المفتاح المهم
+                'unit_name' => $baseUnit->base_unit_label,
+                'unit_code' => $baseUnit->base_unit_code,
+                'unit_label' => $baseUnit->base_unit_label,
+                'conversion_factor' => 1,
+                'quantity_in_base_unit' => 1,
+                'unit_purchase_price' => $baseUnit->base_purchase_price,
+                'unit_selling_price' => $baseUnit->base_selling_price,
+                'auto_calculate_price' => true,
+                'is_base' => true, // 🔥 وحدة أساسية
+                'is_default' => true,
+                'is_active' => true,
+                'display_order' => 0,
+                'created_by' => auth()->id(),
+            ]);
+
+            Log::info('✅ تم إنشاء selling unit للوحدة الأساسية', [
+                'product_id' => $baseUnit->product_id,
+                'base_unit_id' => $baseUnit->id,
+            ]);
+        }
     }
 
     /**
@@ -363,5 +412,6 @@ class ProductPricingService
     {
         Cache::forget("products_pricing_{$baseUnit}_{$category}");
         Cache::forget("categories_by_unit_{$baseUnit}");
+        Cache::tags(['products', 'pricing'])->flush();
     }
 }

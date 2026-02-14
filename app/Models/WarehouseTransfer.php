@@ -24,6 +24,9 @@ class WarehouseTransfer extends Model
         'received_date',
         'status',
         'reversed_at',
+        'reversed_by',      // ✅ FIXED
+        'cancelled_at',     // ✅ FIXED
+        'cancelled_by',     // ✅ FIXED
         'notes',
         'created_by',
         'updated_by',
@@ -37,6 +40,7 @@ class WarehouseTransfer extends Model
         'expected_date' => 'date',
         'received_date' => 'date',
         'reversed_at' => 'datetime',
+        'cancelled_at' => 'datetime',  // ✅ FIXED
         'confirmed_at' => 'datetime',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
@@ -83,6 +87,17 @@ class WarehouseTransfer extends Model
     public function receivedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'received_by');
+    }
+
+    // ✅ FIXED: العلاقات الناقصة
+    public function reversedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'reversed_by');
+    }
+
+    public function cancelledBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'cancelled_by');
     }
 
     // ==================== Query Scopes ====================
@@ -183,6 +198,8 @@ class WarehouseTransfer extends Model
             'createdBy:id,name',
             'confirmedBy:id,name',
             'receivedBy:id,name',
+            'reversedBy:id,name',    // ✅ FIXED
+            'cancelledBy:id,name',   // ✅ FIXED
         ]);
     }
 

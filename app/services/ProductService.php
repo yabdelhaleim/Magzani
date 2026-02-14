@@ -3,8 +3,10 @@
 namespace App\Services;
 
 use App\Models\Product;
+use App\Models\ProductBaseUnit;
 use App\Models\ProductSellingUnit;
 use App\Models\ProductPriceHistory;
+use App\Models\PriceChangeHistory;
 use App\Models\Warehouse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
@@ -83,8 +85,30 @@ class ProductService
         'cm2' => 'سنتيمتر مربع',
     ];
 
+    private const UNIT_TYPE_MAP = [
+        'kg' => 'weight',
+        'g' => 'weight',
+        'ton' => 'weight',
+        'lb' => 'weight',
+        'm' => 'length',
+        'cm' => 'length',
+        'mm' => 'length',
+        'km' => 'length',
+        'l' => 'volume',
+        'ml' => 'volume',
+        'm3' => 'volume',
+        'piece' => 'piece',
+        'box' => 'piece',
+        'carton' => 'piece',
+        'bag' => 'piece',
+        'pack' => 'piece',
+        'dozen' => 'piece',
+        'm2' => 'area',
+        'cm2' => 'area',
+    ];
+
     /**
-     * ✅ إنشاء منتج جديد (محسّن ومضمون 100%)
+     * 🔥 إنشاء منتج جديد (متوافق 100% مع النظام الجديد)
      */
     public function createProduct(array $data): Product
     {
@@ -131,10 +155,13 @@ class ProductService
                     'is_active' => $data['is_active'] ?? true,
                 ]);
 
-                // ✅ 6. إنشاء الوحدة الأساسية
-                $this->createBaseSellingUnit($product, $data['base_unit'], $baseUnitLabel);
+                // 🔥 6. إنشاء الوحدة الأساسية في product_base_units
+                $baseUnit = $this->createProductBaseUnit($product, $data);
 
-                // ✅ 7. 🔥 إضافة للمخزن (مضمونة 100%)
+                // 🔥 7. إنشاء selling unit للوحدة الأساسية (مع base_unit_id)
+                $this->createBaseSellingUnit($product, $baseUnit, $data['base_unit'], $baseUnitLabel);
+
+                // ✅ 8. إضافة للمخزن
                 $warehouseId = $this->determineWarehouse($data);
                 $initialQuantity = (float) ($data['warehouses'][0]['quantity'] ?? 0);
                 $minStock = (float) ($data['warehouses'][0]['min_stock'] ?? $data['stock_alert_quantity'] ?? 10);
@@ -146,24 +173,22 @@ class ProductService
                     $minStock
                 );
 
-                // ✅ 8. تسجيل حركة المخزون (لو في كمية أولية)
+                // ✅ 9. تسجيل حركة المخزون
                 if ($initialQuantity > 0) {
                     $this->logInitialStock($product, $warehouseId, $initialQuantity);
                 }
 
-                // ✅ 9. مسح الكاش
+                // ✅ 10. مسح الكاش
                 $this->clearProductCache();
 
                 Log::info('✅ تم إنشاء منتج جديد', [
                     'product_id' => $product->id,
                     'name' => $product->name,
                     'code' => $product->code,
-                    'sku' => $product->sku,
-                    'warehouse_id' => $warehouseId,
-                    'initial_quantity' => $initialQuantity,
+                    'base_unit_id' => $baseUnit->id,
                 ]);
 
-                return $product->fresh(['sellingUnits', 'warehouses']);
+                return $product->fresh(['sellingUnits', 'warehouses', 'baseUnit']);
 
             } catch (RuntimeException $e) {
                 throw $e;
@@ -179,15 +204,462 @@ class ProductService
     }
 
     /**
-     * 🔥 تحديد المخزن المستهدف (مضمون يرجع ID)
+     * 🔥 إنشاء سجل الوحدة الأساسية في product_base_units
      */
+    private function createProductBaseUnit(Product $product, array $data): ProductBaseUnit
+    {
+        $unitType = self::UNIT_TYPE_MAP[$data['base_unit']] ?? 'piece';
+        $unitLabel = $this->getUnitLabel($data['base_unit']);
+        
+        $purchasePrice = (float) $data['purchase_price'];
+        $sellingPrice = (float) $data['selling_price'];
+        $profitMargin = $purchasePrice > 0 
+            ? round((($sellingPrice - $purchasePrice) / $purchasePrice) * 100, 2) 
+            : 0;
+
+        return ProductBaseUnit::create([
+            'product_id' => $product->id,
+            'product_code' => $product->code,
+            'base_unit_type' => $unitType,
+            'base_unit_code' => $data['base_unit'],
+            'base_unit_label' => $unitLabel,
+            'base_purchase_price' => $purchasePrice,
+            'base_selling_price' => $sellingPrice,
+            'profit_margin' => $profitMargin,
+            'is_active' => true,
+            'auto_update_selling_units' => true,
+            'effective_from' => now()->toDateString(),
+            'notes' => 'وحدة أساسية تم إنشاؤها تلقائياً',
+            'created_by' => auth()->id(),
+        ]);
+    }
+
+    /**
+     * 🔥 إنشاء selling unit للوحدة الأساسية (مع base_unit_id)
+     */
+private function createBaseSellingUnit(
+    Product $product, 
+    ProductBaseUnit $baseUnit,
+    string $unitCode, 
+    string $unitLabel
+): void {
+    try {
+        // ✅ التحقق من عدم وجود selling unit أساسية مسبقاً
+        $exists = DB::table('product_selling_units')
+            ->where('product_id', $product->id)
+            ->where('is_base', true)
+            ->exists();
+
+        if ($exists) {
+            Log::warning('الوحدة الأساسية موجودة مسبقاً', [
+                'product_id' => $product->id
+            ]);
+            return;
+        }
+
+        // ✅ إنشاء السجل باستخدام DB::table للتأكد من جميع الحقول
+        $inserted = DB::table('product_selling_units')->insert([
+            'product_id' => $product->id,
+            'base_unit_id' => $baseUnit->id,
+            
+            // 🔥 الحقول النصية الثلاثة (كلها مطلوبة)
+            'unit_name' => $unitLabel,
+            'unit_code' => $unitCode,
+            'unit_label' => $unitLabel,
+            
+            // الكميات والأسعار
+            'quantity_in_base_unit' => 1.0,
+            'conversion_factor' => 1.0,
+            'unit_purchase_price' => round($baseUnit->base_purchase_price, 2),
+            'unit_selling_price' => round($baseUnit->base_selling_price, 2),
+            
+            // الإعدادات
+            'auto_calculate_price' => true,
+            'is_base' => true,
+            'is_default' => true,
+            'is_active' => true,
+            'display_order' => 0,
+            
+            // Audit
+            'created_by' => auth()->id(),
+            'updated_by' => auth()->id(),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        if (!$inserted) {
+            throw new RuntimeException('فشل إدراج السجل في product_selling_units');
+        }
+
+        // ✅ التحقق من نجاح الإنشاء
+        $record = DB::table('product_selling_units')
+            ->where('product_id', $product->id)
+            ->where('base_unit_id', $baseUnit->id)
+            ->where('is_base', true)
+            ->first();
+
+        if (!$record) {
+            throw new RuntimeException('السجل لم يُنشأ رغم نجاح الـ insert!');
+        }
+
+        Log::info('✅ تم إنشاء selling unit للوحدة الأساسية', [
+            'product_id' => $product->id,
+            'base_unit_id' => $baseUnit->id,
+            'unit_name' => $unitLabel,
+            'unit_code' => $unitCode,
+        ]);
+
+    } catch (\Exception $e) {
+        Log::error('❌ فشل إنشاء selling unit', [
+            'product_id' => $product->id,
+            'base_unit_id' => $baseUnit->id ?? null,
+            'unit_label' => $unitLabel ?? null,
+            'error' => $e->getMessage(),
+            'sql_state' => $e->getCode() ?? 'unknown',
+        ]);
+        
+        throw new RuntimeException('فشل إنشاء وحدة البيع الأساسية: ' . $e->getMessage());
+    }
+}
+
+    /**
+     * 🔥 تحديث منتج موجود (متوافق مع النظام الجديد)
+     */
+    public function updateProduct(Product $product, array $data): Product
+    {
+        return DB::transaction(function () use ($product, $data) {
+            try {
+                // ✅ Validation
+                $this->validateProductData($data);
+
+                $baseUnitLabel = !empty($data['base_unit_label']) 
+                    ? trim($data['base_unit_label']) 
+                    : $this->getUnitLabel($data['base_unit']);
+
+                // ✅ التحقق من SKU/Barcode
+                $this->checkDuplicates(
+                    $data['sku'] ?? $product->sku,
+                    $data['barcode'] ?? null,
+                    $product->id
+                );
+
+                // ✅ حفظ الأسعار القديمة
+                $oldPurchasePrice = $product->purchase_price;
+                $oldSellingPrice = $product->selling_price;
+
+                $newPurchasePrice = (float) $data['purchase_price'];
+                $newSellingPrice = (float) $data['selling_price'];
+
+                // ✅ تحديث المنتج
+                $product->update([
+                    'name' => trim($data['name']),
+                    'sku' => !empty($data['sku']) ? trim($data['sku']) : $product->sku,
+                    'barcode' => !empty($data['barcode']) ? trim($data['barcode']) : null,
+                    'category' => trim($data['category']),
+                    'description' => !empty($data['description']) ? trim($data['description']) : null,
+                    'base_unit' => $data['base_unit'],
+                    'base_unit_label' => $baseUnitLabel,
+                    
+                    'purchase_price' => $newPurchasePrice,
+                    'selling_price' => $newSellingPrice,
+                    'min_selling_price' => !empty($data['min_selling_price']) ? (float) $data['min_selling_price'] : null,
+                    'wholesale_price' => !empty($data['wholesale_price']) ? (float) $data['wholesale_price'] : null,
+                    'tax_rate' => !empty($data['tax_rate']) ? (float) $data['tax_rate'] : 0,
+                    'default_discount' => !empty($data['default_discount']) ? (float) $data['default_discount'] : 0,
+                    'stock_alert_quantity' => !empty($data['stock_alert_quantity']) ? (float) $data['stock_alert_quantity'] : null,
+                    
+                    'is_active' => $data['is_active'] ?? $product->is_active,
+                ]);
+
+                // 🔥 تحديث الوحدة الأساسية في product_base_units
+                $baseUnit = ProductBaseUnit::where('product_id', $product->id)
+                    ->where('is_active', true)
+                    ->first();
+
+                if ($baseUnit) {
+                    // تحديث السعر في الوحدة الأساسية (الـ Observer سيتولى تحديث selling units)
+                    $profitMargin = $newPurchasePrice > 0 
+                        ? round((($newSellingPrice - $newPurchasePrice) / $newPurchasePrice) * 100, 2) 
+                        : 0;
+
+                    $baseUnit->update([
+                        'base_unit_code' => $data['base_unit'],
+                        'base_unit_label' => $baseUnitLabel,
+                        'base_purchase_price' => $newPurchasePrice,
+                        'base_selling_price' => $newSellingPrice,
+                        'profit_margin' => $profitMargin,
+                        'updated_by' => auth()->id(),
+                    ]);
+
+                    // 🔥 سجل تاريخي في price_change_history (إذا تغير السعر)
+                    if ($oldPurchasePrice != $newPurchasePrice || $oldSellingPrice != $newSellingPrice) {
+                        $diffPercentage = $oldSellingPrice > 0 
+                            ? round((($newSellingPrice - $oldSellingPrice) / $oldSellingPrice) * 100, 2) 
+                            : 0;
+
+                        PriceChangeHistory::create([
+                            'product_id' => $product->id,
+                            'base_unit_id' => $baseUnit->id,
+                            'old_base_purchase_price' => $oldPurchasePrice,
+                            'new_base_purchase_price' => $newPurchasePrice,
+                            'old_base_selling_price' => $oldSellingPrice,
+                            'new_base_selling_price' => $newSellingPrice,
+                            'diff_percentage' => $diffPercentage,
+                            'change_reason' => $data['price_change_reason'] ?? 'تحديث يدوي',
+                            'changed_by' => auth()->id(),
+                            'changed_at' => now(),
+                        ]);
+                    }
+                } else {
+                    // إنشاء الوحدة الأساسية إذا لم تكن موجودة
+                    $baseUnit = $this->createProductBaseUnit($product, $data);
+                    $this->createBaseSellingUnit($product, $baseUnit, $data['base_unit'], $baseUnitLabel);
+                }
+
+                $this->clearProductCache();
+
+                Log::info('✅ تم تحديث المنتج', [
+                    'product_id' => $product->id,
+                    'old_price' => $oldSellingPrice,
+                    'new_price' => $newSellingPrice,
+                ]);
+
+                return $product->fresh(['sellingUnits', 'warehouses', 'baseUnit']);
+
+            } catch (RuntimeException $e) {
+                throw $e;
+            } catch (\Exception $e) {
+                Log::error('❌ فشل تحديث المنتج', [
+                    'product_id' => $product->id,
+                    'error' => $e->getMessage()
+                ]);
+                throw new RuntimeException('فشل تحديث المنتج: ' . $e->getMessage());
+            }
+        });
+    }
+
+    /**
+     * 🔥 التحديث الجماعي للأسعار (متوافق مع Observer)
+     */
+    public function bulkUpdatePrices(array $data): array
+    {
+        return DB::transaction(function () use ($data) {
+            try {
+                $selectedProductIds = json_decode($data['selected_products'], true);
+                
+                if (empty($selectedProductIds) || !is_array($selectedProductIds)) {
+                    throw new RuntimeException('لم يتم تحديد أي منتجات');
+                }
+
+                if (count($selectedProductIds) > 5000) {
+                    throw new RuntimeException('لا يمكن تحديث أكثر من 5000 منتج دفعة واحدة');
+                }
+
+                $purchasePrice = (float) ($data['purchase_price'] ?? $data['base_purchase_price'] ?? 0);
+                $profitValue = (float) $data['profit_value'];
+                
+                if ($data['profit_type'] === 'percentage') {
+                    $profit = ($purchasePrice * $profitValue) / 100;
+                } else {
+                    $profit = $profitValue;
+                }
+                
+                $sellingPrice = round($purchasePrice + $profit, 2);
+                $profitMargin = $purchasePrice > 0 
+                    ? round((($sellingPrice - $purchasePrice) / $purchasePrice) * 100, 2) 
+                    : 0;
+
+                $chunks = array_chunk($selectedProductIds, 500);
+                $totalUpdated = 0;
+                $now = now();
+                $userId = auth()->id();
+
+                foreach ($chunks as $chunk) {
+                    foreach ($chunk as $productId) {
+                        // 🔥 الحصول على الوحدة الأساسية
+                        $baseUnit = ProductBaseUnit::where('product_id', $productId)
+                            ->where('is_active', true)
+                            ->first();
+
+                        if (!$baseUnit) {
+                            Log::warning("لا توجد وحدة أساسية للمنتج {$productId}");
+                            continue;
+                        }
+
+                        // 🔥 حفظ السجل التاريخي
+                        if ($baseUnit->base_purchase_price != $purchasePrice || $baseUnit->base_selling_price != $sellingPrice) {
+                            $diffPercentage = $baseUnit->base_selling_price > 0 
+                                ? round((($sellingPrice - $baseUnit->base_selling_price) / $baseUnit->base_selling_price) * 100, 2) 
+                                : 0;
+
+                            PriceChangeHistory::create([
+                                'product_id' => $productId,
+                                'base_unit_id' => $baseUnit->id,
+                                'old_base_purchase_price' => $baseUnit->base_purchase_price,
+                                'new_base_purchase_price' => $purchasePrice,
+                                'old_base_selling_price' => $baseUnit->base_selling_price,
+                                'new_base_selling_price' => $sellingPrice,
+                                'diff_percentage' => $diffPercentage,
+                                'change_reason' => $data['change_reason'] ?? 'تحديث جماعي',
+                                'changed_by' => $userId,
+                                'changed_at' => $now,
+                            ]);
+                        }
+
+                        // 🔥 تحديث product_base_units (Observer سيحدث selling units تلقائياً)
+                        $baseUnit->update([
+                            'base_purchase_price' => $purchasePrice,
+                            'base_selling_price' => $sellingPrice,
+                            'profit_margin' => $profitMargin,
+                            'updated_by' => $userId,
+                        ]);
+
+                        // 🔥 تحديث جدول products (للتوافق مع الكود القديم)
+                        Product::where('id', $productId)->update([
+                            'purchase_price' => $purchasePrice,
+                            'selling_price' => $sellingPrice,
+                            'updated_at' => $now,
+                        ]);
+
+                        $totalUpdated++;
+                    }
+                }
+
+                $this->clearProductCache();
+
+                Log::info('✅ تحديث جماعي للأسعار', [
+                    'count' => $totalUpdated,
+                    'purchase_price' => $purchasePrice,
+                    'selling_price' => $sellingPrice
+                ]);
+
+                return [
+                    'updated_count' => $totalUpdated,
+                    'purchase_price' => $purchasePrice,
+                    'selling_price' => $sellingPrice,
+                    'profit' => round($profit, 2),
+                    'profit_percentage' => $profitMargin,
+                ];
+
+            } catch (RuntimeException $e) {
+                throw $e;
+            } catch (\Exception $e) {
+                Log::error('❌ فشل التحديث الجماعي', ['error' => $e->getMessage()]);
+                throw new RuntimeException('فشل التحديث الجماعي: ' . $e->getMessage());
+            }
+        });
+    }
+
+    /**
+     * ✅ حذف منتج (آمن)
+     */
+    public function deleteProduct(Product $product): void
+    {
+        DB::transaction(function () use ($product) {
+            try {
+                // ✅ التحقق من عدم استخدام المنتج في فواتير
+                if ($this->isProductUsedInInvoices($product)) {
+                    throw new RuntimeException('لا يمكن حذف المنتج لأنه مستخدم في فواتير');
+                }
+
+                // ✅ التحقق من عدم وجود مخزون
+                $totalStock = DB::table('product_warehouse')
+                    ->where('product_id', $product->id)
+                    ->sum('quantity');
+
+                if ($totalStock > 0) {
+                    throw new RuntimeException("لا يمكن حذف المنتج لأنه يحتوي على مخزون (الكمية: {$totalStock})");
+                }
+
+                // ✅ حذف العلاقات
+                DB::table('product_warehouse')->where('product_id', $product->id)->delete();
+                DB::table('product_selling_units')->where('product_id', $product->id)->delete();
+                DB::table('product_base_units')->where('product_id', $product->id)->delete();
+                DB::table('price_change_history')->where('product_id', $product->id)->delete();
+
+                // ✅ حذف المنتج
+                $product->delete();
+
+                $this->clearProductCache();
+
+                Log::info('✅ تم حذف المنتج', ['product_id' => $product->id, 'name' => $product->name]);
+
+            } catch (RuntimeException $e) {
+                throw $e;
+            } catch (\Exception $e) {
+                Log::error('❌ فشل حذف المنتج', [
+                    'product_id' => $product->id,
+                    'error' => $e->getMessage()
+                ]);
+                throw new RuntimeException('فشل حذف المنتج: ' . $e->getMessage());
+            }
+        });
+    }
+
+    /**
+     * ✅ الحصول على التصنيفات حسب الوحدة
+     */
+    public function getCategoriesByUnit(string $baseUnit): array
+    {
+        $cacheKey = "categories_by_unit_{$baseUnit}";
+        
+        return Cache::remember($cacheKey, 3600, function () use ($baseUnit) {
+            return DB::table('product_base_units as pbu')
+                ->join('products as p', 'p.id', '=', 'pbu.product_id')
+                ->where('pbu.base_unit_code', $baseUnit)
+                ->where('pbu.is_active', true)
+                ->where('p.is_active', true)
+                ->whereNotNull('p.category')
+                ->where('p.category', '!=', '')
+                ->distinct()
+                ->orderBy('p.category')
+                ->pluck('p.category')
+                ->values()
+                ->toArray();
+        });
+    }
+
+    /**
+     * ✅ الحصول على المنتجات حسب الوحدة والتصنيف
+     */
+    public function getProductsByUnitAndCategory(string $baseUnit, string $category): array
+    {
+        $cacheKey = "products_{$baseUnit}_{$category}";
+
+        return Cache::remember($cacheKey, 1800, function () use ($baseUnit, $category) {
+            return DB::table('products as p')
+                ->join('product_base_units as pbu', 'p.id', '=', 'pbu.product_id')
+                ->where('p.category', $category)
+                ->where('p.is_active', true)
+                ->where('pbu.base_unit_code', $baseUnit)
+                ->where('pbu.is_active', true)
+                ->select([
+                    'p.id',
+                    'p.name',
+                    'p.code',
+                    'p.category',
+                    'pbu.id as base_unit_id',
+                    'pbu.base_unit_code',
+                    'pbu.base_unit_label',
+                    'pbu.base_purchase_price',
+                    'pbu.base_selling_price',
+                    'pbu.profit_margin',
+                ])
+                ->orderBy('p.name')
+                ->get()
+                ->toArray();
+        });
+    }
+
+    /* ===========================
+     * 🛠️ الباقي من الكود كما هو
+     * =========================== */
+
     private function determineWarehouse(array $data): int
     {
-        // ✅ لو المستخدم اختار مخزن من الفورم
         if (!empty($data['warehouses'][0]['warehouse_id'])) {
             $warehouseId = (int) $data['warehouses'][0]['warehouse_id'];
             
-            // التحقق من وجود المخزن
             $warehouse = DB::table('warehouses')
                 ->where('id', $warehouseId)
                 ->where('is_active', true)
@@ -200,7 +672,6 @@ class ProductService
             Log::warning("المخزن {$warehouseId} غير موجود أو غير نشط، سيتم استخدام المخزن الافتراضي");
         }
 
-        // ✅ المخزن الافتراضي
         $defaultWarehouse = Cache::remember('default_warehouse_id', 3600, function () {
             return DB::table('warehouses')
                 ->where('is_active', true)
@@ -215,14 +686,8 @@ class ProductService
         return (int) $defaultWarehouse;
     }
 
-    /**
-     * 🔥 ربط المنتج بمخزن (محمي 100% من الأخطاء)
-     * ✅ بدون available_quantity - يتحسب تلقائياً من الـ Migration
-     */
-/**
- * 🔥 ربط المنتج بمخزن (محمي 100% من الأخطاء)
- * ✅ بدون available_quantity - يتحسب تلقائياً من الـ Migration
- */
+// في ProductService.php
+
 private function attachToWarehouseSecure(
     Product $product, 
     int $warehouseId, 
@@ -230,7 +695,13 @@ private function attachToWarehouseSecure(
     float $minStock
 ): void {
     try {
-        // ✅ التحقق المزدوج من المخزن
+        Log::info('🔄 بدء إضافة المنتج للمخزن', [
+            'product_id' => $product->id,
+            'warehouse_id' => $warehouseId,
+            'quantity' => $quantity,
+        ]);
+
+        // ✅ التحقق من المخزن
         $warehouse = DB::table('warehouses')
             ->where('id', $warehouseId)
             ->first(['id', 'name', 'is_active']);
@@ -243,14 +714,17 @@ private function attachToWarehouseSecure(
             throw new RuntimeException("المخزن '{$warehouse->name}' غير نشط");
         }
 
-        // ✅ التحقق من عدم وجود تكرار
+        // ✅ التحقق من عدم التكرار
         $exists = DB::table('product_warehouse')
             ->where('product_id', $product->id)
             ->where('warehouse_id', $warehouseId)
             ->exists();
 
         if ($exists) {
-            Log::warning("المنتج {$product->id} موجود بالفعل في المخزن {$warehouseId}");
+            Log::warning("⚠️ المنتج موجود بالفعل في المخزن", [
+                'product_id' => $product->id,
+                'warehouse_id' => $warehouseId,
+            ]);
             return;
         }
 
@@ -259,7 +733,13 @@ private function attachToWarehouseSecure(
         $minStock = max(0, (int) $minStock);
         $averageCost = round($product->purchase_price ?? 0, 2);
 
-        // ✅ الإدراج المباشر - الأعمدة الموجودة فقط
+        Log::info('📊 البيانات المُنظفة', [
+            'quantity' => $quantity,
+            'min_stock' => $minStock,
+            'average_cost' => $averageCost,
+        ]);
+
+        // ✅ الإدراج المباشر
         $inserted = DB::table('product_warehouse')->insert([
             'product_id' => $product->id,
             'warehouse_id' => $warehouseId,
@@ -275,27 +755,24 @@ private function attachToWarehouseSecure(
         ]);
 
         if (!$inserted) {
-            throw new RuntimeException("فشل إدراج السجل في product_warehouse");
+            throw new RuntimeException("فشل الـ INSERT في product_warehouse");
         }
 
-        // ✅ التحقق من نجاح الإدراج
+        // ✅ التحقق النهائي
         $record = DB::table('product_warehouse')
             ->where('product_id', $product->id)
             ->where('warehouse_id', $warehouseId)
             ->first();
 
         if (!$record) {
-            throw new RuntimeException("السجل لم يُنشأ في product_warehouse رغم نجاح الـ insert!");
+            throw new RuntimeException("السجل لم يُنشأ رغم نجاح الـ insert!");
         }
 
         Log::info('✅ تم ربط المنتج بالمخزن بنجاح', [
             'product_id' => $product->id,
-            'product_name' => $product->name,
             'warehouse_id' => $warehouseId,
-            'warehouse_name' => $warehouse->name,
-            'quantity' => $quantity,
-            'min_stock' => $minStock,
-            'available_quantity' => $record->available_quantity ?? 'computed',
+            'quantity' => $record->quantity,
+            'record_id' => property_exists($record, 'id') ? $record->id : 'N/A',
         ]);
 
     } catch (RuntimeException $e) {
@@ -305,14 +782,11 @@ private function attachToWarehouseSecure(
             'product_id' => $product->id,
             'warehouse_id' => $warehouseId,
             'error' => $e->getMessage(),
-            'sql_state' => $e->getCode() ?? 'unknown',
+            'trace' => $e->getTraceAsString(),
         ]);
         throw new RuntimeException("فشل إضافة المنتج للمخزن: " . $e->getMessage());
     }
-}    /**
-     * 📝 تسجيل حركة المخزون الأولية
-     */
-    private function logInitialStock(Product $product, int $warehouseId, float $quantity): void
+}    private function logInitialStock(Product $product, int $warehouseId, float $quantity): void
     {
         try {
             DB::table('inventory_movements')->insert([
@@ -335,9 +809,6 @@ private function attachToWarehouseSecure(
         }
     }
 
-    /**
-     * ✅ Validation شامل للبيانات
-     */
     private function validateProductData(array $data): void
     {
         if (empty(trim($data['name'] ?? ''))) {
@@ -374,18 +845,8 @@ private function attachToWarehouseSecure(
         if ($sellingPrice > 0 && $sellingPrice < $purchasePrice) {
             throw new RuntimeException('سعر البيع لا يمكن أن يكون أقل من سعر الشراء');
         }
-
-        if (!empty($data['warehouses'][0]['quantity'])) {
-            $quantity = (float) $data['warehouses'][0]['quantity'];
-            if ($quantity < 0) {
-                throw new RuntimeException('الكمية الأولية يجب أن تكون صفر أو أكبر');
-            }
-        }
     }
 
-    /**
-     * ✅ التحقق من التكرار (SKU + Barcode)
-     */
     private function checkDuplicates(?string $sku, ?string $barcode, ?int $exceptId = null): void
     {
         if (!empty($sku)) {
@@ -409,326 +870,135 @@ private function attachToWarehouseSecure(
         }
     }
 
-    /**
-     * ✅ تحديث منتج موجود
-     */
-    public function updateProduct(Product $product, array $data): Product
+    private function updateBaseSellingUnit(Product $product, string $unitCode, string $unitLabel, array $data): void
     {
-        return DB::transaction(function () use ($product, $data) {
-            try {
-                // ✅ Validation
-                $this->validateProductData($data);
-
-                $baseUnitLabel = !empty($data['base_unit_label']) 
-                    ? trim($data['base_unit_label']) 
-                    : $this->getUnitLabel($data['base_unit']);
-
-                // ✅ التحقق من SKU/Barcode
-                $this->checkDuplicates(
-                    $data['sku'] ?? $product->sku,
-                    $data['barcode'] ?? null,
-                    $product->id
-                );
-
-                // ✅ حفظ الأسعار القديمة
-                $oldPurchasePrice = $product->purchase_price;
-                $oldSellingPrice = $product->selling_price;
-
-                // ✅ تحديث المنتج
-                $product->update([
-                    'name' => trim($data['name']),
-                    'sku' => !empty($data['sku']) ? trim($data['sku']) : $product->sku,
-                    'barcode' => !empty($data['barcode']) ? trim($data['barcode']) : null,
-                    'category' => trim($data['category']),
-                    'description' => !empty($data['description']) ? trim($data['description']) : null,
-                    'base_unit' => $data['base_unit'],
-                    'base_unit_label' => $baseUnitLabel,
-                    
-                    'purchase_price' => (float) $data['purchase_price'],
-                    'selling_price' => (float) $data['selling_price'],
-                    'min_selling_price' => !empty($data['min_selling_price']) ? (float) $data['min_selling_price'] : null,
-                    'wholesale_price' => !empty($data['wholesale_price']) ? (float) $data['wholesale_price'] : null,
-                    'tax_rate' => !empty($data['tax_rate']) ? (float) $data['tax_rate'] : 0,
-                    'default_discount' => !empty($data['default_discount']) ? (float) $data['default_discount'] : 0,
-                    'stock_alert_quantity' => !empty($data['stock_alert_quantity']) ? (float) $data['stock_alert_quantity'] : null,
-                    
-                    'is_active' => $data['is_active'] ?? $product->is_active,
-                ]);
-
-                // ✅ تسجيل تغيير السعر
-                if ($oldPurchasePrice != $data['purchase_price'] || $oldSellingPrice != $data['selling_price']) {
-                    ProductPriceHistory::logPriceChange(
-                        $product->id,
-                        $data['base_unit'],
-                        $oldPurchasePrice,
-                        $data['purchase_price'],
-                        $oldSellingPrice,
-                        $data['selling_price'],
-                        $data['price_change_reason'] ?? 'تحديث يدوي'
-                    );
-                }
-
-                // ✅ تحديث الوحدة الأساسية
-                $this->updateBaseSellingUnit($product, $data['base_unit'], $baseUnitLabel, $data);
-
-                $this->clearProductCache();
-
-                Log::info('✅ تم تحديث المنتج', ['product_id' => $product->id]);
-
-                return $product->fresh(['sellingUnits', 'warehouses']);
-
-            } catch (RuntimeException $e) {
-                throw $e;
-            } catch (\Exception $e) {
-                Log::error('❌ فشل تحديث المنتج', [
-                    'product_id' => $product->id,
-                    'error' => $e->getMessage()
-                ]);
-                throw new RuntimeException('فشل تحديث المنتج: ' . $e->getMessage());
-            }
-        });
+        DB::table('product_selling_units')
+            ->where('product_id', $product->id)
+            ->where('is_base', true)
+            ->update([
+                'unit_name' => $unitLabel,
+                'unit_code' => $unitCode,
+                'unit_label' => $unitLabel,
+                'updated_at' => now(),
+            ]);
     }
 
-    /**
-     * ✅ حذف منتج (آمن)
-     */
-    public function deleteProduct(Product $product): void
+    private function isProductUsedInInvoices(Product $product): bool
     {
-        DB::transaction(function () use ($product) {
-            try {
-                // ✅ التحقق من عدم استخدام المنتج في فواتير
-                if ($this->isProductUsedInInvoices($product)) {
-                    throw new RuntimeException('لا يمكن حذف المنتج لأنه مستخدم في فواتير');
-                }
-
-                // ✅ التحقق من عدم وجود مخزون
-                $totalStock = DB::table('product_warehouse')
-                    ->where('product_id', $product->id)
-                    ->sum('quantity');
-
-                if ($totalStock > 0) {
-                    throw new RuntimeException("لا يمكن حذف المنتج لأنه يحتوي على مخزون (الكمية: {$totalStock})");
-                }
-
-                // ✅ حذف العلاقات
-                DB::table('product_warehouse')->where('product_id', $product->id)->delete();
-                DB::table('product_selling_units')->where('product_id', $product->id)->delete();
-
-                // ✅ حذف المنتج
-                $product->delete();
-
-                $this->clearProductCache();
-
-                Log::info('✅ تم حذف المنتج', ['product_id' => $product->id, 'name' => $product->name]);
-
-            } catch (RuntimeException $e) {
-                throw $e;
-            } catch (\Exception $e) {
-                Log::error('❌ فشل حذف المنتج', [
-                    'product_id' => $product->id,
-                    'error' => $e->getMessage()
-                ]);
-                throw new RuntimeException('فشل حذف المنتج: ' . $e->getMessage());
-            }
-        });
+        return DB::table('sales_invoice_items')
+            ->where('product_id', $product->id)
+            ->exists()
+            ||
+            DB::table('purchase_invoice_items')
+                ->where('product_id', $product->id)
+                ->exists();
     }
 
-    /**
-     * ✅ التحديث الجماعي للأسعار
-     */
-    public function bulkUpdatePrices(array $data): array
-    {
-        return DB::transaction(function () use ($data) {
-            try {
-                $selectedProductIds = json_decode($data['selected_products'], true);
-                
-                if (empty($selectedProductIds) || !is_array($selectedProductIds)) {
-                    throw new RuntimeException('لم يتم تحديد أي منتجات');
-                }
-
-                if (count($selectedProductIds) > 5000) {
-                    throw new RuntimeException('لا يمكن تحديث أكثر من 5000 منتج دفعة واحدة');
-                }
-
-                $purchasePrice = (float) ($data['purchase_price'] ?? $data['base_purchase_price'] ?? 0);
-                $profitValue = (float) $data['profit_value'];
-                
-                if ($data['profit_type'] === 'percentage') {
-                    $profit = ($purchasePrice * $profitValue) / 100;
-                } else {
-                    $profit = $profitValue;
-                }
-                
-                $sellingPrice = round($purchasePrice + $profit, 2);
-
-                $chunks = array_chunk($selectedProductIds, 500);
-                $totalUpdated = 0;
-
-                foreach ($chunks as $chunk) {
-                    $updated = DB::table('products')
-                        ->whereIn('id', $chunk)
-                        ->where('base_unit', $data['base_unit'])
-                        ->where('category', $data['category'])
-                        ->update([
-                            'purchase_price' => $purchasePrice,
-                            'selling_price' => $sellingPrice,
-                            'updated_at' => now(),
-                        ]);
-
-                    $totalUpdated += $updated;
-
-                    DB::table('product_selling_units')
-                        ->whereIn('product_id', $chunk)
-                        ->where('is_base', true)
-                        ->update(['updated_at' => now()]);
-                }
-
-                foreach ($selectedProductIds as $productId) {
-                    $oldProduct = DB::table('products')->where('id', $productId)->first();
-                    
-                    if ($oldProduct && ($oldProduct->purchase_price != $purchasePrice || $oldProduct->selling_price != $sellingPrice)) {
-                        ProductPriceHistory::logPriceChange(
-                            $productId,
-                            $data['base_unit'],
-                            $oldProduct->purchase_price,
-                            $purchasePrice,
-                            $oldProduct->selling_price,
-                            $sellingPrice,
-                            'تحديث جماعي'
-                        );
-                    }
-                }
-
-                $this->clearProductCache();
-
-                Log::info('✅ تحديث جماعي للأسعار', [
-                    'count' => $totalUpdated,
-                    'purchase_price' => $purchasePrice,
-                    'selling_price' => $sellingPrice
-                ]);
-
-                return [
-                    'updated_count' => $totalUpdated,
-                    'purchase_price' => $purchasePrice,
-                    'selling_price' => $sellingPrice
-                ];
-
-            } catch (RuntimeException $e) {
-                throw $e;
-            } catch (\Exception $e) {
-                Log::error('❌ فشل التحديث الجماعي', ['error' => $e->getMessage()]);
-                throw new RuntimeException('فشل التحديث الجماعي: ' . $e->getMessage());
-            }
-        });
-    }
-
-    /**
-     * ✅ الحصول على التصنيفات حسب الوحدة
-     */
-    public function getCategoriesByUnit(string $baseUnit): array
-    {
-        $cacheKey = "categories_by_unit_{$baseUnit}";
+/**
+ * 🗑️ مسح الكاش (متوافق مع جميع أنواع الكاش)
+ */
+private function clearProductCache(): void
+{
+    try {
+        // ✅ مسح الـ keys المحددة
+        $keys = [
+            'products_count',
+            'low_stock_products',
+            'warehouses_with_stats',
+            'active_warehouses',
+            'default_warehouse_id',
+        ];
         
-        return Cache::remember($cacheKey, 3600, function () use ($baseUnit) {
-            return DB::table('products')
-                ->where('base_unit', $baseUnit)
-                ->whereNotNull('category')
-                ->where('category', '!=', '')
-                ->distinct()
-                ->orderBy('category')
-                ->pluck('category')
-                ->values()
-                ->toArray();
-        });
+        foreach ($keys as $key) {
+            Cache::forget($key);
+        }
+
+        // ✅ مسح كاش التصنيفات (جميع الوحدات الممكنة)
+        $possibleUnits = ['kg', 'g', 'ton', 'lb', 'm', 'cm', 'mm', 'km', 'l', 'ml', 'm3', 'piece', 'box', 'carton', 'bag', 'pack', 'dozen', 'm2', 'cm2'];
+        
+        foreach ($possibleUnits as $unit) {
+            Cache::forget("categories_by_unit_{$unit}");
+        }
+
+        // ✅ مسح كاش المنتجات (نمط wildcard محاكاة)
+        // لو عندك Laravel 9+ يمكن استخدام:
+        // Cache::flush(); // ⚠️ بحذر - بيمسح الكاش كله
+        
+        // أو مسح فقط الـ keys المعروفة
+        $categories = DB::table('products')
+            ->distinct()
+            ->pluck('category')
+            ->filter()
+            ->toArray();
+
+        foreach ($possibleUnits as $unit) {
+            foreach ($categories as $category) {
+                Cache::forget("products_{$unit}_{$category}");
+                Cache::forget("suggested_pricing_{$unit}_{$category}");
+            }
+            Cache::forget("suggested_pricing_{$unit}_all");
+        }
+
+        Log::debug('✅ تم مسح الكاش بنجاح');
+
+    } catch (\Exception $e) {
+        // لا نرمي Exception لأن مسح الكاش ليس critical
+        Log::warning('⚠️ فشل مسح الكاش (غير حرج)', [
+            'error' => $e->getMessage()
+        ]);
     }
-
-    /**
-     * ✅ الحصول على المنتجات حسب الوحدة والتصنيف
-     */
-    public function getProductsByUnitAndCategory(string $baseUnit, string $category): array
+}
+    private function generateUniqueCode(): string
     {
-        $cacheKey = "products_{$baseUnit}_{$category}";
-
-        return Cache::remember($cacheKey, 1800, function () use ($baseUnit, $category) {
-            return DB::table('products')
-                ->where('base_unit', $baseUnit)
-                ->where('category', $category)
-                ->where('is_active', true)
-                ->select([
-                    'id', 'name', 'sku', 'category', 'base_unit', 'base_unit_label',
-                    'purchase_price',
-                    'selling_price'
-                ])
-                ->orderBy('name')
-                ->get()
-                ->toArray();
-        });
-    }
-
-    /**
-     * ✅ الحصول على اقتراحات التسعير
-     */
-    public function getSuggestedPricing(string $baseUnit, ?string $category = null): array
-    {
-        $cacheKey = "suggested_pricing_{$baseUnit}_" . ($category ?? 'all');
-
-        return Cache::remember($cacheKey, 1800, function () use ($baseUnit, $category) {
-            $query = DB::table('products')
-                ->where('base_unit', $baseUnit)
-                ->where('is_active', true);
+        $maxId = DB::table('products')->max('id') ?? 0;
+        $attempts = 0;
+        
+        do {
+            $newNumber = $maxId + 1 + $attempts + rand(0, 99);
+            $code = 'PRD' . str_pad($newNumber, 6, '0', STR_PAD_LEFT);
             
-            if ($category) {
-                $query->where('category', $category);
+            $exists = DB::table('products')->where('code', $code)->exists();
+            $attempts++;
+            
+            if ($attempts >= 100) {
+                return 'PRD-' . strtoupper(substr(uniqid() . bin2hex(random_bytes(2)), 0, 10));
             }
-
-            $stats = $query->selectRaw('
-                COUNT(*) as sample_size,
-                AVG(purchase_price) as avg_purchase,
-                AVG(selling_price) as avg_selling,
-                AVG(selling_price - purchase_price) as avg_profit,
-                MIN(purchase_price) as min_purchase,
-                MAX(purchase_price) as max_purchase
-            ')->first();
-
-            if (!$stats || $stats->sample_size == 0) {
-                throw new RuntimeException('لا توجد منتجات مشابهة');
-            }
-
-            return [
-                'suggested_purchase_price' => round($stats->avg_purchase, 2),
-                'suggested_selling_price' => round($stats->avg_selling, 2),
-                'suggested_profit_margin' => round($stats->avg_profit, 2),
-                'min_purchase_price' => round($stats->min_purchase, 2),
-                'max_purchase_price' => round($stats->max_purchase, 2),
-                'sample_size' => $stats->sample_size,
-            ];
-        });
+            
+        } while ($exists);
+        
+        return $code;
     }
 
-    /**
-     * ✅ البحث بالكود أو الباركود
-     */
-    public function findByCodeOrBarcode(string $search): ?Product
+    private function generateUniqueSKU(): string
     {
-        $cacheKey = "product_search_" . md5($search);
-
-        return Cache::remember($cacheKey, 300, function () use ($search) {
-            return Product::where(function ($query) use ($search) {
-                    $query->where('code', $search)
-                          ->orWhere('barcode', $search)
-                          ->orWhere('sku', $search);
-                })
-                ->with([
-                    'warehouses:id,name',
-                    'sellingUnits' => fn($q) => $q->select('id', 'product_id', 'unit_name', 'unit_code', 'conversion_factor', 'is_default')->where('is_active', true)
-                ])
-                ->first();
-        });
+        $attempts = 0;
+        
+        do {
+            $sku = 'SKU-' . date('Ymd') . '-' . strtoupper(Str::random(6));
+            $exists = DB::table('products')->where('sku', $sku)->exists();
+            $attempts++;
+            
+            if ($attempts >= 50) {
+                $sku = 'SKU-' . date('YmdHis') . '-' . strtoupper(substr(md5(microtime(true) . rand()), 0, 6));
+                break;
+            }
+            
+        } while ($exists);
+        
+        return $sku;
     }
 
-    /**
-     * ✅ نقل مخزون بين مخازن
-     */
+    private function getUnitLabel(string $unit): string
+    {
+        return self::UNIT_LABELS[$unit] ?? $unit;
+    }
+
+    public function getUnitsByCategory(): array
+    {
+        return self::UNITS_BY_CATEGORY;
+    }
+
+    // باقي الـ methods للمخزون والنقل والتسوية كما هي...
     public function transferStock(
         Product $product,
         int $fromWarehouseId,
@@ -810,9 +1080,6 @@ private function attachToWarehouseSecure(
         });
     }
 
-    /**
-     * ✅ تسوية المخزون من الجرد
-     */
     public function adjustStockFromCount(
         Product $product,
         int $warehouseId,
@@ -863,9 +1130,6 @@ private function attachToWarehouseSecure(
         });
     }
 
-    /**
-     * ✅ الحصول على إحصائيات المخزون
-     */
     public function getStockStatistics(Product $product): array
     {
         $cacheKey = "stock_stats_{$product->id}";
@@ -894,112 +1158,58 @@ private function attachToWarehouseSecure(
         });
     }
 
-    /* ===========================
-     * 🛠️ HELPER METHODS
-     * =========================== */
-
-    private function generateUniqueCode(): string
+    public function getSuggestedPricing(string $baseUnit, ?string $category = null): array
     {
-        $maxId = DB::table('products')->max('id') ?? 0;
-        $attempts = 0;
-        
-        do {
-            $newNumber = $maxId + 1 + $attempts + rand(0, 99);
-            $code = 'PRD' . str_pad($newNumber, 6, '0', STR_PAD_LEFT);
+        $cacheKey = "suggested_pricing_{$baseUnit}_" . ($category ?? 'all');
+
+        return Cache::remember($cacheKey, 1800, function () use ($baseUnit, $category) {
+            $query = DB::table('products')
+                ->where('base_unit', $baseUnit)
+                ->where('is_active', true);
             
-            $exists = DB::table('products')->where('code', $code)->exists();
-            $attempts++;
-            
-            if ($attempts >= 100) {
-                return 'PRD-' . strtoupper(substr(uniqid() . bin2hex(random_bytes(2)), 0, 10));
+            if ($category) {
+                $query->where('category', $category);
             }
-            
-        } while ($exists);
-        
-        return $code;
-    }
 
-    private function generateUniqueSKU(): string
-    {
-        $attempts = 0;
-        
-        do {
-            $sku = 'SKU-' . date('Ymd') . '-' . strtoupper(Str::random(6));
-            $exists = DB::table('products')->where('sku', $sku)->exists();
-            $attempts++;
-            
-            if ($attempts >= 50) {
-                $sku = 'SKU-' . date('YmdHis') . '-' . strtoupper(substr(md5(microtime(true) . rand()), 0, 6));
-                break;
+            $stats = $query->selectRaw('
+                COUNT(*) as sample_size,
+                AVG(purchase_price) as avg_purchase,
+                AVG(selling_price) as avg_selling,
+                AVG(selling_price - purchase_price) as avg_profit,
+                MIN(purchase_price) as min_purchase,
+                MAX(purchase_price) as max_purchase
+            ')->first();
+
+            if (!$stats || $stats->sample_size == 0) {
+                throw new RuntimeException('لا توجد منتجات مشابهة');
             }
-            
-        } while ($exists);
-        
-        return $sku;
+
+            return [
+                'suggested_purchase_price' => round($stats->avg_purchase, 2),
+                'suggested_selling_price' => round($stats->avg_selling, 2),
+                'suggested_profit_margin' => round($stats->avg_profit, 2),
+                'min_purchase_price' => round($stats->min_purchase, 2),
+                'max_purchase_price' => round($stats->max_purchase, 2),
+                'sample_size' => $stats->sample_size,
+            ];
+        });
     }
 
-    private function getUnitLabel(string $unit): string
+    public function findByCodeOrBarcode(string $search): ?Product
     {
-        return self::UNIT_LABELS[$unit] ?? $unit;
-    }
+        $cacheKey = "product_search_" . md5($search);
 
-    private function createBaseSellingUnit(Product $product, string $unitCode, string $unitLabel): void
-    {
-        DB::table('product_selling_units')->insert([
-            'product_id' => $product->id,
-            'unit_name' => $unitLabel,
-            'unit_code' => $unitCode,
-            'quantity_in_base_unit' => 1.0,
-            'conversion_factor' => 1.0,
-            'is_default' => true,
-            'is_base' => true,
-            'is_active' => true,
-            'display_order' => 0,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
-    }
-
-    private function updateBaseSellingUnit(Product $product, string $unitCode, string $unitLabel, array $data): void
-    {
-        DB::table('product_selling_units')
-            ->where('product_id', $product->id)
-            ->where('is_base', true)
-            ->update([
-                'unit_name' => $unitLabel,
-                'unit_code' => $unitCode,
-                'updated_at' => now(),
-            ]);
-    }
-
-    private function isProductUsedInInvoices(Product $product): bool
-    {
-        return DB::table('sales_invoice_items')
-            ->where('product_id', $product->id)
-            ->exists()
-            ||
-            DB::table('purchase_invoice_items')
-                ->where('product_id', $product->id)
-                ->exists();
-    }
-
-    private function clearProductCache(): void
-    {
-        $keys = [
-            'products_count',
-            'low_stock_products',
-            'warehouses_with_stats',
-            'active_warehouses',
-            'default_warehouse_id',
-        ];
-        
-        foreach ($keys as $key) {
-            Cache::forget($key);
-        }
-    }
-
-    public function getUnitsByCategory(): array
-    {
-        return self::UNITS_BY_CATEGORY;
+        return Cache::remember($cacheKey, 300, function () use ($search) {
+            return Product::where(function ($query) use ($search) {
+                    $query->where('code', $search)
+                          ->orWhere('barcode', $search)
+                          ->orWhere('sku', $search);
+                })
+                ->with([
+                    'warehouses:id,name',
+                    'sellingUnits' => fn($q) => $q->select('id', 'product_id', 'unit_name', 'unit_code', 'conversion_factor', 'is_default')->where('is_active', true)
+                ])
+                ->first();
+        });
     }
 }

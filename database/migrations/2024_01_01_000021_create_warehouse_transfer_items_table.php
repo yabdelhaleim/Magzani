@@ -14,24 +14,26 @@ return new class extends Migration
             $table->unsignedBigInteger('warehouse_transfer_id')->index();
             $table->unsignedBigInteger('product_id')->index();
             
-            // نظام مفصل للكميات
-            $table->decimal('quantity_sent', 10, 3);
-            $table->decimal('quantity_received', 10, 3)->default(0);
+            // ✅ نظام مفصل للكميات
+            $table->decimal('quantity_sent', 10, 3)->comment('الكمية المرسلة');
+            $table->decimal('quantity_received', 10, 3)->default(0)->comment('الكمية المستلمة');
             
-            // حساب الفرق تلقائياً
+            // ✅ حساب الفرق تلقائياً - Generated Column
             $table->decimal('quantity_difference', 10, 3)
-                  ->storedAs('quantity_sent - quantity_received');
+                  ->storedAs('quantity_sent - quantity_received')
+                  ->comment('الفرق بين المرسل والمستلم');
             
-            $table->text('notes')->nullable();
-            $table->text('discrepancy_reason')->nullable(); // سبب الفرق
+            // ✅ الملاحظات
+            $table->text('notes')->nullable()->comment('ملاحظات عامة');
+            $table->text('discrepancy_reason')->nullable()->comment('سبب الفرق في الكمية');
+            
             $table->timestamps();
             
-            // Composite Indexes للـ queries المتكررة
-            $table->index(['warehouse_transfer_id', 'product_id']);
-            $table->index('created_at');
+            // ✅ Composite Indexes للـ queries المتكررة
             $table->index(['warehouse_transfer_id', 'product_id'], 'idx_transfer_product');
+            $table->index('created_at');
 
-            // Foreign Keys
+            // ✅ Foreign Keys
             $table->foreign('warehouse_transfer_id')
                   ->references('id')->on('warehouse_transfers')
                   ->onDelete('cascade');
