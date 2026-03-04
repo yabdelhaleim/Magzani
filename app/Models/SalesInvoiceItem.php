@@ -21,10 +21,14 @@ class SalesInvoiceItem extends Model
         'quantity',
         'base_quantity', // تم استبداله بـ quantity_in_base_unit
         'quantity_in_base_unit', // للتوافق
+        'weight', // ✅ الوزن (للمنتجات التي تُباع بالوزن)
         
         // الوحدة
         'unit_code',
         'conversion_factor',
+        'base_unit_type', // ✅ نوع الوحدة الأساسية (weight, volume, count, length)
+        'base_unit_code', // ✅ كود الوحدة الأساسية (kg, ton, piece, etc.)
+        'base_unit_label', // ✅ اسم الوحدة الأساسية بالعربي
         
         // الأسعار
         'price',
@@ -51,6 +55,7 @@ class SalesInvoiceItem extends Model
         'quantity' => 'decimal:3',
         'base_quantity' => 'decimal:3',
         'quantity_in_base_unit' => 'decimal:3',
+        'weight' => 'decimal:3',
         'conversion_factor' => 'decimal:4',
         'price' => 'decimal:2',
         'unit_price' => 'decimal:2',

@@ -17,7 +17,7 @@ class ProductWarehouse extends Pivot
         'warehouse_id',
         'quantity',
         'reserved_quantity',
-        'available_quantity',
+        
         'min_stock',
         'average_cost',
         'last_count_quantity',
@@ -29,7 +29,7 @@ class ProductWarehouse extends Pivot
     protected $casts = [
         'quantity' => 'decimal:3',
         'reserved_quantity' => 'decimal:3',
-        'available_quantity' => 'decimal:3',
+        
         'min_stock' => 'decimal:3',
         'average_cost' => 'decimal:2',
         'last_count_quantity' => 'decimal:3',
@@ -121,7 +121,6 @@ class ProductWarehouse extends Pivot
 
         $updates = [
             'quantity' => \DB::raw("quantity + {$quantity}"),
-            'available_quantity' => \DB::raw("quantity + {$quantity} - COALESCE(reserved_quantity, 0)"),
             'updated_at' => now(),
         ];
 
@@ -158,7 +157,6 @@ class ProductWarehouse extends Pivot
             ->where(\DB::raw('quantity - COALESCE(reserved_quantity, 0)'), '>=', $quantity)
             ->update([
                 'quantity' => \DB::raw("quantity - {$quantity}"),
-                'available_quantity' => \DB::raw("quantity - {$quantity} - COALESCE(reserved_quantity, 0)"),
                 'last_sale_date' => now(),
                 'updated_at' => now(),
             ]) > 0;
@@ -183,7 +181,6 @@ class ProductWarehouse extends Pivot
             ->where(\DB::raw('quantity - COALESCE(reserved_quantity, 0)'), '>=', $quantity)
             ->update([
                 'reserved_quantity' => \DB::raw("COALESCE(reserved_quantity, 0) + {$quantity}"),
-                'available_quantity' => \DB::raw("quantity - COALESCE(reserved_quantity, 0) - {$quantity}"),
                 'updated_at' => now(),
             ]) > 0;
     }
@@ -207,7 +204,6 @@ class ProductWarehouse extends Pivot
             ->where('warehouse_id', $this->warehouse_id)
             ->update([
                 'reserved_quantity' => \DB::raw("GREATEST(0, COALESCE(reserved_quantity, 0) - {$quantity})"),
-                'available_quantity' => \DB::raw("quantity - GREATEST(0, COALESCE(reserved_quantity, 0) - {$quantity})"),
                 'updated_at' => now(),
             ]) > 0;
     }
@@ -224,7 +220,6 @@ class ProductWarehouse extends Pivot
             ->where('warehouse_id', $this->warehouse_id)
             ->update([
                 'quantity' => $actualQuantity,
-                'available_quantity' => max(0, $actualQuantity - ($this->reserved_quantity ?? 0)),
                 'last_count_quantity' => $this->quantity,
                 'last_count_date' => now(),
                 'adjustment_total' => \DB::raw("COALESCE(adjustment_total, 0) + {$variance}"),

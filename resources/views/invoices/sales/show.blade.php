@@ -120,6 +120,8 @@
                     <tr>
                         <th class="p-3 text-right text-sm font-semibold text-gray-700">#</th>
                         <th class="p-3 text-right text-sm font-semibold text-gray-700">المنتج</th>
+                        <th class="p-3 text-right text-sm font-semibold text-gray-700">الوحدة</th>
+                        <th class="p-3 text-right text-sm font-semibold text-gray-700">⚖️ الوزن</th>
                         <th class="p-3 text-right text-sm font-semibold text-gray-700">الكمية</th>
                         <th class="p-3 text-right text-sm font-semibold text-gray-700">السعر</th>
                         <th class="p-3 text-right text-sm font-semibold text-gray-700">الخصم</th>
@@ -137,6 +139,31 @@
                             <div class="text-xs text-gray-500">كود: {{ $item->product->sku }}</div>
                             @endif
                         </td>
+                        {{-- ✅ الوحدة --}}
+                        <td class="p-3 text-right text-sm">
+                            @if($item->base_unit_label)
+                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-bold
+                                    {{ $item->base_unit_type === 'weight' ? 'bg-amber-100 text-amber-800' : 'bg-blue-100 text-blue-800' }}">
+                                    {{ $item->base_unit_type === 'weight' ? '⚖️' : '📦' }}
+                                    {{ $item->base_unit_label }}
+                                </span>
+                            @elseif($item->sellingUnit)
+                                <span class="text-sm text-gray-600">{{ $item->sellingUnit->unit_label ?? $item->unit_code }}</span>
+                            @else
+                                <span class="text-gray-400">—</span>
+                            @endif
+                        </td>
+                        {{-- ✅ الوزن --}}
+                        <td class="p-3 text-right text-sm">
+                            @if($item->weight && $item->weight > 0)
+                                <span class="font-semibold text-amber-700">
+                                    {{ number_format($item->weight, 3) }}
+                                    {{ $item->base_unit_label ?? 'كجم' }}
+                                </span>
+                            @else
+                                <span class="text-gray-400">—</span>
+                            @endif
+                        </td>
                         <td class="p-3 text-right text-sm">{{ number_format($item->quantity, 2) }}</td>
                         <td class="p-3 text-right text-sm">{{ number_format($item->price, 2) }} جنيه</td>
                         <td class="p-3 text-right text-sm text-red-600">{{ number_format($item->discount ?? 0, 2) }} جنيه</td>
@@ -145,7 +172,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="7" class="p-4 text-center text-gray-500">
+                        <td colspan="9" class="p-4 text-center text-gray-500">
                             لا توجد عناصر في هذه الفاتورة
                         </td>
                     </tr>
@@ -153,7 +180,7 @@
                 </tbody>
                 <tfoot class="bg-gray-50 border-t-2">
                     <tr>
-                        <td colspan="6" class="p-3 text-left font-bold text-gray-700">الإجمالي:</td>
+                        <td colspan="8" class="p-3 text-left font-bold text-gray-700">الإجمالي:</td>
                         <td class="p-3 text-right font-bold text-lg text-green-600">
                             {{ number_format($invoice->total, 2) }} جنيه
                         </td>

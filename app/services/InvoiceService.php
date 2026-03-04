@@ -487,21 +487,22 @@ class InvoiceService
                 // تجهيز بيانات الصنف للإدراج الجماعي
                 $invoiceItems[] = [
                     'sales_invoice_id' => $invoice->id,
-                    'invoice_id'       => $invoice->id,
                     'product_id'       => $item['product_id'],
-                    'selling_unit_id'  => $item['selling_unit_id'],
+                    'selling_unit_id'  => $item['selling_unit_id'] ?? null,
                     'quantity'         => round($item['quantity'], 3),
                     'base_quantity'    => $baseQuantity,
-                    'quantity_in_base_unit' => $baseQuantity,
+                    'weight'           => isset($item['weight']) && $item['weight'] ? round($item['weight'], 3) : null,
                     'unit_code'        => $sellingUnit->unit_code ?? 'piece',
+                    'base_unit_type'   => $item['base_unit_type'] ?? null,
+                    'base_unit_code'   => $item['base_unit_code'] ?? null,
+                    'base_unit_label'  => $item['base_unit_label'] ?? null,
                     'conversion_factor'=> $sellingUnit->conversion_factor,
-                    'price'            => round($item['price'], 2),
                     'unit_price'       => round($item['price'], 2),
-                    'discount'         => $itemCalc['discount'],
-                    'discount_percent' => $item['discount'] ?? 0,
+                    'cost_price'       => round($product->purchase_price ?? 0, 2),
+                    'discount_type'    => 'fixed',
+                    'discount_value'   => $itemCalc['discount'],
                     'discount_amount'  => $itemCalc['discount'],
-                    'tax'              => $itemCalc['tax'],
-                    'tax_rate'         => $item['tax_rate'] ?? 0,
+                    'tax_rate'         => round($item['tax_rate'] ?? 0, 2),
                     'tax_amount'       => $itemCalc['tax'],
                     'subtotal'         => $itemCalc['subtotal'],
                     'total'            => $itemCalc['total'],
@@ -526,12 +527,12 @@ class InvoiceService
                     ->where('warehouse_id', $data['warehouse_id'])
                     ->decrement('quantity', $update['quantity']);
                 
-                // تحديث الكمية المتاحة
+                // لم نعد نكتب مباشرة إلى العمود المحسوب `available_quantity`.
+                // تحديث `updated_at` فقط ليظهر التغيير في السجلات.
                 DB::table('product_warehouse')
                     ->where('product_id', $update['product_id'])
                     ->where('warehouse_id', $data['warehouse_id'])
                     ->update([
-                        'available_quantity' => DB::raw('quantity - COALESCE(reserved_quantity, 0)'),
                         'updated_at' => now()
                     ]);
             }
@@ -714,14 +715,13 @@ class InvoiceService
                     ->where('product_id', $update['product_id'])
                     ->where('warehouse_id', $invoice->warehouse_id)
                     ->increment('quantity', $update['quantity']);
-                
+
+                // لا نكتب مباشرة إلى العمود المحسوب `available_quantity` — السماح لقاعدة البيانات
+                // بحسابه تلقائياً من الأعمدة الأساسية. نقوم بتحديث الطابع الزمني فقط.
                 DB::table('product_warehouse')
                     ->where('product_id', $update['product_id'])
                     ->where('warehouse_id', $invoice->warehouse_id)
-                    ->update([
-                        'available_quantity' => DB::raw('quantity - COALESCE(reserved_quantity, 0)'),
-                        'updated_at' => now()
-                    ]);
+                    ->update(['updated_at' => now()]);
             }
             
             // ==================== معالجة رصيد العميل ====================
@@ -1093,20 +1093,17 @@ class InvoiceService
                         'product_id' => $update['product_id'],
                         'warehouse_id' => $data['warehouse_id'],
                         'quantity' => $update['quantity'],
-                        'available_quantity' => $update['quantity'],
                         'reserved_quantity' => 0,
                         'created_at' => now(),
                         'updated_at' => now(),
                     ]);
                 }
                 
+                // Allow DB to compute stored generated column; only touch updated_at
                 DB::table('product_warehouse')
                     ->where('product_id', $update['product_id'])
                     ->where('warehouse_id', $data['warehouse_id'])
-                    ->update([
-                        'available_quantity' => DB::raw('quantity - COALESCE(reserved_quantity, 0)'),
-                        'updated_at' => now()
-                    ]);
+                    ->update(['updated_at' => now()]);
             }
             
             // تحديث رصيد المورد
@@ -1179,14 +1176,11 @@ class InvoiceService
                     ->where('product_id', $item->product_id)
                     ->where('warehouse_id', $invoice->warehouse_id)
                     ->decrement('quantity', $baseQuantity);
-                
+
                 DB::table('product_warehouse')
                     ->where('product_id', $item->product_id)
                     ->where('warehouse_id', $invoice->warehouse_id)
-                    ->update([
-                        'available_quantity' => DB::raw('quantity - COALESCE(reserved_quantity, 0)'),
-                        'updated_at' => now()
-                    ]);
+                    ->update(['updated_at' => now()]);
             }
             
             // تحديث رصيد المورد

@@ -224,7 +224,7 @@ class SalesController extends Controller
         $customers = Customer::where('is_active', 1)->get();
         $warehouses = Warehouse::where('is_active', 1)->get();
         
-        // ✅ جلب المنتجات مع الوحدات والمخزون - متوافق مع Product Model
+        // ✅ جلب المنتجات مع الوحدات والمخزون والوحدة الأساسية - متوافق مع Product Model
         $products = Product::active()
             ->with([
                 'activeSellingUnits' => function($q) {
@@ -232,7 +232,8 @@ class SalesController extends Controller
                 },
                 'warehouses' => function($q) {
                     $q->where('warehouses.is_active', true);
-                }
+                },
+                'baseunit' // ✅ جلب الوحدة الأساسية من product_base_units
             ])
             ->get();
         
@@ -260,8 +261,12 @@ class SalesController extends Controller
                 'items.*.selling_unit_id' => 'required|exists:product_selling_units,id',
                 'items.*.quantity' => 'required|numeric|min:0.001',
                 'items.*.price' => 'required|numeric|min:0',
+                'items.*.weight' => 'nullable|numeric|min:0',
                 'items.*.discount' => 'nullable|numeric|min:0|max:100',
                 'items.*.tax_rate' => 'nullable|numeric|min:0|max:100',
+                'items.*.base_unit_type' => 'nullable|string|max:50',
+                'items.*.base_unit_code' => 'nullable|string|max:50',
+                'items.*.base_unit_label' => 'nullable|string|max:100',
             ]);
 
             // ✅ استخدام InvoiceService لإنشاء الفاتورة
@@ -335,7 +340,8 @@ class SalesController extends Controller
                 },
                 'warehouses' => function($q) {
                     $q->where('warehouses.is_active', true);
-                }
+                },
+                'baseunit' // ✅ جلب الوحدة الأساسية من product_base_units
             ])
             ->get();
         
@@ -363,8 +369,12 @@ class SalesController extends Controller
                 'items.*.selling_unit_id' => 'required|exists:product_selling_units,id',
                 'items.*.quantity' => 'required|numeric|min:0.001',
                 'items.*.price' => 'required|numeric|min:0',
+                'items.*.weight' => 'nullable|numeric|min:0',
                 'items.*.discount' => 'nullable|numeric|min:0|max:100',
                 'items.*.tax_rate' => 'nullable|numeric|min:0|max:100',
+                'items.*.base_unit_type' => 'nullable|string|max:50',
+                'items.*.base_unit_code' => 'nullable|string|max:50',
+                'items.*.base_unit_label' => 'nullable|string|max:100',
             ]);
 
             $invoice = $this->invoiceService->updateSalesInvoice($id, $validated);

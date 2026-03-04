@@ -10,7 +10,7 @@ document.addEventListener('alpine:init', () => {
         warehouseId: '',
         customerId: '',
         
-        // جميع بيانات المنتجات مع المخزون والوحدات
+        // جميع بيانات المنتجات مع المخزون والوحدات والوحدة الأساسية
         productsData: {!! json_encode($products->mapWithKeys(function($p) { 
             return [$p->id => [
                 'id' => $p->id,
@@ -21,19 +21,26 @@ document.addEventListener('alpine:init', () => {
                 'base_selling_price' => (float)($p->base_selling_price ?? 0),
                 'tax_rate' => (float)($p->tax_rate ?? 0),
                 'discount' => (float)($p->default_discount ?? 0),
+                // ✅ بيانات الوحدة الأساسية من product_base_units
+                'base_unit_type' => $p->baseunit->base_unit_type ?? 'count',
+                'base_unit_code' => $p->baseunit->base_unit_code ?? ($p->base_unit ?? 'piece'),
+                'base_unit_label' => $p->baseunit->base_unit_label ?? ($p->base_unit_label ?? 'قطعة'),
+                'base_unit_weight_kg' => (float)($p->baseunit->base_unit_weight_kg ?? 0),
+                'base_unit_purchase_price' => (float)($p->baseunit->base_purchase_price ?? $p->purchase_price ?? 0),
+                'base_unit_selling_price' => (float)($p->baseunit->base_selling_price ?? $p->selling_price ?? 0),
                 // مخزون المنتج في كل مخزن (بالوحدة الأساسية)
                 'stock' => $p->warehouses->mapWithKeys(function($w) {
                     return [$w->id => (float)$w->pivot->quantity];
                 })->toArray(),
                 // وحدات البيع المتاحة للمنتج
-                'selling_units' => $p->sellingUnits->map(function($su) {
+                'selling_units' => $p->activeSellingUnits->map(function($su) {
                     return [
                         'id' => $su->id,
                         'unit_code' => $su->unit_code,
                         'unit_label' => $su->unit_label,
-                        'conversion_factor' => (float)$su->conversion_factor,
-                        'selling_price' => (float)$su->selling_price,
-                        'purchase_price' => (float)$su->purchase_price,
+                        'conversion_factor' => (float)($su->conversion_factor ?? $su->quantity_in_base_unit ?? 1),
+                        'selling_price' => (float)($su->unit_selling_price ?? 0),
+                        'purchase_price' => (float)($su->unit_purchase_price ?? 0),
                         'is_default' => (bool)$su->is_default
                     ];
                 })->toArray()
@@ -49,7 +56,12 @@ document.addEventListener('alpine:init', () => {
                 unit_label: '',
                 conversion_factor: 1,
                 quantity: 1, 
+                weight: '',
                 price: 0, 
+                base_unit_price: 0,
+                base_unit_type: 'count',
+                base_unit_code: '',
+                base_unit_label: '',
                 tax_rate: 0,
                 discount: 0,
                 total: 0,
@@ -65,6 +77,12 @@ document.addEventListener('alpine:init', () => {
         grandTotal: 0,
         paid: 0,
         remaining: 0,
+
+        // ✅ التحقق هل المنتج يُباع بالوزن
+        isWeightBased(productId) {
+            if (!productId || !this.productsData[productId]) return false;
+            return this.productsData[productId].base_unit_type === 'weight';
+        },
 
         // جلب الكمية المتاحة للمنتج في المخزن المختار (بالوحدة الأساسية)
         getAvailableStock(productId) {
@@ -95,8 +113,17 @@ document.addEventListener('alpine:init', () => {
             const productData = this.productsData[item.product_id];
             item.product_name = productData.name;
             
+            // ✅ تحميل بيانات الوحدة الأساسية
+            item.base_unit_type = productData.base_unit_type;
+            item.base_unit_code = productData.base_unit_code;
+            item.base_unit_label = productData.base_unit_label;
+            item.base_unit_price = productData.base_unit_selling_price;
+            
             // تحديث الكمية المتاحة بالوحدة الأساسية
             item.available_stock = this.getAvailableStock(item.product_id);
+            
+            // ✅ إعادة تعيين الوزن
+            item.weight = '';
             
             // تحديد الوحدة الافتراضية
             const defaultUnit = productData.selling_units.find(u => u.is_default);
@@ -108,10 +135,10 @@ document.addEventListener('alpine:init', () => {
                 this.selectUnit(index, firstUnit.id);
             } else {
                 // إذا لم توجد وحدات بيع، استخدم الوحدة الأساسية
-                item.unit_code = productData.base_unit;
-                item.unit_label = this.getUnitLabel(productData.base_unit);
+                item.unit_code = productData.base_unit_code;
+                item.unit_label = productData.base_unit_label;
                 item.conversion_factor = 1;
-                item.price = productData.base_selling_price;
+                item.price = productData.base_unit_selling_price;
                 item.tax_rate = productData.tax_rate;
                 item.discount = productData.discount;
                 item.available_stock_in_unit = item.available_stock;
@@ -151,6 +178,46 @@ document.addEventListener('alpine:init', () => {
             this.calculateItemTotal(index);
         },
 
+        // ✅ حساب السعر تلقائياً عند إدخال الكمية
+        autoCalculatePrice(index) {
+            const item = this.items[index];
+            if (!item.product_id) return;
+            
+            const productData = this.productsData[item.product_id];
+            const qty = parseFloat(item.quantity) || 0;
+            
+            // ✅ إذا كان المنتج يُباع بالوزن، نحسب السعر = الكمية × سعر الوحدة الأساسية
+            if (item.base_unit_type === 'weight') {
+                const weight = parseFloat(item.weight) || 0;
+                if (weight > 0) {
+                    // السعر = الوزن × سعر الوحدة الأساسية (مثلاً: 50 كجم × 30 ج.م/كجم = 1500 ج.م)
+                    item.price = Math.round(weight * item.base_unit_price * 100) / 100;
+                }
+            } else {
+                // ✅ للمنتجات العادية (بالقطعة/الكمية): السعر = سعر الوحدة المختارة
+                // السعر يبقى كما هو (سعر الوحدة المختارة)
+                // لا نغير السعر هنا لأنه يتحدد من الوحدة المختارة
+            }
+            
+            this.checkStockAvailability(index);
+            this.calculateItemTotal(index);
+        },
+
+        // ✅ حساب السعر عند تغيير الوزن
+        onWeightChange(index) {
+            const item = this.items[index];
+            if (!item.product_id) return;
+            
+            const weight = parseFloat(item.weight) || 0;
+            
+            if (weight > 0 && item.base_unit_price > 0) {
+                // السعر = الوزن × سعر الوحدة الأساسية
+                item.price = Math.round(weight * item.base_unit_price * 100) / 100;
+            }
+            
+            this.calculateItemTotal(index);
+        },
+
         // التحقق من توفر الكمية
         checkStockAvailability(index) {
             const item = this.items[index];
@@ -186,6 +253,11 @@ document.addEventListener('alpine:init', () => {
             item.unit_label = '';
             item.conversion_factor = 1;
             item.price = 0;
+            item.base_unit_price = 0;
+            item.base_unit_type = 'count';
+            item.base_unit_code = '';
+            item.base_unit_label = '';
+            item.weight = '';
             item.tax_rate = 0;
             item.discount = 0;
             item.available_stock = 0;
@@ -202,7 +274,12 @@ document.addEventListener('alpine:init', () => {
                 unit_label: '',
                 conversion_factor: 1,
                 quantity: 1, 
+                weight: '',
                 price: 0, 
+                base_unit_price: 0,
+                base_unit_type: 'count',
+                base_unit_code: '',
+                base_unit_label: '',
                 tax_rate: 0,
                 discount: 0,
                 total: 0,
@@ -269,6 +346,18 @@ document.addEventListener('alpine:init', () => {
                 return false;
             }
 
+            // ✅ التحقق من إدخال الوزن للمنتجات التي تُباع بالوزن
+            const missingWeight = this.items.filter(item => {
+                if (!item.product_id) return false;
+                return item.base_unit_type === 'weight' && (!item.weight || parseFloat(item.weight) <= 0);
+            });
+
+            if (missingWeight.length > 0) {
+                const itemsList = missingWeight.map(item => `- ${item.product_name}`).join('\n');
+                alert(`⚠️ يجب إدخال الوزن للأصناف التالية:\n\n${itemsList}`);
+                return false;
+            }
+
             // التحقق من وجود أصناف تتجاوز المخزون المتاح
             const outOfStockItems = this.items.filter(item => {
                 if (!item.product_id) return false;
@@ -295,15 +384,38 @@ document.addEventListener('alpine:init', () => {
                 'piece': 'قطعة',
                 'kg': 'كيلو جرام',
                 'ton': 'طن',
+                'gram': 'جرام',
+                'quintal': 'قنطار',
                 'liter': 'لتر',
+                'milliliter': 'مللتر',
+                'gallon': 'جالون',
                 'meter': 'متر',
+                'cm': 'سنتيمتر',
                 'box': 'صندوق',
                 'carton': 'كرتونة',
                 'bag': 'شيكارة',
-                'roll': 'رولة',
-                'pack': 'عبوة'
+                'sack': 'جوال',
+                'roll': 'لفة',
+                'pack': 'عبوة',
+                'dozen': 'دستة',
+                'bundle': 'ربطة',
+                'bottle': 'زجاجة',
+                'can': 'علبة',
+                'unit': 'وحدة'
             };
             return unitLabels[unitCode] || unitCode;
+        },
+
+        // ✅ أيقونة نوع الوحدة
+        getUnitTypeIcon(unitType) {
+            const icons = {
+                'weight': '⚖️',
+                'volume': '🧪',
+                'length': '📏',
+                'count': '🔢',
+                'packaging': '📦'
+            };
+            return icons[unitType] || '📦';
         }
     }));
 });
@@ -400,16 +512,21 @@ document.addEventListener('alpine:init', () => {
                 <table class="w-full text-sm">
                     <thead class="bg-gradient-to-r from-gray-100 to-gray-200 border-b-2 border-gray-300">
                         <tr>
-                            <th class="px-4 py-4 text-right font-bold text-gray-700">#</th>
-                            <th class="px-4 py-4 text-right font-bold text-gray-700">الصنف</th>
-                            <th class="px-4 py-4 text-right font-bold text-gray-700">الوحدة</th>
-                            <th class="px-4 py-4 text-center font-bold text-gray-700 bg-green-50">المتاح</th>
-                            <th class="px-4 py-4 text-center font-bold text-gray-700">الكمية</th>
-                            <th class="px-4 py-4 text-center font-bold text-gray-700">السعر</th>
-                            <th class="px-4 py-4 text-center font-bold text-gray-700">خصم %</th>
-                            <th class="px-4 py-4 text-center font-bold text-gray-700">ضريبة %</th>
-                            <th class="px-4 py-4 text-center font-bold text-gray-700 bg-blue-50">الإجمالي</th>
-                            <th class="px-4 py-4 text-center font-bold text-gray-700">حذف</th>
+                            <th class="px-3 py-4 text-right font-bold text-gray-700">#</th>
+                            <th class="px-3 py-4 text-right font-bold text-gray-700">الصنف</th>
+                            <th class="px-3 py-4 text-right font-bold text-gray-700">الوحدة</th>
+                            <th class="px-3 py-4 text-center font-bold text-gray-700 bg-amber-50">
+                                <span class="flex items-center justify-center gap-1">⚖️ الوزن</span>
+                            </th>
+                            <th class="px-3 py-4 text-center font-bold text-gray-700 bg-green-50">المتاح</th>
+                            <th class="px-3 py-4 text-center font-bold text-gray-700">الكمية</th>
+                            <th class="px-3 py-4 text-center font-bold text-gray-700">
+                                <span class="flex items-center justify-center gap-1">💰 السعر</span>
+                            </th>
+                            <th class="px-3 py-4 text-center font-bold text-gray-700">خصم %</th>
+                            <th class="px-3 py-4 text-center font-bold text-gray-700">ضريبة %</th>
+                            <th class="px-3 py-4 text-center font-bold text-gray-700 bg-blue-50">الإجمالي</th>
+                            <th class="px-3 py-4 text-center font-bold text-gray-700">حذف</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-200">
@@ -417,10 +534,10 @@ document.addEventListener('alpine:init', () => {
                             <tr class="hover:bg-blue-50 transition-colors" 
                                 :class="{ 'bg-red-50 border-l-4 border-red-500': item.show_stock_warning }">
                                 
-                                <td class="px-4 py-3 font-bold text-gray-600" x-text="index + 1"></td>
+                                <td class="px-3 py-3 font-bold text-gray-600" x-text="index + 1"></td>
                                 
                                 <!-- اختيار المنتج -->
-                                <td class="px-4 py-3">
+                                <td class="px-3 py-3">
                                     <select :name="'items[' + index + '][product_id]'" 
                                             x-model="item.product_id"
                                             @change="loadProductData(index)"
@@ -431,6 +548,24 @@ document.addEventListener('alpine:init', () => {
                                             <option value="{{ $product->id }}">{{ $product->name }}</option>
                                         @endforeach
                                     </select>
+                                    <!-- ✅ عرض نوع الوحدة الأساسية -->
+                                    <div x-show="item.product_id && item.base_unit_label" class="mt-1 flex items-center gap-1">
+                                        <span class="text-xs" x-text="getUnitTypeIcon(item.base_unit_type)"></span>
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold"
+                                              :class="{
+                                                  'bg-amber-100 text-amber-800': item.base_unit_type === 'weight',
+                                                  'bg-blue-100 text-blue-800': item.base_unit_type === 'volume',
+                                                  'bg-green-100 text-green-800': item.base_unit_type === 'count',
+                                                  'bg-purple-100 text-purple-800': item.base_unit_type === 'length',
+                                                  'bg-gray-100 text-gray-800': !['weight','volume','count','length'].includes(item.base_unit_type)
+                                              }"
+                                              x-text="item.base_unit_label">
+                                        </span>
+                                        <span x-show="item.base_unit_price > 0" 
+                                              class="text-xs text-gray-500"
+                                              x-text="'(' + item.base_unit_price.toFixed(2) + ' ج.م/' + item.base_unit_label + ')'">
+                                        </span>
+                                    </div>
                                     <p x-show="!warehouseId && item.product_id" 
                                        class="text-red-600 text-xs mt-1 font-semibold">
                                         ⚠️ اختر المخزن أولاً
@@ -438,7 +573,7 @@ document.addEventListener('alpine:init', () => {
                                 </td>
 
                                 <!-- اختيار الوحدة -->
-                                <td class="px-4 py-3">
+                                <td class="px-3 py-3">
                                     <select x-show="item.product_id && getSellingUnits(item.product_id).length > 0"
                                             :name="'items[' + index + '][selling_unit_id]'"
                                             x-model="item.selling_unit_id"
@@ -453,8 +588,35 @@ document.addEventListener('alpine:init', () => {
                                           x-text="item.unit_label"></span>
                                 </td>
 
+                                <!-- ✅ الوزن (يظهر فقط للمنتجات التي تُباع بالوزن) -->
+                                <td class="px-3 py-3 bg-amber-50/50">
+                                    <div x-show="item.product_id && item.base_unit_type === 'weight'">
+                                        <div class="flex items-center gap-1">
+                                            <input type="number" 
+                                                   :name="'items[' + index + '][weight]'"
+                                                   x-model="item.weight" 
+                                                   @input="onWeightChange(index)"
+                                                   class="w-24 border-2 border-amber-300 rounded-lg px-2 py-2 text-sm font-bold text-center bg-amber-50 focus:ring-2 focus:ring-amber-500 transition-all" 
+                                                   min="0.001" step="0.001" 
+                                                   :placeholder="item.base_unit_label">
+                                            <span class="text-xs font-bold text-amber-700" x-text="item.base_unit_label"></span>
+                                        </div>
+                                        <div x-show="item.weight > 0 && item.base_unit_price > 0" class="mt-1">
+                                            <span class="text-xs text-amber-600 font-semibold"
+                                                  x-text="'= ' + (parseFloat(item.weight) * item.base_unit_price).toFixed(2) + ' ج.م'">
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div x-show="item.product_id && item.base_unit_type !== 'weight'" class="text-center">
+                                        <span class="text-xs text-gray-400">—</span>
+                                    </div>
+                                    <div x-show="!item.product_id" class="text-center">
+                                        <span class="text-xs text-gray-300">—</span>
+                                    </div>
+                                </td>
+
                                 <!-- الكمية المتاحة -->
-                                <td class="px-4 py-3 text-center bg-green-50">
+                                <td class="px-3 py-3 text-center bg-green-50">
                                     <div class="flex flex-col items-center gap-1">
                                         <span x-show="item.product_id && warehouseId"
                                               x-text="item.available_stock_in_unit"
@@ -477,28 +639,35 @@ document.addEventListener('alpine:init', () => {
                                 </td>
 
                                 <!-- الكمية -->
-                                <td class="px-4 py-3">
+                                <td class="px-3 py-3">
                                     <input type="number" 
                                            :name="'items[' + index + '][quantity]'"
                                            x-model="item.quantity" 
-                                           @input="calculateItemTotal(index)"
+                                           @input="autoCalculatePrice(index)"
                                            class="w-24 border-2 rounded-lg px-3 py-2 text-sm font-bold text-center focus:ring-2 focus:ring-blue-500 transition-all" 
                                            :class="{ 'border-red-500 bg-red-50': item.show_stock_warning }"
                                            min="0.001" step="0.001" required>
                                 </td>
 
                                 <!-- السعر -->
-                                <td class="px-4 py-3">
+                                <td class="px-3 py-3">
                                     <input type="number" 
                                            :name="'items[' + index + '][price]'"
                                            x-model="item.price" 
                                            @input="calculateItemTotal(index)"
                                            class="w-28 border-2 border-gray-300 rounded-lg px-3 py-2 text-sm font-bold text-center focus:ring-2 focus:ring-green-500 transition-all" 
+                                           :class="{ 'bg-amber-50 border-amber-300': item.base_unit_type === 'weight' }"
                                            min="0" step="0.01" required>
+                                    <!-- ✅ عرض سعر الوحدة الأساسية -->
+                                    <div x-show="item.product_id && item.base_unit_price > 0" class="mt-1 text-center">
+                                        <span class="text-xs text-gray-500"
+                                              x-text="item.base_unit_price.toFixed(2) + ' ج.م/' + item.base_unit_label">
+                                        </span>
+                                    </div>
                                 </td>
 
                                 <!-- الخصم -->
-                                <td class="px-4 py-3">
+                                <td class="px-3 py-3">
                                     <input type="number" 
                                            :name="'items[' + index + '][discount]'"
                                            x-model="item.discount" 
@@ -508,7 +677,7 @@ document.addEventListener('alpine:init', () => {
                                 </td>
 
                                 <!-- الضريبة -->
-                                <td class="px-4 py-3">
+                                <td class="px-3 py-3">
                                     <input type="number" 
                                            :name="'items[' + index + '][tax_rate]'"
                                            x-model="item.tax_rate" 
@@ -518,12 +687,12 @@ document.addEventListener('alpine:init', () => {
                                 </td>
 
                                 <!-- الإجمالي -->
-                                <td class="px-4 py-3 text-center bg-blue-50">
+                                <td class="px-3 py-3 text-center bg-blue-50">
                                     <span class="font-bold text-lg text-blue-700" x-text="item.total.toFixed(2) + ' ج.م'"></span>
                                 </td>
 
                                 <!-- حذف -->
-                                <td class="px-4 py-3 text-center">
+                                <td class="px-3 py-3 text-center">
                                     <button type="button" 
                                             @click="removeItem(index)"
                                             class="text-red-600 hover:text-red-800 hover:bg-red-100 rounded-lg p-2 transition-all font-bold text-lg">
@@ -533,9 +702,12 @@ document.addEventListener('alpine:init', () => {
                                     </button>
                                 </td>
 
-                                <!-- Hidden inputs للوحدة -->
+                                <!-- Hidden inputs للوحدة والوزن -->
                                 <input type="hidden" :name="'items[' + index + '][conversion_factor]'" x-model="item.conversion_factor">
                                 <input type="hidden" :name="'items[' + index + '][unit_code]'" x-model="item.unit_code">
+                                <input type="hidden" :name="'items[' + index + '][base_unit_type]'" x-model="item.base_unit_type">
+                                <input type="hidden" :name="'items[' + index + '][base_unit_code]'" x-model="item.base_unit_code">
+                                <input type="hidden" :name="'items[' + index + '][base_unit_label]'" x-model="item.base_unit_label">
                             </tr>
                         </template>
                     </tbody>
