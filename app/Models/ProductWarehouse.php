@@ -232,3 +232,19 @@ class ProductWarehouse extends Pivot
             ]) > 0;
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

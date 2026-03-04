@@ -157,6 +157,7 @@
                 </div>
             </div>
             <p class="text-purple-100 text-sm mb-1">إجمالي القيمة</p>
+            {{-- ✅ الإصلاح: total_value محسوب من الـ Service --}}
             <h3 class="text-3xl font-bold">{{ number_format($stats['total_value'] ?? 0, 2) }} ج.م</h3>
         </div>
 
@@ -200,7 +201,7 @@
                     <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">اسم المنتج</th>
                     <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">كود المنتج</th>
                     <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الكمية</th>
-                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">متوسط التكلفة</th>
+                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">سعر البيع</th>
                     <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">القيمة الإجمالية</th>
                     <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الحد الأدنى</th>
                     <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الحالة</th>
@@ -228,27 +229,29 @@
                             {{ number_format($item->quantity) }}
                         </span>
                     </td>
+                    {{-- ✅ الإصلاح: استخدام selling_price بدل average_cost --}}
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                        {{ number_format($item->average_cost, 2) }} ج.م
+                        {{ number_format($item->product->selling_price ?? 0, 2) }} ج.م
                     </td>
+                    {{-- ✅ الإصلاح: القيمة الإجمالية = الكمية × selling_price --}}
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-800">
-                        {{ number_format($item->quantity * $item->average_cost, 2) }} ج.م
+                        {{ number_format($item->quantity * ($item->product->selling_price ?? 0), 2) }} ج.م
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                         {{ $item->min_stock ?? '-' }}
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
-                        @if($item->quantity <= $item->min_stock)
+                        @if($item->quantity <= 0)
+                            <span class="px-2 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-800">
+                                غير متوفر
+                            </span>
+                        @elseif($item->quantity <= $item->min_stock)
                             <span class="px-2 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800">
                                 قريب من النفاد
                             </span>
-                        @elseif($item->quantity > 0)
+                        @else
                             <span class="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">
                                 متوفر
-                            </span>
-                        @else
-                            <span class="px-2 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-800">
-                                غير متوفر
                             </span>
                         @endif
                     </td>

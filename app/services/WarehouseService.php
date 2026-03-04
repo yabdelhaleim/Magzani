@@ -151,44 +151,48 @@ class WarehouseService
     /**
      * ✅ جلب تفاصيل المخزن الكاملة - محسّن مع Cache
      */
-    public function getWarehouseDetails(int $warehouseId): array
-    {
-        $cacheKey = "warehouse_details_{$warehouseId}";
+   public function getWarehouseDetails(int $warehouseId): array
+{
+    $cacheKey = "warehouse_details_{$warehouseId}";
 
-        return Cache::remember($cacheKey, 300, function () use ($warehouseId) {
+    return Cache::remember($cacheKey, 300, function () use ($warehouseId) {
+        
+        $warehouse = Warehouse::with([
+'productWarehouses.product' => function($q) {
+    $q->select('id', 'name', 'code', 'sku', 'unit', 'is_active', 'selling_price'); // ✅ أضف selling_price
+},
+            'manager:id,name,email',
+        ])->findOrFail($warehouseId);
+
+        $products = $warehouse->productWarehouses;
+        
+        $stats = [
+            'total_products'    => $products->count(),
+            'active_products'   => $products->filter(fn($p) => $p->product?->is_active)->count(),
+            'total_quantity'    => $products->sum('quantity'),
+            'reserved_quantity' => $products->sum('reserved_quantity'),
+            'available_quantity'=> $products->sum(fn($p) => $p->quantity - ($p->reserved_quantity ?? 0)),
+            'low_stock_items'   => $products->filter(fn($p) => $p->quantity <= $p->min_stock)->count(),
+            'out_of_stock_items'=> $products->filter(fn($p) => $p->quantity <= 0)->count(),
             
-            $warehouse = Warehouse::with([
-                'productWarehouses.product' => function($q) {
-                    $q->select('id', 'name', 'code', 'sku', 'unit', 'is_active');
-                },
-                'manager:id,name,email',
-            ])->findOrFail($warehouseId);
+            // ✅ إضافة حساب القيمة الإجمالية
+            'total_value' => $products->sum(
+                fn($p) => $p->quantity * ($p->product?->selling_price ?? 0)
+            ),
+        ];
 
-            $products = $warehouse->productWarehouses;
-            
-            // حساب الإحصائيات من الـ Collection
-            $stats = [
-                'total_products' => $products->count(),
-                'active_products' => $products->filter(fn($p) => $p->product?->is_active)->count(),
-                'total_quantity' => $products->sum('quantity'),
-                'reserved_quantity' => $products->sum('reserved_quantity'),
-                'available_quantity' => $products->sum(fn($p) => $p->quantity - ($p->reserved_quantity ?? 0)),
-                'low_stock_items' => $products->filter(fn($p) => $p->quantity <= $p->min_stock)->count(),
-                'out_of_stock_items' => $products->filter(fn($p) => $p->quantity <= 0)->count(),
-            ];
+        $lowStockProducts = $products->filter(function($p) {
+            return $p->quantity <= $p->min_stock && $p->product?->is_active;
+        })->sortBy('quantity')->values();
 
-            $lowStockProducts = $products->filter(function($p) {
-                return $p->quantity <= $p->min_stock && $p->product?->is_active;
-            })->sortBy('quantity')->values();
-
-            return [
-                'warehouse' => $warehouse,
-                'products' => $products,
-                'stats' => $stats,
-                'lowStock' => $lowStockProducts,
-            ];
-        });
-    }
+        return [
+            'warehouse' => $warehouse,
+            'products'  => $products,
+            'stats'     => $stats,
+            'lowStock'  => $lowStockProducts,
+        ];
+    });
+}
 
     /**
      * ✅ إضافة منتج للمخزن

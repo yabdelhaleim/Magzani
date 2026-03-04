@@ -19,73 +19,46 @@ class Product extends Model
     use ProductStockManagement;
 
     protected $fillable = [
-        'name',
-        'code',
-        'sku',
-        'barcode',
-        'description',
-        'category_id',
-        'brand_id',
-        'unit_id',
-        'base_unit',
-        'base_unit_label',
-        'purchase_price',
-        'selling_price',
-        'min_selling_price',
-        'wholesale_price',
-        'tax_rate',
-        'default_discount',
-        'profit_margin',
-        'stock_alert_quantity',
-        'reorder_level',
-        'reorder_quantity',
-        'min_stock',
-        'max_stock',
-        'weight',
-        'dimensions',
-        'image',
-        'is_active',
-        'is_featured',
-        'has_expiry',
-        'track_serial',
-        'meta_title',
-        'meta_description',
-        'meta_keywords',
-        'category',
-        'notes',
-        'status',
+        'name', 'code', 'sku', 'barcode', 'description',
+        'category_id', 'brand_id', 'unit_id',
+        'base_unit', 'base_unit_label',
+        'purchase_price', 'selling_price', 'min_selling_price', 'wholesale_price',
+        'tax_rate', 'default_discount', 'profit_margin',
+        'stock_alert_quantity', 'reorder_level', 'reorder_quantity',
+        'min_stock', 'max_stock', 'weight', 'dimensions', 'image',
+        'is_active', 'is_featured', 'has_expiry', 'track_serial',
+        'meta_title', 'meta_description', 'meta_keywords',
+        'category', 'notes', 'status',
     ];
 
     protected $casts = [
-        'purchase_price' => 'decimal:2',
-        'selling_price' => 'decimal:2',
-        'min_selling_price' => 'decimal:2',
-        'wholesale_price' => 'decimal:2',
-        'tax_rate' => 'decimal:2',
-        'default_discount' => 'decimal:2',
-        'profit_margin' => 'decimal:2',
-        'stock_alert_quantity' => 'decimal:3',
-        'reorder_level' => 'decimal:3',
-        'reorder_quantity' => 'decimal:3',
-        'min_stock' => 'decimal:3',
-        'max_stock' => 'decimal:3',
-        'weight' => 'decimal:3',
-        'is_active' => 'boolean',
-        'is_featured' => 'boolean',
-        'has_expiry' => 'boolean',
-        'track_serial' => 'boolean',
+        'purchase_price'      => 'decimal:2',
+        'selling_price'       => 'decimal:2',
+        'min_selling_price'   => 'decimal:2',
+        'wholesale_price'     => 'decimal:2',
+        'tax_rate'            => 'decimal:2',
+        'default_discount'    => 'decimal:2',
+        'profit_margin'       => 'decimal:2',
+        'stock_alert_quantity'=> 'decimal:3',
+        'reorder_level'       => 'decimal:3',
+        'reorder_quantity'    => 'decimal:3',
+        'min_stock'           => 'decimal:3',
+        'max_stock'           => 'decimal:3',
+        'weight'              => 'decimal:3',
+        'is_active'           => 'boolean',
+        'is_featured'         => 'boolean',
+        'has_expiry'          => 'boolean',
+        'track_serial'        => 'boolean',
     ];
 
     /* ===========================
-     * 🔗 RELATIONSHIPS
+     * RELATIONSHIPS
      * =========================== */
 
     public function basePricing(): HasOne
     {
         return $this->hasOne(ProductBasePricing::class, 'product_id')
-            ->where('is_active', true)
-            ->where('is_current', true)
-            ->latest();
+            ->where('is_active', true)->where('is_current', true)->latest();
     }
 
     public function allBasePricing(): HasMany
@@ -107,21 +80,18 @@ class Product extends Model
 
     public function defaultSellingUnit(): HasOne
     {
-        return $this->hasOne(ProductSellingUnit::class)
-            ->where('is_default', true);
+        return $this->hasOne(ProductSellingUnit::class)->where('is_default', true);
     }
 
     public function baseSellingUnit(): HasOne
     {
-        return $this->hasOne(ProductSellingUnit::class)
-            ->where('is_base', true);
+        return $this->hasOne(ProductSellingUnit::class)->where('is_base', true);
     }
 
     public function activeSellingUnits(): HasMany
     {
         return $this->hasMany(ProductSellingUnit::class)
-            ->where('is_active', true)
-            ->ordered();
+            ->where('is_active', true)->ordered();
     }
 
     public function category(): BelongsTo
@@ -134,170 +104,136 @@ class Product extends Model
         return $this->belongsToMany(Warehouse::class, 'product_warehouse')
             ->using(ProductWarehouse::class)
             ->withPivot([
-                'quantity',
-                'reserved_quantity',
-                'available_quantity',
-                'min_stock',
-                'average_cost',
-                'last_count_quantity',
-                'last_count_date',
-                'adjustment_total',
+                'quantity', 'reserved_quantity', 'available_quantity',
+                'min_stock', 'average_cost', 'last_count_quantity',
+                'last_count_date', 'adjustment_total',
             ])
             ->withTimestamps();
     }
 
-    public function salesInvoiceItems(): HasMany
-    {
-        return $this->hasMany(SalesInvoiceItem::class);
-    }
+    public function salesInvoiceItems(): HasMany    { return $this->hasMany(SalesInvoiceItem::class); }
+    public function purchaseInvoiceItems(): HasMany { return $this->hasMany(PurchaseInvoiceItem::class); }
+    public function salesReturnItems(): HasMany     { return $this->hasMany(SalesReturnItem::class); }
+    public function purchaseReturnItems(): HasMany  { return $this->hasMany(PurchaseReturnItem::class); }
+    public function inventoryMovements(): HasMany   { return $this->hasMany(InventoryMovement::class); }
+    public function stockCountItems(): HasMany      { return $this->hasMany(StockCountItem::class); }
 
-    public function purchaseInvoiceItems(): HasMany
-    {
-        return $this->hasMany(PurchaseInvoiceItem::class);
-    }
-
-    public function salesReturnItems(): HasMany
-    {
-        return $this->hasMany(SalesReturnItem::class);
-    }
-
-    public function purchaseReturnItems(): HasMany
-    {
-        return $this->hasMany(PurchaseReturnItem::class);
-    }
-
-    public function inventoryMovements(): HasMany
-    {
-        return $this->hasMany(InventoryMovement::class);
-    }
-
-    public function stockCountItems(): HasMany
-    {
-        return $this->hasMany(StockCountItem::class);
-    }
     public function baseunit(): HasOne
     {
         return $this->hasOne(ProductBaseUnit::class, 'product_id');
     }
 
     /* ===========================
-     * 📊 STOCK ACCESSORS (جديد)
+     * 📊 STOCK ACCESSORS
      * =========================== */
 
     /**
-     * ✅ إجمالي المخزون في كل المخازن
+     * ✅ إجمالي المخزون - يدعم 3 حالات:
+     *   1. withSum('warehouses as total_stock', 'quantity')  ← من index()
+     *   2. with('warehouses') مع withPivot               ← من show()
+     *   3. query مباشر على DB                            ← fallback
      */
     public function getTotalStockAttribute(): float
     {
-        if ($this->relationLoaded('warehouses')) {
-            return (float) $this->warehouses->sum('pivot.quantity');
+        $attrs = $this->getAttributes();
+
+        // ✅ 1: withSum نتيجته بتتخزن في attributes مباشرة
+        if (array_key_exists('total_stock', $attrs) && $attrs['total_stock'] !== null) {
+            return (float) $attrs['total_stock'];
         }
-        
+
+        // ✅ 2: اسم تلقائي في بعض إصدارات Laravel
+        if (array_key_exists('warehouses_sum_quantity', $attrs) && $attrs['warehouses_sum_quantity'] !== null) {
+            return (float) $attrs['warehouses_sum_quantity'];
+        }
+
+        // ✅ 3: العلاقة محملة مع pivot (from show/edit)
+        if ($this->relationLoaded('warehouses')) {
+            return (float) $this->warehouses->sum(fn($w) => (float) ($w->pivot->quantity ?? 0));
+        }
+
+        // ✅ 4: query مباشر كآخر حل
         return (float) DB::table('product_warehouse')
             ->where('product_id', $this->id)
             ->sum('quantity');
     }
 
-    /**
-     * ✅ إجمالي الكمية المتاحة (غير المحجوزة)
-     */
     public function getTotalAvailableAttribute(): float
     {
         if ($this->relationLoaded('warehouses')) {
-            return (float) $this->warehouses->sum('pivot.available_quantity');
+            return (float) $this->warehouses->sum(fn($w) => (float) ($w->pivot->available_quantity ?? 0));
         }
-        
+
         return (float) DB::table('product_warehouse')
             ->where('product_id', $this->id)
             ->sum(DB::raw('GREATEST(0, quantity - COALESCE(reserved_quantity, 0))'));
     }
 
-    /**
-     * ✅ إجمالي الكمية المحجوزة
-     */
     public function getTotalReservedAttribute(): float
     {
         if ($this->relationLoaded('warehouses')) {
-            return (float) $this->warehouses->sum('pivot.reserved_quantity');
+            return (float) $this->warehouses->sum(fn($w) => (float) ($w->pivot->reserved_quantity ?? 0));
         }
-        
+
         return (float) DB::table('product_warehouse')
             ->where('product_id', $this->id)
             ->sum('reserved_quantity');
     }
 
-    /**
-     * ✅ حالة المخزون (نفذ / منخفض / متوفر)
-     */
     public function getStockStatusAttribute(): string
     {
         $total = $this->total_stock;
-        $alert = $this->stock_alert_quantity ?? 10;
-        
-        if ($total == 0) return 'نفذ';
+        $alert = (float) ($this->stock_alert_quantity ?? 10);
+        if ($total == 0)      return 'نفذ';
         if ($total <= $alert) return 'منخفض';
         return 'متوفر';
     }
 
-    /**
-     * ✅ لون حالة المخزون (للعرض)
-     */
     public function getStockStatusColorAttribute(): string
     {
-        return match($this->stock_status) {
-            'نفذ' => 'red',
+        return match ($this->stock_status) {
+            'نفذ'   => 'red',
             'منخفض' => 'yellow',
             'متوفر' => 'green',
-            default => 'gray'
+            default => 'gray',
         };
     }
 
-    /**
-     * ✅ هل المخزون منخفض؟
-     */
     public function getIsLowStockAttribute(): bool
     {
-        $total = $this->total_stock;
-        $alert = $this->stock_alert_quantity ?? 10;
-        return $total > 0 && $total <= $alert;
+        $alert = (float) ($this->stock_alert_quantity ?? 10);
+        return $this->total_stock > 0 && $this->total_stock <= $alert;
     }
 
-    /**
-     * ✅ هل المخزون نفذ؟
-     */
     public function getIsOutOfStockAttribute(): bool
     {
         return $this->total_stock == 0;
     }
 
     /* ===========================
-     * 📊 OTHER ACCESSORS
+     * OTHER ACCESSORS
      * =========================== */
 
     public function getSellingUnitsWithPricesAttribute(): array
     {
-        if (!$this->relationLoaded('sellingUnits')) {
-            return [];
-        }
+        if (!$this->relationLoaded('sellingUnits')) return [];
 
-        return $this->sellingUnits->map(function ($unit) {
-            return [
-                'id' => $unit->id,
-                'name' => $unit->unit_name,
-                'code' => $unit->unit_code,
-                'label' => $unit->label,
-                'conversion_factor' => $unit->conversion_factor,
-                    'selling_price' => $unit->selling_price,
-                    'purchase_price' => $unit->purchase_price,
-                'is_default' => $unit->is_default,
-                'is_base' => $unit->is_base,
-                'is_active' => $unit->is_active,
-            ];
-        })->toArray();
+        return $this->sellingUnits->map(fn($unit) => [
+            'id'                => $unit->id,
+            'name'              => $unit->unit_name,
+            'code'              => $unit->unit_code,
+            'label'             => $unit->label,
+            'conversion_factor' => $unit->conversion_factor,
+            'selling_price'     => $unit->selling_price,
+            'purchase_price'    => $unit->purchase_price,
+            'is_default'        => $unit->is_default,
+            'is_base'           => $unit->is_base,
+            'is_active'         => $unit->is_active,
+        ])->toArray();
     }
 
     /* ===========================
-     * 🎯 SCOPES
+     * SCOPES
      * =========================== */
 
     public function scopeActive(Builder $query): Builder
@@ -312,9 +248,7 @@ class Product extends Model
 
     public function scopeSearch(Builder $query, ?string $search): Builder
     {
-        if (empty($search)) {
-            return $query;
-        }
+        if (empty($search)) return $query;
 
         return $query->where(function ($q) use ($search) {
             $q->where('name', 'like', "%{$search}%")
@@ -330,29 +264,23 @@ class Product extends Model
         return $query->where('category', $category);
     }
 
-    /**
-     * ✅ Scope للمنتجات منخفضة المخزون
-     */
     public function scopeLowStock(Builder $query): Builder
     {
-        return $query->whereHas('warehouses', function($q) {
+        return $query->whereHas('warehouses', function ($q) {
             $q->whereRaw('product_warehouse.quantity <= product_warehouse.min_stock')
               ->whereRaw('product_warehouse.quantity > 0');
         });
     }
 
-    /**
-     * ✅ Scope للمنتجات النافذة
-     */
     public function scopeOutOfStock(Builder $query): Builder
     {
-        return $query->whereDoesntHave('warehouses', function($q) {
+        return $query->whereDoesntHave('warehouses', function ($q) {
             $q->where('product_warehouse.quantity', '>', 0);
         });
     }
 
     /* ===========================
-     * 🛠️ HELPER METHODS
+     * HELPER METHODS
      * =========================== */
 
     public function ensureBaseSellingUnit(): ProductSellingUnit
@@ -360,12 +288,12 @@ class Product extends Model
         return $this->sellingUnits()->firstOrCreate(
             ['is_base' => true],
             [
-                'unit_name' => $this->base_unit_label ?? 'وحدة',
-                'unit_code' => $this->base_unit ?? 'unit',
+                'unit_name'             => $this->base_unit_label ?? 'وحدة',
+                'unit_code'             => $this->base_unit ?? 'unit',
                 'quantity_in_base_unit' => 1.0,
-                'is_default' => true,
-                'is_active' => true,
-                'display_order' => 0,
+                'is_default'            => true,
+                'is_active'             => true,
+                'display_order'         => 0,
             ]
         );
     }
@@ -375,7 +303,6 @@ class Product extends Model
         if ($this->relationLoaded('sellingUnits')) {
             return $this->sellingUnits->firstWhere('id', $unitId);
         }
-
         return $this->sellingUnits()->find($unitId);
     }
 
@@ -384,56 +311,46 @@ class Product extends Model
         if ($this->relationLoaded('sellingUnits')) {
             return $this->sellingUnits->firstWhere('unit_code', $code);
         }
-
         return $this->sellingUnits()->byCode($code)->first();
     }
 
-    /**
-     * ✅ الحصول على كمية المنتج في مخزن محدد
-     */
     public function getQuantityInWarehouse(int $warehouseId): float
     {
         if ($this->relationLoaded('warehouses')) {
-            $warehouse = $this->warehouses->firstWhere('id', $warehouseId);
-            return $warehouse ? (float) $warehouse->pivot->quantity : 0;
+            $w = $this->warehouses->firstWhere('id', $warehouseId);
+            return $w ? (float) $w->pivot->quantity : 0.0;
         }
 
-        return (float) DB::table('product_warehouse')
+        return (float) (DB::table('product_warehouse')
             ->where('product_id', $this->id)
             ->where('warehouse_id', $warehouseId)
-            ->value('quantity') ?? 0;
+            ->value('quantity') ?? 0);
     }
 
-    /**
-     * ✅ الحصول على الكمية المتاحة في مخزن محدد
-     */
     public function getAvailableInWarehouse(int $warehouseId): float
     {
         if ($this->relationLoaded('warehouses')) {
-            $warehouse = $this->warehouses->firstWhere('id', $warehouseId);
-            return $warehouse ? (float) $warehouse->pivot->available_quantity : 0;
+            $w = $this->warehouses->firstWhere('id', $warehouseId);
+            return $w ? (float) ($w->pivot->available_quantity ?? 0) : 0.0;
         }
 
-        return (float) DB::table('product_warehouse')
+        return (float) (DB::table('product_warehouse')
             ->where('product_id', $this->id)
             ->where('warehouse_id', $warehouseId)
-            ->value(DB::raw('GREATEST(0, quantity - COALESCE(reserved_quantity, 0))')) ?? 0;
+            ->selectRaw('GREATEST(0, quantity - COALESCE(reserved_quantity, 0)) as available')
+            ->value('available') ?? 0);
     }
 
     /* ===========================
-     * 🔄 EVENTS
+     * EVENTS
      * =========================== */
 
     protected static function boot()
     {
         parent::boot();
 
-        // ✅ حذف العلاقات عند حذف المنتج
         static::deleting(function ($product) {
-            // حذف الوحدات
             $product->sellingUnits()->delete();
-            
-            // حذف علاقات المخازن
             $product->warehouses()->detach();
         });
     }

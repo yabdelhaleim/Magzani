@@ -112,17 +112,22 @@ class Warehouse extends Model
     /**
      * ✅ جلب الإحصائيات في استعلام واحد - محسّن للأداء
      */
-    public function scopeWithStats(Builder $query): Builder
-    {
-        return $query->withCount('productWarehouses as products_count')
-            ->addSelect([
-                'total_quantity' => ProductWarehouse::selectRaw('COALESCE(SUM(quantity), 0)')
-                    ->whereColumn('warehouse_id', 'warehouses.id'),
-                
-                'total_value' => ProductWarehouse::selectRaw('COALESCE(SUM(quantity * average_cost), 0)')
-                    ->whereColumn('warehouse_id', 'warehouses.id'),
-            ]);
-    }
+  public function scopeWithStats(Builder $query): Builder
+{
+    return $query->withCount('productWarehouses as total_products')
+        ->addSelect([
+            'total_quantity' => ProductWarehouse::selectRaw('COALESCE(SUM(quantity), 0)')
+                ->whereColumn('warehouse_id', 'warehouses.id'),
+            
+            // ✅ ربط مع جدول products لجلب السعر الحقيقي
+            'total_value' => ProductWarehouse::selectRaw(
+                'COALESCE(SUM(pw.quantity * p.selling_price), 0)'
+            )
+            ->from('product_warehouse as pw')
+            ->join('products as p', 'p.id', '=', 'pw.product_id')
+            ->whereColumn('pw.warehouse_id', 'warehouses.id'),
+        ]);
+}
 
     public function scopeWithLowStockCount(Builder $query): Builder
     {

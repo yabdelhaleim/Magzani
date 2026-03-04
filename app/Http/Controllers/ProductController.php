@@ -11,6 +11,7 @@ use App\Http\Requests\BulkPriceUpdateRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 
 class ProductController extends Controller
 {
@@ -19,7 +20,7 @@ class ProductController extends Controller
     ) {}
 
     /**
-     * ✅ عرض قائمة المنتجات (محسّن)
+     * عرض قائمة المنتجات
      */
     public function index(Request $request)
     {
@@ -28,17 +29,14 @@ class ProductController extends Controller
                 'sellingUnits' => fn($q) => $q->select('id', 'product_id', 'unit_name', 'unit_code', 'is_default')
                     ->where('is_active', true)
                     ->orderBy('display_order'),
-                'warehouses' => fn($q) => $q->select(
-                    'warehouses.id', 
-                    'warehouses.name',
-                    'product_warehouse.quantity',
-                    'product_warehouse.reserved_quantity',
-                    'product_warehouse.available_quantity'
-                )
+                // ✅ warehouses مع pivot عشان يظهر كل مخزن على حدة في الجدول
+                'warehouses' => fn($q) => $q->select('warehouses.id', 'warehouses.name')
+                    ->withPivot('quantity'),
             ])
+            ->withSum('warehouses as total_stock', 'quantity')
             ->select([
-                'id', 'name', 'code', 'sku', 'barcode', 'category', 
-                'base_unit', 'base_unit_label', 'selling_price', 
+                'id', 'name', 'code', 'sku', 'barcode', 'category',
+                'base_unit', 'base_unit_label', 'selling_price',
                 'purchase_price', 'is_active', 'image', 'stock_alert_quantity'
             ]);
 
@@ -60,50 +58,54 @@ class ProductController extends Controller
             }
         }
 
-        // ✅ فلتر المخزون المنخفض
         if ($request->input('low_stock')) {
-            $query->whereHas('warehouses', function($q) {
-                $q->whereRaw('product_warehouse.quantity <= product_warehouse.min_stock');
+            $query->whereHas('warehouses', function ($q) {
+                $q->whereRaw('product_warehouse.quantity <= product_warehouse.min_stock')
+                  ->whereRaw('product_warehouse.quantity > 0');
             });
         }
 
-        $sortBy = $request->input('sort_by', 'id');
+        $sortBy        = $request->input('sort_by', 'id');
         $sortDirection = $request->input('sort_direction', 'desc');
-        $query->orderBy($sortBy, $sortDirection);
 
-        $perPage = min($request->input('per_page', 20), 100);
+        // ✅ لو الترتيب بالمخزون نتعامل معاه بشكل خاص
+        if ($sortBy === 'total_stock') {
+            $query->orderBy('total_stock', $sortDirection);
+        } else {
+            $query->orderBy($sortBy, $sortDirection);
+        }
+
+        $perPage  = min($request->input('per_page', 20), 100);
         $products = $query->paginate($perPage)->withQueryString();
 
         return view('products.index', compact('products'));
     }
 
     /**
-     * ✅ عرض صفحة إضافة منتج جديد
+     * عرض صفحة إضافة منتج جديد
      */
     public function create()
     {
-        // ✅ جلب المخازن النشطة فقط (مع cache)
         $warehouses = Cache::remember('active_warehouses', 1800, function () {
             return Warehouse::select('id', 'name')
                 ->where('is_active', true)
                 ->orderBy('name')
                 ->get();
         });
-        
+
         $unitsByCategory = $this->productService->getUnitsByCategory();
 
         return view('products.create', compact('warehouses', 'unitsByCategory'));
     }
 
     /**
-     * ✅ حفظ منتج جديد
+     * حفظ منتج جديد
      */
     public function store(StoreProductRequest $request)
     {
         try {
             $product = $this->productService->createProduct($request->validated());
 
-            // ✅ رسالة نجاح واضحة
             return redirect()
                 ->route('products.index')
                 ->with('success', "✅ تم إضافة المنتج '{$product->name}' بنجاح!\nالكود: {$product->code}\nSKU: {$product->sku}");
@@ -111,10 +113,10 @@ class ProductController extends Controller
         } catch (\Exception $e) {
             Log::error('Product creation failed', [
                 'error' => $e->getMessage(),
-                'data' => $request->validated(),
+                'data'  => $request->validated(),
                 'trace' => $e->getTraceAsString()
             ]);
-            
+
             return back()
                 ->withInput()
                 ->with('error', '❌ حدث خطأ: ' . $e->getMessage());
@@ -122,25 +124,25 @@ class ProductController extends Controller
     }
 
     /**
-     * ✅ عرض تفاصيل المنتج (محسّن)
+     * عرض تفاصيل المنتج
      */
     public function show(Product $product)
     {
-        // ✅ Eager loading محسّن
         $product->load([
-            'sellingUnits' => fn($q) => $q->ordered(),
-            'warehouses' => fn($q) => $q->select('warehouses.id', 'warehouses.name'),
-            'priceHistory' => fn($q) => $q->latest()->limit(10),
+            'sellingUnits'  => fn($q) => $q->ordered(),
+            // ✅ تحميل warehouses مع pivot data كاملة
+            'warehouses'    => fn($q) => $q->select('warehouses.id', 'warehouses.name')
+                                           ->withPivot(['quantity', 'reserved_quantity', 'available_quantity', 'min_stock']),
+            'priceHistory'  => fn($q) => $q->latest()->limit(10),
         ]);
 
-        // ✅ إحصائيات المخزون
         $stockStats = $this->productService->getStockStatistics($product);
-        
+
         return view('products.show', compact('product', 'stockStats'));
     }
 
     /**
-     * ✅ عرض صفحة التعديل
+     * عرض صفحة التعديل
      */
     public function edit(Product $product)
     {
@@ -150,46 +152,51 @@ class ProductController extends Controller
                 ->orderBy('name')
                 ->get();
         });
-        
+
         $unitsByCategory = $this->productService->getUnitsByCategory();
 
         return view('products.edit', compact('product', 'warehouses', 'unitsByCategory'));
     }
 
     /**
-     * ✅ تحديث المنتج
-     */
-    public function update(UpdateProductRequest $request, Product $product)
-    {
-        try {
-            $this->productService->updateProduct($product, $request->validated());
+ * @hideFromAPIDocumentation
+ */
 
-            return redirect()
-                ->route('products.index')
-                ->with('success', "✅ تم تحديث المنتج '{$product->name}' بنجاح!");
-
-        } catch (\Exception $e) {
-            Log::error('Product update failed', [
-                'product_id' => $product->id,
-                'error' => $e->getMessage(),
-                'data' => $request->validated(),
-            ]);
-            
-            return back()
-                ->withInput()
-                ->with('error', '❌ حدث خطأ: ' . $e->getMessage());
-        }
+public function update(UpdateProductRequest $request, Product $product)
+{
+    if (app()->runningInConsole()) {
+        return response()->json(['message' => 'Documentation mode']);
     }
 
+    try {
+        $this->productService->updateProduct($product, $request->validated());
+
+        return redirect()
+            ->route('products.index')
+            ->with('success', "✅ تم تحديث المنتج '{$product->name}' بنجاح!");
+
+    } catch (\Exception $e) {
+        Log::error('Product update failed', [
+            'product_id' => $product->id,
+            'error'      => $e->getMessage(),
+            'data'       => $request->validated(),
+        ]);
+
+        return back()
+            ->withInput()
+            ->with('error', '❌ حدث خطأ: ' . $e->getMessage());
+    }
+}
+
     /**
-     * ✅ حذف المنتج
+     * حذف المنتج
      */
     public function destroy(Product $product)
     {
         try {
             $productName = $product->name;
             $this->productService->deleteProduct($product);
-            
+
             return redirect()
                 ->route('products.index')
                 ->with('success', "✅ تم حذف المنتج '{$productName}' بنجاح!");
@@ -197,15 +204,15 @@ class ProductController extends Controller
         } catch (\Exception $e) {
             Log::error('Product deletion failed', [
                 'product_id' => $product->id,
-                'error' => $e->getMessage()
+                'error'      => $e->getMessage()
             ]);
-            
+
             return back()->with('error', '❌ ' . $e->getMessage());
         }
     }
 
     /**
-     * ✅ صفحة التحديث الجماعي للأسعار
+     * صفحة التحديث الجماعي للأسعار
      */
     public function bulkPriceUpdatePage()
     {
@@ -215,7 +222,7 @@ class ProductController extends Controller
     }
 
     /**
-     * ✅ تطبيق التحديث الجماعي للأسعار
+     * تطبيق التحديث الجماعي للأسعار
      */
     public function applyBulkPriceUpdate(BulkPriceUpdateRequest $request)
     {
@@ -225,15 +232,15 @@ class ProductController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => "✅ تم تحديث {$result['updated_count']} منتج بنجاح!",
-                'data' => $result
+                'data'    => $result
             ]);
 
         } catch (\Exception $e) {
             Log::error('Bulk price update failed', [
                 'error' => $e->getMessage(),
-                'data' => $request->validated(),
+                'data'  => $request->validated(),
             ]);
-            
+
             return response()->json([
                 'success' => false,
                 'message' => '❌ حدث خطأ: ' . $e->getMessage()
@@ -242,38 +249,30 @@ class ProductController extends Controller
     }
 
     /**
-     * ✅ AJAX: جلب التصنيفات حسب الوحدة
+     * AJAX: جلب التصنيفات حسب الوحدة
      */
     public function getCategoriesByUnit(Request $request)
     {
-        $request->validate([
-            'base_unit' => 'required|string|max:50'
-        ]);
+        $request->validate(['base_unit' => 'required|string|max:50']);
 
         try {
             $categories = $this->productService->getCategoriesByUnit($request->base_unit);
 
-            return response()->json([
-                'success' => true,
-                'categories' => $categories
-            ]);
+            return response()->json(['success' => true, 'categories' => $categories]);
 
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage()
-            ], 400);
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
         }
     }
 
     /**
-     * ✅ AJAX: جلب المنتجات حسب الوحدة والتصنيف
+     * AJAX: جلب المنتجات حسب الوحدة والتصنيف
      */
     public function getProductsByUnitAndCategory(Request $request)
     {
         $request->validate([
             'base_unit' => 'required|string|max:50',
-            'category' => 'required|string|max:255'
+            'category'  => 'required|string|max:255'
         ]);
 
         try {
@@ -283,27 +282,24 @@ class ProductController extends Controller
             );
 
             return response()->json([
-                'success' => true,
+                'success'  => true,
                 'products' => $products,
-                'count' => count($products)
+                'count'    => count($products)
             ]);
 
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage()
-            ], 400);
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
         }
     }
 
     /**
-     * ✅ AJAX: اقتراحات التسعير الذكية
+     * AJAX: اقتراحات التسعير
      */
     public function getSuggestedPricing(Request $request)
     {
         $request->validate([
             'base_unit' => 'required|string|max:50',
-            'category' => 'nullable|string|max:255'
+            'category'  => 'nullable|string|max:255'
         ]);
 
         try {
@@ -312,27 +308,19 @@ class ProductController extends Controller
                 $request->category
             );
 
-            return response()->json([
-                'success' => true,
-                'suggestions' => $suggestions
-            ]);
+            return response()->json(['success' => true, 'suggestions' => $suggestions]);
 
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage()
-            ], 400);
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
         }
     }
 
     /**
-     * ✅ AJAX: البحث السريع
+     * AJAX: البحث السريع
      */
     public function quickSearch(Request $request)
     {
-        $request->validate([
-            'q' => 'required|string|min:2|max:100'
-        ]);
+        $request->validate(['q' => 'required|string|min:2|max:100']);
 
         try {
             $products = Product::search($request->q)
@@ -341,29 +329,23 @@ class ProductController extends Controller
                 ->limit(10)
                 ->get();
 
-            return response()->json([
-                'success' => true,
-                'products' => $products
-            ]);
+            return response()->json(['success' => true, 'products' => $products]);
 
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage()
-            ], 400);
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
         }
     }
 
     /**
-     * ✅ نقل مخزون
+     * نقل مخزون
      */
     public function transferStock(Request $request, Product $product)
     {
         $request->validate([
             'from_warehouse_id' => 'required|exists:warehouses,id',
-            'to_warehouse_id' => 'required|exists:warehouses,id|different:from_warehouse_id',
-            'quantity' => 'required|numeric|min:0.001',
-            'notes' => 'nullable|string|max:500'
+            'to_warehouse_id'   => 'required|exists:warehouses,id|different:from_warehouse_id',
+            'quantity'          => 'required|numeric|min:0.001',
+            'notes'             => 'nullable|string|max:500'
         ]);
 
         try {
@@ -383,7 +365,7 @@ class ProductController extends Controller
         } catch (\Exception $e) {
             Log::error('Stock transfer failed', [
                 'product_id' => $product->id,
-                'error' => $e->getMessage()
+                'error'      => $e->getMessage()
             ]);
 
             return response()->json([
@@ -394,30 +376,29 @@ class ProductController extends Controller
     }
 
     /**
-     * ✅ تصدير المنتجات (Excel/CSV)
+     * تصدير المنتجات CSV
      */
     public function export(Request $request)
     {
         try {
-            // يمكنك استخدام Laravel Excel أو تصدير يدوي
-            $products = Product::with(['sellingUnits', 'warehouses'])
+            // ✅ withSum بدل with('warehouses') لتجنب نفس مشكلة الـ pivot
+            $products = Product::withSum('warehouses as total_stock', 'quantity')
                 ->select('id', 'name', 'code', 'sku', 'category', 'selling_price', 'purchase_price')
                 ->get();
 
-            // مثال بسيط لـ CSV
             $filename = 'products_' . date('Y-m-d_H-i-s') . '.csv';
-            $headers = [
-                'Content-Type' => 'text/csv',
+            $headers  = [
+                'Content-Type'        => 'text/csv; charset=UTF-8',
                 'Content-Disposition' => "attachment; filename=\"{$filename}\"",
             ];
 
-            $callback = function() use ($products) {
+            $callback = function () use ($products) {
                 $file = fopen('php://output', 'w');
-                
-                // Headers
+                // BOM لدعم العربي في Excel
+                fprintf($file, chr(0xEF) . chr(0xBB) . chr(0xBF));
+
                 fputcsv($file, ['الكود', 'الاسم', 'SKU', 'التصنيف', 'سعر البيع', 'سعر الشراء', 'المخزون']);
-                
-                // Data
+
                 foreach ($products as $product) {
                     fputcsv($file, [
                         $product->code,
@@ -426,10 +407,11 @@ class ProductController extends Controller
                         $product->category,
                         $product->selling_price,
                         $product->purchase_price,
-                        $product->total_stock ?? 0,
+                        // ✅ total_stock جاي من withSum مباشرة
+                        (float) ($product->total_stock ?? 0),
                     ]);
                 }
-                
+
                 fclose($file);
             };
 
@@ -437,7 +419,7 @@ class ProductController extends Controller
 
         } catch (\Exception $e) {
             Log::error('Product export failed', ['error' => $e->getMessage()]);
-            
+
             return back()->with('error', '❌ فشل التصدير: ' . $e->getMessage());
         }
     }
