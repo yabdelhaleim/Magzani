@@ -272,6 +272,19 @@ class SalesController extends Controller
             // ✅ استخدام InvoiceService لإنشاء الفاتورة
             $invoice = $this->invoiceService->createSalesInvoice($validated);
             
+            // ✅ التحقق من وجود تحذير تجاوز الدفع
+            $warning = null;
+            if (isset($invoice->overpayment_warning)) {
+                $warning = $invoice->overpayment_warning;
+            }
+            
+            if ($warning) {
+                return redirect()
+                    ->route('invoices.sales.show', $invoice->id)
+                    ->with('warning', '⚠️ ' . $warning)
+                    ->with('success', '✅ تم إنشاء فاتورة المبيعات بنجاح');
+            }
+            
             return redirect()
                 ->route('invoices.sales.show', $invoice->id)
                 ->with('success', '✅ تم إنشاء فاتورة المبيعات بنجاح');
@@ -314,17 +327,17 @@ class SalesController extends Controller
     {
         $invoice = SalesInvoice::with(['items.product', 'items.sellingUnit'])->findOrFail($id);
         
-        // منع التعديل للفواتير الملغاة أو المكتملة
+        // ✅ منع التعديل للفواتير المكتملة والملغاة - التعديل متاح فقط للمعلقة
         if ($invoice->status === 'cancelled') {
             return redirect()
                 ->route('invoices.sales.index')
                 ->with('error', '❌ لا يمكن تعديل فاتورة ملغاة');
         }
-
-        if ($invoice->payment_status === 'paid') {
+        
+        if ($invoice->status === 'confirmed') {
             return redirect()
-                ->route('invoices.sales.show', $invoice->id)
-                ->with('error', '❌ لا يمكن تعديل فاتورة مكتملة (مدفوعة بالكامل)');
+                ->route('invoices.sales.index')
+                ->with('error', '❌ لا يمكن تعديل فاتورة مكتملة. استخدم المرتجعات لإضافة أصناف.');
         }
         
         $invoice->calculated_details = $this->invoiceService->calculateInvoiceDetails($invoice);

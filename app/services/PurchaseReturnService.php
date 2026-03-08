@@ -72,7 +72,7 @@ class PurchaseReturnService
                     'status' => $data['status'] ?? $return->status,
                     'return_reason' => $data['return_reason'] ?? null,
                     'notes' => $data['notes'] ?? null,
-                    'updated_by' => auth()->id(),
+                    'updated_by' => auth()->id() ?? null,
                 ]);
 
                 // 4. إضافة الأصناف الجديدة
@@ -132,6 +132,9 @@ class PurchaseReturnService
      */
     private function createReturn(array $data, PurchaseInvoice $invoice): PurchaseReturn
     {
+        $discount = isset($data['discount_amount']) && $data['discount_amount'] !== '' ? (float) $data['discount_amount'] : 0;
+        $tax = isset($data['tax_amount']) && $data['tax_amount'] !== '' ? (float) $data['tax_amount'] : 0;
+
         return PurchaseReturn::create([
             'return_number' => $this->generateReturnNumber(),
             'purchase_invoice_id' => $invoice->id,
@@ -139,8 +142,8 @@ class PurchaseReturnService
             'warehouse_id' => $invoice->warehouse_id,
             'return_date' => $data['return_date'],
             'subtotal' => 0,
-            'discount_amount' => $data['discount_amount'] ?? 0,
-            'tax_amount' => $data['tax_amount'] ?? 0,
+            'discount_amount' => $discount,
+            'tax_amount' => $tax,
             'total' => 0,
             'status' => $data['status'] ?? 'draft',
             'return_reason' => $data['return_reason'] ?? null,
@@ -155,11 +158,26 @@ class PurchaseReturnService
     private function attachItems(PurchaseReturn $return, array $items): void
     {
         foreach ($items as $item) {
+            // Skip items without purchase_invoice_item_id
+            if (!isset($item['purchase_invoice_item_id'])) {
+                continue;
+            }
+            
+            // Skip items with zero or invalid quantity (form may send '' for disabled inputs)
+            $qty = isset($item['quantity_returned']) && $item['quantity_returned'] !== ''
+                ? (float) $item['quantity_returned'] : 0;
+            if ($qty <= 0) {
+                continue;
+            }
+            
             // جلب بيانات الصنف من الفاتورة الأصلية
-            $originalItem = \App\Models\PurchaseInvoiceItem::findOrFail($item['purchase_invoice_item_id']);
+            $originalItem = \App\Models\PurchaseInvoiceItem::find($item['purchase_invoice_item_id']);
+            
+            if (!$originalItem) {
+                continue;
+            }
 
-            $qty = $item['quantity_returned'];
-            $price = $originalItem->price;
+            $price = $originalItem->unit_price;
             $itemTotal = $qty * $price;
 
             PurchaseReturnItem::create([
@@ -171,8 +189,8 @@ class PurchaseReturnService
                 'discount_amount' => 0,
                 'tax_amount' => 0,
                 'total' => $itemTotal,
-                'item_condition' => $item['item_condition'],
-                'return_reason' => $item['return_reason'],
+                'item_condition' => $item['item_condition'] ?? 'good',
+                'return_reason' => $item['return_reason'] ?? 'إرجاع',
                 'notes' => $item['notes'] ?? null,
             ]);
         }
@@ -206,7 +224,7 @@ class PurchaseReturnService
             DB::table('product_warehouse')
                 ->where('product_id', $item->product_id)
                 ->where('warehouse_id', $invoice->warehouse_id)
-                ->decrement('qty', $item->quantity_returned);
+                ->decrement('quantity', $item->quantity_returned);
         }
     }
 
@@ -220,7 +238,7 @@ class PurchaseReturnService
             DB::table('product_warehouse')
                 ->where('product_id', $item->product_id)
                 ->where('warehouse_id', $invoice->warehouse_id)
-                ->increment('qty', $item->quantity_returned);
+                ->increment('quantity', $item->quantity_returned);
         }
     }
 
@@ -244,7 +262,7 @@ class PurchaseReturnService
      */
     public function getReturns(array $filters = [])
     {
-        $query = PurchaseReturn::with(['purchaseInvoice.supplier', 'items.purchaseInvoiceItem.product'])
+        $query = PurchaseReturn::with(['purchaseInvoice', 'supplier', 'items.product'])
             ->orderBy('return_date', 'desc');
 
         // فلتر بالمورد
@@ -267,10 +285,10 @@ class PurchaseReturnService
             $search = $filters['search'];
             $query->where(function($q) use ($search) {
                 $q->where('return_number', 'like', "%{$search}%")
-                  ->orWhereHas('purchaseInvoice.supplier', function($q) use ($search) {
+                  ->orWhereHas('supplier', function($q) use ($search) {
                       $q->where('name', 'like', "%{$search}%");
                   })
-                  ->orWhereHas('items.purchaseInvoiceItem.product', function($q) use ($search) {
+                  ->orWhereHas('items.product', function($q) use ($search) {
                       $q->where('name', 'like', "%{$search}%");
                   });
             });
@@ -302,21 +320,22 @@ class PurchaseReturnService
         $availableItems = [];
         
         foreach ($invoice->items as $item) {
-            // حساب الكمية المرتجعة سابقاً
-            $returnedQty = PurchaseReturnItem::where('purchase_invoice_item_id', $item->id)->sum('quantity_returned');
+            // حساب الكمية المرتجعة سابقاً من نفس الصنف في نفس الفاتورة
+            $returnedQty = PurchaseReturnItem::where('purchase_invoice_item_id', $item->id)
+                ->sum('quantity_returned');
             
-            $availableQty = $item->qty - $returnedQty;
+            $availableQty = $item->quantity - $returnedQty;
             
-            if ($availableQty > 0) {
-                $availableItems[] = [
-                    'purchase_invoice_item_id' => $item->id,
-                    'product' => $item->product,
-                    'original_qty' => $item->qty,
-                    'returned_qty' => $returnedQty,
-                    'available_qty' => $availableQty,
-                    'unit_price' => $item->price,
-                ];
-            }
+            // إظهار كل الأصناف حتى لو كانت الكمية 0
+            $availableItems[] = [
+                'purchase_invoice_item_id' => $item->id,
+                'product' => $item->product,
+                'product_id' => $item->product_id,
+                'original_qty' => $item->quantity,
+                'returned_qty' => $returnedQty,
+                'available_qty' => $availableQty,
+                'unit_price' => $item->unit_price ?? $item->cost,
+            ];
         }
         
         return $availableItems;

@@ -50,6 +50,9 @@ class SettingsController extends Controller
             'auto_invoice_number' => 'nullable|boolean',
             'auto_print_invoice' => 'nullable|boolean',
             'auto_email_invoice' => 'nullable|boolean',
+            // ✅ شروط وأحكام الفواتير
+            'default_sales_terms' => 'nullable|string',
+            'default_purchase_terms' => 'nullable|string',
         ]);
 
         $this->service->updateSystem($data);

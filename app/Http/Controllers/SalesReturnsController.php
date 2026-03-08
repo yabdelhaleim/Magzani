@@ -24,20 +24,27 @@ class SalesReturnsController extends Controller
 
     public function create()
     {
-        // جلب الفواتير المكتملة (المدفوعة بالكامل) فقط
+        // جلب الفواتير (المؤكدة والغير مدفوعة بالكامل)
         $invoices = SalesInvoice::with(['customer', 'items.product', 'returns.items'])
-            ->where('status', 'confirmed')
-            ->where('payment_status', 'paid')
+            ->whereIn('status', ['confirmed', 'pending'])
             ->latest()
             ->get();
 
         // تجهيز البيانات للـ Blade
         $invoicesData = $invoices->map(function($inv) {
+            // حساب المدفوع والمتبقي
+            $total = (float) $inv->total;
+            $paid = (float) ($inv->paid ?? 0);
+            $remaining = max(0, $total - $paid);
+            
             return [
                 'id' => $inv->id,
                 'invoice_number' => $inv->invoice_number,
                 'invoice_date' => $inv->invoice_date->format('Y-m-d'),
                 'customer_name' => $inv->customer->name ?? '',
+                'total' => $total,
+                'paid' => $paid,
+                'remaining' => $remaining,
                 'items' => $inv->items->map(function($item) use ($inv) {
                     $returnedQty = $inv->returns->flatMap(function($return) {
                         return $return->items;
@@ -63,6 +70,7 @@ class SalesReturnsController extends Controller
         $validated = $request->validate([
             'sales_invoice_id' => 'required|exists:sales_invoices,id',
             'return_date' => 'nullable|date',
+            'return_type' => 'nullable|in:full,partial,exchange', // ✅ نوع الإرجاع
             'items' => 'required|array|min:1',
             'items.*.product_id' => 'required|exists:products,id',
             'items.*.quantity' => 'required|numeric|min:0.001',

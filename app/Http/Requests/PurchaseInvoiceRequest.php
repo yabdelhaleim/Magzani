@@ -16,6 +16,21 @@ class PurchaseInvoiceRequest extends FormRequest
     }
 
     /**
+     * Prepare the data for validation.
+     * Filter out empty item rows (where product_id is empty) so they don't fail validation.
+     */
+    protected function prepareForValidation(): void
+    {
+        $items = $this->input('items', []);
+        if (is_array($items)) {
+            $items = array_values(array_filter($items, function ($item) {
+                return !empty($item['product_id']);
+            }));
+            $this->merge(['items' => $items]);
+        }
+    }
+
+    /**
      * Get the validation rules that apply to the request.
      */
     public function rules(): array
@@ -31,6 +46,13 @@ class PurchaseInvoiceRequest extends FormRequest
             'items.*.product_id' => ['required', 'exists:products,id'],
             'items.*.qty' => ['required', 'numeric', 'min:0.01'],
             'items.*.price' => ['required', 'numeric', 'min:0'],
+            
+            // حقول اختيارية للأوزان والوحدات
+            'items.*.weight' => ['nullable', 'numeric', 'min:0'],
+            'items.*.conversion_factor' => ['nullable', 'numeric', 'min:0.0001'],
+            'items.*.selling_unit_id' => ['nullable', 'integer'],
+            'items.*.unit_code' => ['nullable', 'string', 'max:50'],
+            'items.*.base_unit_type' => ['nullable', 'string', 'max:50'],
             
             // حقول اختيارية
             'notes' => ['nullable', 'string', 'max:1000'],

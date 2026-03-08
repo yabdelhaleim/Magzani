@@ -22,6 +22,7 @@ class SalesReturn extends Model
         'tax_amount',         // ✅ مطلوب
         'total',
         'status',             // ✅ مطلوب (enum)
+        'return_type',        // ✅ نوع الإرجاع: full / partial / exchange
         'return_reason',
         'notes',
         'created_by',

@@ -189,7 +189,7 @@ document.addEventListener('alpine:init', () => {
                 تفاصيل فاتورة البيع
             </h3>
 
-            <div class="grid md:grid-cols-3 gap-4 mb-4">
+            <div class="grid md:grid-cols-6 gap-4 mb-4">
                 <div class="bg-white rounded-lg p-4 shadow">
                     <p class="text-xs text-gray-500 mb-1">رقم الفاتورة</p>
                     <p class="font-bold text-blue-600" x-text="selectedInvoice.invoice_number"></p>
@@ -201,6 +201,18 @@ document.addEventListener('alpine:init', () => {
                 <div class="bg-white rounded-lg p-4 shadow">
                     <p class="text-xs text-gray-500 mb-1">التاريخ</p>
                     <p class="font-bold text-gray-800" x-text="selectedInvoice.invoice_date"></p>
+                </div>
+                <div class="bg-white rounded-lg p-4 shadow">
+                    <p class="text-xs text-gray-500 mb-1">إجمالي الفاتورة</p>
+                    <p class="font-bold text-blue-600" x-text="parseFloat(selectedInvoice.total || 0).toFixed(2) + ' ج.م'"></p>
+                </div>
+                <div class="bg-white rounded-lg p-4 shadow">
+                    <p class="text-xs text-gray-500 mb-1">المدفوع</p>
+                    <p class="font-bold text-green-600" x-text="parseFloat(selectedInvoice.paid || 0).toFixed(2) + ' ج.م'"></p>
+                </div>
+                <div class="bg-white rounded-lg p-4 shadow">
+                    <p class="text-xs text-gray-500 mb-1">المتبقي</p>
+                    <p class="font-bold text-red-600" x-text="parseFloat(selectedInvoice.remaining || 0).toFixed(2) + ' ج.م'"></p>
                 </div>
             </div>
 

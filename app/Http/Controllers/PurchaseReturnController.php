@@ -39,20 +39,20 @@ class PurchaseReturnController extends Controller
      */
     public function create(Request $request)
     {
-        // إذا تم تمرير invoice_id في الـ URL
-        $invoiceId = $request->get('invoice_id');
+        // إذا تم تمرير invoice_id في الـ URL أو في الـ session (بعد خطأ في التحقق)
+        $invoiceId = $request->get('invoice_id') ?? session('invoice_id');
         $invoice = null;
-        $availableItems = [];
+        $availableItems = collect([]);
 
         if ($invoiceId) {
             $invoice = PurchaseInvoice::with(['supplier', 'warehouse'])->findOrFail($invoiceId);
-            $availableItems = $this->returnService->getAvailableItemsForReturn($invoiceId);
+            $availableItems = collect($this->returnService->getAvailableItemsForReturn($invoiceId));
         }
 
         // قائمة الفواتير المتاحة للإرجاع
         $invoices = PurchaseInvoice::with('supplier')->get();
 
-        return view('invoices.purchase-returns.index', compact('invoices', 'invoice', 'availableItems'));
+        return view('invoices.purchase-returns.create', compact('invoices', 'invoice', 'availableItems'));
     }
 
     /**
@@ -68,9 +68,11 @@ class PurchaseReturnController extends Controller
                 ->with('success', 'تم إنشاء مرتجع الشراء بنجاح');
 
         } catch (\Exception $e) {
+            $invoiceId = $request->input('purchase_invoice_id');
             return back()
                 ->withInput()
-                ->with('error', 'حدث خطأ أثناء إنشاء المرتجع: ' . $e->getMessage());
+                ->with('error', 'حدث خطأ أثناء إنشاء المرتجع: ' . $e->getMessage())
+                ->with('invoice_id', $invoiceId);
         }
     }
 
@@ -82,10 +84,10 @@ class PurchaseReturnController extends Controller
         $purchaseReturn->load([
             'purchaseInvoice.supplier',
             'purchaseInvoice.warehouse',
-            'items.purchaseInvoiceItem.product'
+            'items.product'
         ]);
 
-        return view('invoices.purchase-returns.index', compact('purchaseReturn'));
+        return view('invoices.purchase-returns.show', compact('purchaseReturn'));
     }
 
     /**
@@ -121,7 +123,10 @@ class PurchaseReturnController extends Controller
             }
         }
 
-        return view('invoices.purchase-returns.index', compact('purchaseReturn', 'invoice', 'availableItems'));
+        // جلب قائمة الفواتير
+        $invoices = PurchaseInvoice::with('supplier')->get();
+        
+        return view('invoices.purchase-returns.create', compact('purchaseReturn', 'invoice', 'availableItems', 'invoices'));
     }
 
     /**

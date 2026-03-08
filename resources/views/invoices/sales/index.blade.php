@@ -86,7 +86,7 @@
                 </button>
             </div>
 
-            <div x-show="showFilters" x-collapse>
+            <div x-show="showFilters" x-transition>
                 <form method="GET" action="{{ route('invoices.sales.index') }}" class="p-6">
                     <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
                         

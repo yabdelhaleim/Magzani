@@ -20,5 +20,8 @@ class SystemSetting extends Model
         'auto_invoice_number',
         'auto_print_invoice',
         'auto_email_invoice',
+        // ✅ إعدادات شروط وأحكام الفواتير الافتراضية
+        'default_sales_terms',
+        'default_purchase_terms',
     ];
 }

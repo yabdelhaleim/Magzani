@@ -22,6 +22,7 @@ use App\Http\Controllers\PurchasesController;
 // use App\Http\Controllers\PurchaseReturnController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\SupplierController;
+use App\Http\Controllers\SupplierPaymentController;
 use App\Http\Controllers\AccountingController;
 use App\Http\Controllers\ReportController;
 // use App\Http\Controllers\SettingController;
@@ -136,6 +137,9 @@ Route::prefix('products')->name('products.')->group(function () {
     Route::get('/create', [ProductController::class, 'create'])->name('create');
     Route::post('/', [ProductController::class, 'store'])->name('store');
     Route::get('/barcode/print', [ProductController::class, 'barcode'])->name('barcode');
+    
+    // ✅ حفظ منتج سريع (من داخل الفاتورة)
+    Route::post('/quick-store', [ProductController::class, 'quickStore'])->name('quick-store');
     
     // ==========================================
     // 🎯 التحديث الذكي للأسعار
@@ -326,6 +330,7 @@ Route::prefix('suppliers')->name('suppliers.')->group(function () {
     Route::put('/{supplier}', [SupplierController::class, 'update'])->name('update');
     Route::delete('/{supplier}', [SupplierController::class, 'destroy'])->name('destroy');
     Route::get('/{supplier}/statement', [SupplierController::class, 'statement'])->name('statement');
+    Route::post('/{supplier}/payments', [SupplierPaymentController::class, 'store'])->name('payments.store');
 });
 
 /*

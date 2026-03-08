@@ -53,27 +53,38 @@ return new class extends Migration
                 }
                 
                 // Indexes للبحث السريع (تحقق من عدم وجودها)
-                $sm = Schema::getConnection()->getDoctrineSchemaManager();
-                $indexesFound = $sm->listTableIndexes('product_selling_units');
-                
-                if (!isset($indexesFound['idx_product_active_default'])) {
+                try {
                     if (Schema::hasColumn('product_selling_units', 'product_id') && 
                         Schema::hasColumn('product_selling_units', 'is_active') && 
                         Schema::hasColumn('product_selling_units', 'is_default')) {
                         $table->index(['product_id', 'is_active', 'is_default'], 'idx_product_active_default');
                     }
+                } catch (\Exception $e) {
+                    // Index might already exist, skip
                 }
                 
-                if (!isset($indexesFound['idx_barcode']) && Schema::hasColumn('product_selling_units', 'barcode')) {
-                    $table->index(['barcode'], 'idx_barcode');
+                try {
+                    if (Schema::hasColumn('product_selling_units', 'barcode')) {
+                        $table->index(['barcode'], 'idx_barcode');
+                    }
+                } catch (\Exception $e) {
+                    // Index might already exist, skip
                 }
                 
-                if (!isset($indexesFound['idx_unit_code']) && Schema::hasColumn('product_selling_units', 'unit_code')) {
-                    $table->index(['unit_code'], 'idx_unit_code');
+                try {
+                    if (Schema::hasColumn('product_selling_units', 'unit_code')) {
+                        $table->index(['unit_code'], 'idx_unit_code');
+                    }
+                } catch (\Exception $e) {
+                    // Index might already exist, skip
                 }
                 
-                if (!isset($indexesFound['idx_display_order']) && Schema::hasColumn('product_selling_units', 'display_order')) {
-                    $table->index(['display_order'], 'idx_display_order');
+                try {
+                    if (Schema::hasColumn('product_selling_units', 'display_order')) {
+                        $table->index(['display_order'], 'idx_display_order');
+                    }
+                } catch (\Exception $e) {
+                    // Index might already exist, skip
                 }
             });
         }
@@ -81,24 +92,30 @@ return new class extends Migration
         // ✅ فقط إذا كان الجدول موجود
         if (Schema::hasTable('product_price_history')) {
             Schema::table('product_price_history', function (Blueprint $table) {
-                $sm = Schema::getConnection()->getDoctrineSchemaManager();
-                $indexesFound = $sm->listTableIndexes('product_price_history');
-                
-                if (!isset($indexesFound['idx_product_changed']) && 
-                    Schema::hasColumn('product_price_history', 'product_id') && 
-                    Schema::hasColumn('product_price_history', 'changed_at')) {
-                    $table->index(['product_id', 'changed_at'], 'idx_product_changed');
+                try {
+                    if (Schema::hasColumn('product_price_history', 'product_id') && 
+                        Schema::hasColumn('product_price_history', 'changed_at')) {
+                        $table->index(['product_id', 'changed_at'], 'idx_product_changed');
+                    }
+                } catch (\Exception $e) {
+                    // Index might already exist, skip
                 }
                 
-                if (!isset($indexesFound['idx_user_changed']) && 
-                    Schema::hasColumn('product_price_history', 'changed_by') && 
-                    Schema::hasColumn('product_price_history', 'changed_at')) {
-                    $table->index(['changed_by', 'changed_at'], 'idx_user_changed');
+                try {
+                    if (Schema::hasColumn('product_price_history', 'changed_by') && 
+                        Schema::hasColumn('product_price_history', 'changed_at')) {
+                        $table->index(['changed_by', 'changed_at'], 'idx_user_changed');
+                    }
+                } catch (\Exception $e) {
+                    // Index might already exist, skip
                 }
                 
-                if (!isset($indexesFound['idx_changed_at']) && 
-                    Schema::hasColumn('product_price_history', 'changed_at')) {
-                    $table->index(['changed_at'], 'idx_changed_at');
+                try {
+                    if (Schema::hasColumn('product_price_history', 'changed_at')) {
+                        $table->index(['changed_at'], 'idx_changed_at');
+                    }
+                } catch (\Exception $e) {
+                    // Index might already exist, skip
                 }
             });
         }
@@ -121,20 +138,25 @@ return new class extends Migration
 
         if (Schema::hasTable('product_selling_units')) {
             Schema::table('product_selling_units', function (Blueprint $table) {
-                $sm = Schema::getConnection()->getDoctrineSchemaManager();
-                $indexesFound = $sm->listTableIndexes('product_selling_units');
-                
-                if (isset($indexesFound['idx_product_active_default'])) {
+                try {
                     $table->dropIndex('idx_product_active_default');
+                } catch (\Exception $e) {
+                    // Index doesn't exist, skip
                 }
-                if (isset($indexesFound['idx_barcode'])) {
+                try {
                     $table->dropIndex('idx_barcode');
+                } catch (\Exception $e) {
+                    // Index doesn't exist, skip
                 }
-                if (isset($indexesFound['idx_unit_code'])) {
+                try {
                     $table->dropIndex('idx_unit_code');
+                } catch (\Exception $e) {
+                    // Index doesn't exist, skip
                 }
-                if (isset($indexesFound['idx_display_order'])) {
+                try {
                     $table->dropIndex('idx_display_order');
+                } catch (\Exception $e) {
+                    // Index doesn't exist, skip
                 }
                 
                 if (Schema::hasColumn('product_selling_units', 'conversion_factor')) {
@@ -145,17 +167,20 @@ return new class extends Migration
 
         if (Schema::hasTable('product_price_history')) {
             Schema::table('product_price_history', function (Blueprint $table) {
-                $sm = Schema::getConnection()->getDoctrineSchemaManager();
-                $indexesFound = $sm->listTableIndexes('product_price_history');
-                
-                if (isset($indexesFound['idx_product_changed'])) {
+                try {
                     $table->dropIndex('idx_product_changed');
+                } catch (\Exception $e) {
+                    // Index doesn't exist, skip
                 }
-                if (isset($indexesFound['idx_user_changed'])) {
+                try {
                     $table->dropIndex('idx_user_changed');
+                } catch (\Exception $e) {
+                    // Index doesn't exist, skip
                 }
-                if (isset($indexesFound['idx_changed_at'])) {
+                try {
                     $table->dropIndex('idx_changed_at');
+                } catch (\Exception $e) {
+                    // Index doesn't exist, skip
                 }
             });
         }

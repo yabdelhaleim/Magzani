@@ -142,7 +142,7 @@
             </button>
         </div>
 
-        <form method="GET" action="{{ route('movements.index') }}" x-show="showFilters" x-collapse>
+        <form method="GET" action="{{ route('movements.index') }}" x-show="showFilters" x-transition>
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
                 <!-- نوع الحركة -->
                 <div>

@@ -16,10 +16,16 @@ class PurchaseInvoiceItem extends Model
         'purchase_unit_id', // ✅ إضافة دعم وحدات الشراء
         'quantity',
         'base_quantity', // ✅ الكمية بالوحدة الأساسية
+        'weight', // ✅ الوزن للمنتجات بالوزن
+        'base_unit_type', // ✅ نوع الوحدة الأساسية
+        'base_unit_code', // ✅ كود الوحدة الأساسية
+        'base_unit_label', // ✅ اسم الوحدة الأساسية
         'unit_code',
         'conversion_factor',
         'cost',
         'unit_cost', // للتوافق
+        'cost_price', // ✅ سعر التكلفة
+        'unit_price', // ✅ سعر الوحدة
         'discount',
         'discount_percent',
         'discount_amount',
@@ -34,9 +40,12 @@ class PurchaseInvoiceItem extends Model
     protected $casts = [
         'quantity' => 'decimal:3',
         'base_quantity' => 'decimal:3',
+        'weight' => 'decimal:3',
         'conversion_factor' => 'decimal:4',
         'cost' => 'decimal:2',
         'unit_cost' => 'decimal:2',
+        'cost_price' => 'decimal:2',
+        'unit_price' => 'decimal:2',
         'discount' => 'decimal:2',
         'discount_percent' => 'decimal:2',
         'discount_amount' => 'decimal:2',

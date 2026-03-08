@@ -9,10 +9,13 @@ use App\Models\PurchaseInvoiceItem;
 use App\Models\Product;
 use App\Models\ProductSellingUnit;
 use App\Models\ProductPurchaseUnit;
+use App\Models\ProductPriceHistory;
 use App\Models\Customer;
 use App\Models\Supplier;
+use App\Models\InventoryMovement;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Http\Request;
 use RuntimeException;
 
@@ -21,7 +24,8 @@ class InvoiceService
     public function __construct(
         private ProductService $productService,
         private CustomerService $customerService,
-        private SupplierService $supplierService
+        private SupplierService $supplierService,
+        private ?InventoryMovementService $movementService = null
     ) {}
 
     /* =====================================================================
@@ -306,6 +310,11 @@ class InvoiceService
      */
     public function calculateInvoiceDetails(SalesInvoice $invoice): array
     {
+        // ✅ تحميل العلاقة مع المنتجات إذا لم تكن محملة
+        if (!$invoice->relationLoaded('items') || !$invoice->items->first()?->relationLoaded('product')) {
+            $invoice->load(['items.product']);
+        }
+        
         // ✅ استخدام القيم المحفوظة في DB أولاً
         $subtotal = $invoice->subtotal ?? 0;
         $totalDiscount = $invoice->discount_amount ?? 0;
@@ -317,6 +326,30 @@ class InvoiceService
         $netTotal = $invoice->total;
         $paid = $invoice->paid ?? 0;
         $remaining = $netTotal - $paid;
+        
+        // ✅ حساب الربح من الأصناف
+        $totalCost = 0;
+        $totalRevenue = 0;
+        
+        foreach ($invoice->items as $item) {
+            // الكمية الأساسية (تأخذ في الاعتبار الوزن للمنتجات المرجحة)
+            $baseQty = $item->base_quantity ?? ($item->quantity * $item->conversion_factor);
+            
+            // سعر التكلفة من المنتج
+            $costPrice = $item->product->purchase_price ?? 0;
+            
+            // الإيراد = الكمية × سعر البيع
+            $revenue = $item->quantity * $item->price;
+            
+            // التكلفة = الكمية الأساسية × سعر التكلفة
+            $cost = $baseQty * $costPrice;
+            
+            $totalRevenue += $revenue;
+            $totalCost += $cost;
+        }
+        
+        $totalProfit = $totalRevenue - $totalCost;
+        $profitMargin = $totalRevenue > 0 ? ($totalProfit / $totalRevenue) * 100 : 0;
         
         // تحديد الحالة
         $displayStatus = 'unknown';
@@ -340,6 +373,11 @@ class InvoiceService
             'payment_status' => $invoice->payment_status,
             'display_status' => $displayStatus,
             'items_count' => $invoice->items->count(),
+            // ✅ بيانات الربح
+            'total_cost' => round($totalCost, 2),
+            'total_revenue' => round($totalRevenue, 2),
+            'total_profit' => round($totalProfit, 2),
+            'profit_margin' => round($profitMargin, 2),
         ];
     }
 
@@ -408,8 +446,13 @@ class InvoiceService
             $remaining = round($totals['grand_total'] - $paid, 2);
             
             // ==================== 4️⃣ التحقق من حد الائتمان ====================
+            $overpaymentWarning = null;
+            
+            // ✅ التحقق من تجاوز المبلغ المدفوع للمطلوب - إظهار تحذير بدلاً من رفض
             if ($remaining < 0) {
-                throw new RuntimeException('المبلغ المدفوع أكبر من الإجمالي');
+                $overpaymentWarning = 'المبلغ المدفوع أكبر من الإجمالي المطلوب بمبلغ: ' . abs($remaining) . ' ج.م';
+                $paid = round($totals['grand_total'], 2); // ✅ تسوية المبلغ المدفوع إلى الإجمالي
+                $remaining = 0;
             }
             
             if ($remaining > 0) {
@@ -464,8 +507,17 @@ class InvoiceService
                 $product = $products[$item['product_id']];
                 $sellingUnit = $sellingUnits[$item['selling_unit_id']];
                 
-                // حساب الكمية بالوحدة الأساسية
-                $baseQuantity = round($item['quantity'] * $sellingUnit->conversion_factor, 3);
+                // ✅ حساب الكمية بالوحدة الأساسية - مع دعم المنتجات المرجحة
+                $baseQuantity = 0;
+                $isWeightProduct = ($item['base_unit_type'] ?? null) === 'weight';
+                
+                if ($isWeightProduct && isset($item['weight']) && $item['weight'] > 0) {
+                    // للمنتجات المرجحة: الكمية الأساسية هي الوزن
+                    $baseQuantity = round($item['weight'], 3);
+                } else {
+                    // للمنتجات العادية: الكمية الأساسية = الكمية × معامل التحويل
+                    $baseQuantity = round($item['quantity'] * $sellingUnit->conversion_factor, 3);
+                }
                 
                 // التحقق من المخزون
                 $warehouse = $product->warehouses->first();
@@ -476,8 +528,9 @@ class InvoiceService
                 $availableQty = $warehouse->quantity - ($warehouse->reserved_quantity ?? 0);
                 
                 if ($availableQty < $baseQuantity) {
+                    $unitLabel = $item['base_unit_label'] ?? 'وحدة';
                     throw new RuntimeException(
-                        "الكمية غير متاحة للمنتج: {$product->name}. المطلوب: {$baseQuantity}، المتوفر: {$availableQty}"
+                        "الكمية غير متاحة للمنتج: {$product->name}. المطلوب: {$baseQuantity} {$unitLabel}، المتوفر: {$availableQty} {$unitLabel}"
                     );
                 }
                 
@@ -520,14 +573,23 @@ class InvoiceService
             // ==================== 9️⃣ إدراج الأصناف دفعة واحدة ====================
             DB::table('sales_invoice_items')->insert($invoiceItems);
             
-            // ==================== 🔟 تحديث المخزون دفعة واحدة ====================
+            // ==================== 🔟 تحديث المخزون وتسجيل الحركة ====================
             foreach ($stockUpdates as $update) {
-                DB::table('product_warehouse')
+                // جلب الكمية الحالية قبل الخصم
+                $currentStock = DB::table('product_warehouse')
+                    ->where('product_id', $update['product_id'])
+                    ->where('warehouse_id', $data['warehouse_id'])
+                    ->first();
+                
+                $quantityBefore = $currentStock ? (float) $currentStock->quantity : 0;
+                $quantityAfter = $quantityBefore - $update['quantity'];
+                
+                // خصم المخزون
+                $affected = DB::table('product_warehouse')
                     ->where('product_id', $update['product_id'])
                     ->where('warehouse_id', $data['warehouse_id'])
                     ->decrement('quantity', $update['quantity']);
                 
-                // لم نعد نكتب مباشرة إلى العمود المحسوب `available_quantity`.
                 // تحديث `updated_at` فقط ليظهر التغيير في السجلات.
                 DB::table('product_warehouse')
                     ->where('product_id', $update['product_id'])
@@ -535,6 +597,75 @@ class InvoiceService
                     ->update([
                         'updated_at' => now()
                     ]);
+                
+                // تسجيل حركة المخزون
+                $timestamp = now()->format('YmdHis');
+                $uniqueId = $timestamp . str_pad(mt_rand(1, 9999), 4, '0', STR_PAD_LEFT);
+                
+                $product = $products[$update['product_id']];
+                $unitCost = $product->purchase_price ?? 0;
+                $totalCost = $update['quantity'] * $unitCost;
+                
+                InventoryMovement::create([
+                    'warehouse_id' => $data['warehouse_id'],
+                    'product_id' => $update['product_id'],
+                    'movement_type' => 'sale',
+                    'quantity' => $update['quantity'],
+                    'quantity_change' => -$update['quantity'],
+                    'quantity_before' => $quantityBefore,
+                    'quantity_after' => $quantityAfter,
+                    'unit_cost' => $unitCost,
+                    'unit_price' => 0,
+                    'total_cost' => $totalCost,
+                    'total_price' => 0,
+                    'movement_date' => $invoice->invoice_date,
+                    'reference_type' => SalesInvoice::class,
+                    'reference_id' => $invoice->id,
+                    'sales_invoice_id' => $invoice->id,
+                    'notes' => "فاتورة مبيعات #{$invoice->invoice_number}",
+                    'movement_number' => "SOUT-{$uniqueId}",
+                    'created_by' => auth()->id(),
+                ]);
+                
+                Log::info('تم خصم المخزون وتسجيل الحركة', [
+                    'product_id' => $update['product_id'],
+                    'warehouse_id' => $data['warehouse_id'],
+                    'quantity' => $update['quantity'],
+                    'affected_rows' => $affected
+                ]);
+            }
+            
+            // ==================== 1️⃣0️⃣+ مسح كاش المخزن ====================
+            // مسح كل مفاتيح الكاش المتعلقة بالمخزون
+            Cache::forget("warehouse_details_{$data['warehouse_id']}");
+            Cache::forget("warehouse_stock_{$data['warehouse_id']}");
+            Cache::forget("warehouse_stats_{$data['warehouse_id']}");
+            Cache::forget("warehouse_data_{$data['warehouse_id']}");
+            
+            // ==================== 1️⃣0️⃣+ تحديث أسعار البيع للمنتجات ====================
+            foreach ($data['items'] as $item) {
+                $product = $products[$item['product_id']];
+                $salePrice = round($item['price'], 2);
+                
+                if ($product->selling_price != $salePrice) {
+                    $oldSellingPrice = $product->selling_price;
+                    
+                    // تحديث سعر البيع للمنتج
+                    $product->update(['selling_price' => $salePrice]);
+                    
+                    // تسجيل التغيير في تاريخ الأسعار
+                    ProductPriceHistory::create([
+                        'product_id' => $product->id,
+                        'base_unit' => $product->base_unit,
+                        'old_purchase_price' => $product->purchase_price,
+                        'new_purchase_price' => $product->purchase_price,
+                        'old_selling_price' => $oldSellingPrice,
+                        'new_selling_price' => $salePrice,
+                        'change_reason' => 'sales_invoice_' . $invoice->id,
+                        'changed_by' => auth()->id(),
+                        'changed_at' => now(),
+                    ]);
+                }
             }
             
             // ==================== 1️⃣1️⃣ تحديث رصيد العميل ====================
@@ -554,12 +685,298 @@ class InvoiceService
             // ==================== 1️⃣3️⃣ مسح الـ Cache ====================
             $this->clearSalesInvoiceCache($data['customer_id']);
             
-            return $invoice->fresh([
+            // ✅ إرجاع الفاتورة مع رسالة التحذير إن وجدت
+            $result = $invoice->fresh([
                 'items.product', 
                 'items.sellingUnit', 
                 'customer', 
                 'warehouse'
             ]);
+            
+            // إضافة التحذير كسمة مؤقتة (لا تُحفظ في قاعدة البيانات)
+            if ($overpaymentWarning) {
+                $result->overpayment_warning = $overpaymentWarning;
+            }
+            
+            return $result;
+        });
+    }
+
+
+    /**
+     * ✅ تحديث فاتورة مبيعات
+     */
+    public function updateSalesInvoice(int $invoiceId, array $data): SalesInvoice
+    {
+        return DB::transaction(function () use ($invoiceId, $data) {
+            // جلب الفاتورة الأصلية
+            $invoice = SalesInvoice::with(['items', 'customer'])->findOrFail($invoiceId);
+            
+            // حفظ القيم القديمة للمقارنة
+            $oldCustomerId = $invoice->customer_id;
+            $oldPaid = $invoice->paid;
+            $oldItems = $invoice->items->keyBy('id');
+            
+            // جلب البيانات
+            $productIds = array_column($data['items'], 'product_id');
+            $unitIds = array_column($data['items'], 'selling_unit_id');
+            
+            $products = Product::with(['warehouses' => function($query) use ($data) {
+                    $query->where('warehouse_id', $data['warehouse_id'])
+                          ->select('product_id', 'warehouse_id', 'quantity', 'reserved_quantity');
+                }])
+                ->whereIn('id', $productIds)
+                ->lockForUpdate()
+                ->get()
+                ->keyBy('id');
+            
+            $sellingUnits = ProductSellingUnit::whereIn('id', $unitIds)
+                ->where('is_active', true)
+                ->get()
+                ->keyBy('id');
+            
+            // التحقق من البيانات
+            $this->validateSalesInvoiceData($data, $products, $sellingUnits);
+            
+            // حساب الإجماليات
+            $totals = $this->calculateInvoiceTotals($data);
+            
+            $paid = round($data['paid'] ?? 0, 2);
+            $remaining = round($totals['grand_total'] - $paid, 2);
+            
+            // تحديد حالة الدفع
+            $paymentStatus = $this->determinePaymentStatus($paid, $totals['grand_total']);
+            
+            // ========== إزالة تأثير الفاتورة القديمة (باستخدام Batch Update لتحسين الأداء) ==========
+            
+            // إرجاع المخزون للمنتجات القديمة - استخدام Batch Update بدلاً من N+1
+            $oldItemsArray = $oldItems->map(function ($item) use ($invoice) {
+                return [
+                    'product_id' => $item->product_id,
+                    'warehouse_id' => $invoice->warehouse_id,
+                    'base_quantity' => $item->base_quantity ?? $item->quantity
+                ];
+            })->toArray();
+            
+            if (!empty($oldItemsArray)) {
+                foreach ($oldItemsArray as $item) {
+                    // جلب الكمية الحالية قبل الإرجاع
+                    $currentStock = DB::table('product_warehouse')
+                        ->where('product_id', $item['product_id'])
+                        ->where('warehouse_id', $item['warehouse_id'])
+                        ->first();
+                    
+                    $quantityBefore = $currentStock ? (float) $currentStock->quantity : 0;
+                    $quantityAfter = $quantityBefore + $item['base_quantity'];
+                    
+                    // إرجاع المخزون
+                    DB::table('product_warehouse')
+                        ->where('product_id', $item['product_id'])
+                        ->where('warehouse_id', $item['warehouse_id'])
+                        ->increment('quantity', $item['base_quantity']);
+                    
+                    // تسجيل حركة الإرجاع
+                    $timestamp = now()->format('YmdHis');
+                    $uniqueId = $timestamp . str_pad(mt_rand(1, 9999), 4, '0', STR_PAD_LEFT);
+                    
+                    $product = Product::find($item['product_id']);
+                    $unitCost = $product ? ($product->purchase_price ?? 0) : 0;
+                    $totalCost = $item['base_quantity'] * $unitCost;
+                    
+                    InventoryMovement::create([
+                        'warehouse_id' => $item['warehouse_id'],
+                        'product_id' => $item['product_id'],
+                        'movement_type' => 'return_in',
+                        'quantity' => $item['base_quantity'],
+                        'quantity_change' => $item['base_quantity'],
+                        'quantity_before' => $quantityBefore,
+                        'quantity_after' => $quantityAfter,
+                        'unit_cost' => $unitCost,
+                        'unit_price' => 0,
+                        'total_cost' => $totalCost,
+                        'total_price' => 0,
+                        'movement_date' => now()->toDateString(),
+                        'reference_type' => SalesInvoice::class,
+                        'reference_id' => $invoiceId,
+                        'sales_invoice_id' => $invoiceId,
+                        'notes' => "إرجاع مخزون من تحديث فاتورة #{$invoice->invoice_number}",
+                        'movement_number' => "SRET-{$uniqueId}",
+                        'created_by' => auth()->id(),
+                    ]);
+                }
+            }
+            
+            // خصم الرصيد القديم من العميل القديم
+            if ($oldPaid > 0) {
+                DB::table('customers')
+                    ->where('id', $oldCustomerId)
+                    ->decrement('balance', $oldPaid);
+            }
+            
+            // حذف الأصناف القديمة
+            DB::table('sales_invoice_items')->where('sales_invoice_id', $invoiceId)->delete();
+            
+            // ========== إضافة تأثير الفاتورة الجديدة ==========
+            
+            // التحقق من المخزون وخصمه - تحسين الأداء بتجميع العمليات
+            $stockDecrementData = [];
+            foreach ($data['items'] as $item) {
+                $product = $products[$item['product_id']];
+                $sellingUnit = $sellingUnits[$item['selling_unit_id']];
+                $baseQuantity = round($item['quantity'] * $sellingUnit->conversion_factor, 3);
+                
+                // التحقق من المخزون
+                $warehouse = $product->warehouses->first();
+                if (!$warehouse) {
+                    throw new RuntimeException("المنتج {$product->name} غير موجود في المخزن المحدد");
+                }
+                
+                $availableQty = $warehouse->quantity - ($warehouse->reserved_quantity ?? 0);
+                
+                if ($availableQty < $baseQuantity) {
+                    throw new RuntimeException(
+                        "الكمية غير متاحة للمنتج: {$product->name}. المطلوب: {$baseQuantity}، المتوفر: {$availableQty}"
+                    );
+                }
+                
+                $stockDecrementData[] = [
+                    'product_id' => $item['product_id'],
+                    'warehouse_id' => $data['warehouse_id'],
+                    'quantity' => $baseQuantity
+                ];
+            }
+            
+            // تنفيذ خصم المخزون دفعة واحدة مع تسجيل الحركات
+            foreach ($stockDecrementData as $decrement) {
+                // جلب الكمية الحالية قبل الخصم
+                $currentStock = DB::table('product_warehouse')
+                    ->where('product_id', $decrement['product_id'])
+                    ->where('warehouse_id', $decrement['warehouse_id'])
+                    ->first();
+                
+                $quantityBefore = $currentStock ? (float) $currentStock->quantity : 0;
+                $quantityAfter = $quantityBefore - $decrement['quantity'];
+                
+                // خصم المخزون
+                DB::table('product_warehouse')
+                    ->where('product_id', $decrement['product_id'])
+                    ->where('warehouse_id', $decrement['warehouse_id'])
+                    ->decrement('quantity', $decrement['quantity']);
+                
+                // تسجيل حركة الخصم
+                $timestamp = now()->format('YmdHis');
+                $uniqueId = $timestamp . str_pad(mt_rand(1, 9999), 4, '0', STR_PAD_LEFT);
+                
+                $product = $products[$decrement['product_id']];
+                $unitCost = $product ? ($product->purchase_price ?? 0) : 0;
+                $totalCost = $decrement['quantity'] * $unitCost;
+                
+                InventoryMovement::create([
+                    'warehouse_id' => $decrement['warehouse_id'],
+                    'product_id' => $decrement['product_id'],
+                    'movement_type' => 'sale',
+                    'quantity' => $decrement['quantity'],
+                    'quantity_change' => -$decrement['quantity'],
+                    'quantity_before' => $quantityBefore,
+                    'quantity_after' => $quantityAfter,
+                    'unit_cost' => $unitCost,
+                    'unit_price' => 0,
+                    'total_cost' => $totalCost,
+                    'total_price' => 0,
+                    'movement_date' => now()->toDateString(),
+                    'reference_type' => SalesInvoice::class,
+                    'reference_id' => $invoiceId,
+                    'sales_invoice_id' => $invoiceId,
+                    'notes' => "خصم مخزون من تحديث فاتورة #{$invoice->invoice_number}",
+                    'movement_number' => "SOUT-{$uniqueId}",
+                    'created_by' => auth()->id(),
+                ]);
+            }
+            
+            // مسح كاش المخزن
+            Cache::forget("warehouse_details_{$data['warehouse_id']}");
+            Cache::forget("warehouse_stock_{$data['warehouse_id']}");
+            Cache::forget("warehouse_stats_{$data['warehouse_id']}");
+            Cache::forget("warehouse_data_{$data['warehouse_id']}");
+            
+            // إضافة الرصيد الجديد للعميل
+            if ($remaining > 0) {
+                DB::table('customers')
+                    ->where('id', $data['customer_id'])
+                    ->increment('balance', $remaining);
+            }
+            
+            // ========== تحديث الفاتورة ==========
+            $invoice->update([
+                'customer_id'     => $data['customer_id'],
+                'warehouse_id'    => $data['warehouse_id'],
+                'invoice_date'    => $data['invoice_date'] ?? now(),
+                'subtotal'        => $totals['subtotal'],
+                'discount_type'   => $data['discount_type'] ?? 'fixed',
+                'discount_value'  => $totals['general_discount'],
+                'discount_amount' => $totals['total_discount'],
+                'tax_rate'        => $data['tax_rate'] ?? 0,
+                'tax_amount'      => $totals['total_tax'],
+                'shipping_cost'   => $totals['shipping_cost'],
+                'other_charges'   => $totals['other_charges'],
+                'total'           => $totals['grand_total'],
+                'paid'            => $paid,
+                'payment_status'  => $paymentStatus,
+                'notes'           => $data['notes'] ?? null,
+                'updated_at'       => now(),
+            ]);
+            
+            // إضافة الأصناف الجديدة
+            $invoiceItems = [];
+            
+            foreach ($data['items'] as $item) {
+                $product = $products[$item['product_id']];
+                $sellingUnit = $sellingUnits[$item['selling_unit_id']];
+                $baseQuantity = round($item['quantity'] * $sellingUnit->conversion_factor, 3);
+                $itemCalc = $this->calculateItemTotals($item);
+                
+                $invoiceItems[] = [
+                    'sales_invoice_id' => $invoice->id,
+                    'product_id'       => $item['product_id'],
+                    'selling_unit_id'  => $item['selling_unit_id'] ?? null,
+                    'quantity'         => round($item['quantity'], 3),
+                    'base_quantity'    => $baseQuantity,
+                    'weight'           => isset($item['weight']) && $item['weight'] ? round($item['weight'], 3) : null,
+                    'unit_code'        => $sellingUnit->unit_code ?? 'piece',
+                    'base_unit_type'   => $item['base_unit_type'] ?? null,
+                    'base_unit_code'   => $item['base_unit_code'] ?? null,
+                    'base_unit_label'  => $item['base_unit_label'] ?? null,
+                    'conversion_factor'=> $sellingUnit->conversion_factor,
+                    'unit_price'       => round($item['price'], 2),
+                    'cost_price'       => round($product->purchase_price ?? 0, 2),
+                    'discount_type'    => 'fixed',
+                    'discount_value'   => $itemCalc['discount'],
+                    'discount_amount'  => $itemCalc['discount'],
+                    'tax_rate'         => round($item['tax_rate'] ?? 0, 2),
+                    'tax_amount'       => $itemCalc['tax'],
+                    'subtotal'         => $itemCalc['subtotal'],
+                    'total'            => $itemCalc['total'],
+                    'created_at'       => now(),
+                    'updated_at'       => now(),
+                ];
+            }
+            
+            DB::table('sales_invoice_items')->insert($invoiceItems);
+            
+            // تسجيل النشاط
+            $this->logInvoiceActivity($invoice->id, 'sales', 'updated', [
+                'invoice_number' => $invoice->invoice_number,
+                'total' => $totals['grand_total'],
+                'items_count' => count($data['items'])
+            ]);
+            
+            // مسح الكاش
+            $this->clearSalesInvoiceCache($data['customer_id']);
+            if ($oldCustomerId != $data['customer_id']) {
+                $this->clearSalesInvoiceCache($oldCustomerId);
+            }
+            
+            return $invoice->fresh(['items.product', 'items.sellingUnit', 'customer', 'warehouse']);
         });
     }
 
@@ -709,20 +1126,58 @@ class InvoiceService
                 ];
             }
             
-            // تحديث المخزون دفعة واحدة
+            // تحديث المخزون وتسجيل الحركات
             foreach ($stockUpdates as $update) {
+                // جلب الكمية الحالية قبل الإرجاع
+                $currentStock = DB::table('product_warehouse')
+                    ->where('product_id', $update['product_id'])
+                    ->where('warehouse_id', $invoice->warehouse_id)
+                    ->first();
+                
+                $quantityBefore = $currentStock ? (float) $currentStock->quantity : 0;
+                $quantityAfter = $quantityBefore + $update['quantity'];
+                
+                // إرجاع المخزون
                 DB::table('product_warehouse')
                     ->where('product_id', $update['product_id'])
                     ->where('warehouse_id', $invoice->warehouse_id)
                     ->increment('quantity', $update['quantity']);
 
-                // لا نكتب مباشرة إلى العمود المحسوب `available_quantity` — السماح لقاعدة البيانات
-                // بحسابه تلقائياً من الأعمدة الأساسية. نقوم بتحديث الطابع الزمني فقط.
-                DB::table('product_warehouse')
-                    ->where('product_id', $update['product_id'])
-                    ->where('warehouse_id', $invoice->warehouse_id)
-                    ->update(['updated_at' => now()]);
+                // تسجيل حركة الإرجاع
+                $timestamp = now()->format('YmdHis');
+                $uniqueId = $timestamp . str_pad(mt_rand(1, 9999), 4, '0', STR_PAD_LEFT);
+                
+                $product = Product::find($update['product_id']);
+                $unitCost = $product ? ($product->purchase_price ?? 0) : 0;
+                $totalCost = $update['quantity'] * $unitCost;
+                
+                InventoryMovement::create([
+                    'warehouse_id' => $invoice->warehouse_id,
+                    'product_id' => $update['product_id'],
+                    'movement_type' => 'return_in',
+                    'quantity' => $update['quantity'],
+                    'quantity_change' => $update['quantity'],
+                    'quantity_before' => $quantityBefore,
+                    'quantity_after' => $quantityAfter,
+                    'unit_cost' => $unitCost,
+                    'unit_price' => 0,
+                    'total_cost' => $totalCost,
+                    'total_price' => 0,
+                    'movement_date' => now()->toDateString(),
+                    'reference_type' => SalesInvoice::class,
+                    'reference_id' => $invoiceId,
+                    'sales_invoice_id' => $invoiceId,
+                    'notes' => "إلغاء فاتورة مبيعات #{$invoice->invoice_number}",
+                    'movement_number' => "SRET-{$uniqueId}",
+                    'created_by' => auth()->id(),
+                ]);
             }
+            
+            // مسح كاش المخزن
+            Cache::forget("warehouse_details_{$invoice->warehouse_id}");
+            Cache::forget("warehouse_stock_{$invoice->warehouse_id}");
+            Cache::forget("warehouse_stats_{$invoice->warehouse_id}");
+            Cache::forget("warehouse_data_{$invoice->warehouse_id}");
             
             // ==================== معالجة رصيد العميل ====================
             $remaining = $invoice->total - $invoice->paid;

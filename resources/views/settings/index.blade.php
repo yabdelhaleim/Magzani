@@ -38,6 +38,12 @@
                     <i class="fas fa-database ml-2"></i>
                     النسخ الاحتياطي
                 </button>
+                <button @click="tab = 'terms'" 
+                        :class="tab === 'terms' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-600 hover:text-gray-800'"
+                        class="py-4 px-2 border-b-2 font-semibold transition">
+                    <i class="fas fa-file-contract ml-2"></i>
+                    شروط وأحكام الفواتير
+                </button>
             </nav>
         </div>
 
@@ -344,6 +350,56 @@
                     </div>
                 </div>
             </div>
+        </div>
+        
+        <!-- Terms and Conditions Tab -->
+        <div x-show="tab === 'terms'" class="p-6">
+            <form method="POST" action="{{ route('settings.system.update') }}" class="space-y-6">
+                @csrf
+                @method('PUT')
+                
+                <div>
+                    <h3 class="text-lg font-bold text-gray-800 mb-4">شروط وأحكام الفواتير الافتراضية</h3>
+                    <p class="text-sm text-gray-600 mb-6">سيتم استخدام هذه الشروط والأحكام تلقائياً في جميع الفواتير الجديدة ما لم يتم تحديد شروط مختلفة</p>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- شروط وأحكام فواتير المبيعات -->
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                <i class="fas fa-arrow-up text-green-600 ml-2"></i>
+                                فواتير المبيعات
+                            </label>
+                            <textarea 
+                                name="default_sales_terms" 
+                                rows="6"
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                placeholder="أدخل شروط وأحكام فواتير المبيعات..."></textarea>
+                            <p class="text-xs text-gray-500 mt-1">مثال: الدفع خلال 30 يوم من تاريخ الفاتورة</p>
+                        </div>
+                        
+                        <!-- شروط وأحكام فواتير الشراء -->
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                <i class="fas fa-arrow-down text-blue-600 ml-2"></i>
+                                فواتير الشراء
+                            </label>
+                            <textarea 
+                                name="default_purchase_terms" 
+                                rows="6"
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                placeholder="أدخل شروط وأحكام فواتير الشراء..."></textarea>
+                            <p class="text-xs text-gray-500 mt-1">مثال: الدفع خلال 15 يوم من تاريخ الاستلام</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex justify-end pt-4 border-t border-gray-200">
+                    <button type="submit" class="px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition">
+                        <i class="fas fa-save ml-2"></i>
+                        حفظ شروط وأحكام الفواتير
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 </div>

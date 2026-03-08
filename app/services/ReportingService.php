@@ -136,7 +136,7 @@ public function profitLossReport($startDate, $endDate)
                     DB::raw('SUM(sales_invoice_items.quantity * products.purchase_price) as total_cost'),
                     DB::raw('SUM(sales_invoice_items.total - (sales_invoice_items.quantity * products.purchase_price)) as total_profit'),
                     DB::raw('COUNT(DISTINCT sales_invoice_items.sales_invoice_id) as number_of_orders'),
-                    DB::raw('AVG(sales_invoice_items.price) as average_price')
+                    DB::raw('AVG(sales_invoice_items.unit_price) as average_price')
                 )
                 ->groupBy('products.id', 'products.name', 'products.code', 'products.barcode');
 
@@ -191,7 +191,9 @@ public function profitLossReport($startDate, $endDate)
             ->select(
                 DB::raw('DATE(invoice_date) as date'),
                 DB::raw('COUNT(*) as total_invoices'),
-                DB::raw('SUM(total) as total_sales'),
+                DB::raw('COALESCE(SUM(total), 0) as total_sales'),
+                DB::raw('COALESCE(SUM(paid), 0) as total_paid'),
+                DB::raw('COALESCE(SUM(total), 0) - COALESCE(SUM(paid), 0) as total_remaining'),
                 DB::raw('AVG(total) as average_invoice')
             )
             ->whereBetween('invoice_date', [$startDate, $endDate])
@@ -302,7 +304,14 @@ public function profitLossReport($startDate, $endDate)
                     ->join('products', 'products.id', '=', 'product_warehouse.product_id')
                     ->join('warehouses', 'warehouses.id', '=', 'product_warehouse.warehouse_id')
                     ->whereColumn('product_warehouse.quantity', '<=', 'product_warehouse.min_stock')
-                    ->select('products.name', 'warehouses.name as warehouse', 'product_warehouse.quantity', 'product_warehouse.min_stock')
+                    ->select(
+                        'products.id',
+                        'products.name',
+                        'warehouses.id as warehouse_id',
+                        'warehouses.name as warehouse_name',
+                        'product_warehouse.quantity as qty',
+                        'product_warehouse.min_stock as min_qty'
+                    )
                     ->limit(10)
                     ->get(),
                 

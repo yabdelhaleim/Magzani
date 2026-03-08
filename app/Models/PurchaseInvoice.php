@@ -31,6 +31,7 @@ class PurchaseInvoice extends Model
         'status',
         'payment_status',
         'notes',
+        'terms_conditions',
         'created_by',
         'confirmed_by',
         'confirmed_at',

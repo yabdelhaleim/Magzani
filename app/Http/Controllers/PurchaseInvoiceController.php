@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\PurchaseInvoiceRequest;
 use App\Models\PurchaseInvoice;
 use App\Models\Supplier;
+use Illuminate\Support\Facades\Log;
 use App\Models\Warehouse;
 use App\Models\Product;
 use App\Services\PurchaseInvoiceService;
@@ -38,8 +39,20 @@ class PurchaseInvoiceController extends Controller
     public function create()
     {
         $suppliers = Supplier::all();
-        $warehouses = Warehouse::all();
-        $products = Product::all();
+        $warehouses = Warehouse::where('is_active', 1)->get();
+        
+        // ✅ جلب المنتجات مع البيانات الكاملة (مثل المبيعات)
+        $products = Product::active()
+            ->with([
+                'activeSellingUnits' => function($q) {
+                    $q->ordered();
+                },
+                'warehouses' => function($q) {
+                    $q->where('warehouses.is_active', true);
+                },
+                'baseunit'
+            ])
+            ->get();
 
         return view('invoices.purchases.create', compact('suppliers', 'warehouses', 'products'));
     }
@@ -50,6 +63,7 @@ class PurchaseInvoiceController extends Controller
     public function store(PurchaseInvoiceRequest $request)
     {
         try {
+            Log::info('Purchase invoice store: validation passed', ['items_count' => count($request->input('items', []))]);
             $invoice = $this->invoiceService->create($request->validated());
 
             return redirect()
@@ -57,6 +71,10 @@ class PurchaseInvoiceController extends Controller
                 ->with('success', 'تم إنشاء فاتورة الشراء بنجاح');
 
         } catch (\Exception $e) {
+            Log::error('Purchase invoice store failed', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
             return back()
                 ->withInput()
                 ->with('error', 'حدث خطأ أثناء إنشاء الفاتورة: ' . $e->getMessage());

@@ -16,6 +16,7 @@ class ProductSellingUnit extends Model
     protected $fillable = [
         'product_id',
         'base_unit_id',
+        'unit_name',
         'unit_code',
         'unit_label',
         'conversion_factor',

@@ -165,7 +165,7 @@
                                     <input 
                                         type="number" 
                                         name="items[{{ $index }}][discount]" 
-                                        value="{{ ($item->discount / ($item->quantity * $item->price)) * 100 }}"
+                                        value="{{ ($item->quantity * $item->price) > 0 ? ($item->discount / ($item->quantity * $item->price)) * 100 : 0 }}"
                                         step="0.01"
                                         min="0"
                                         max="100"
@@ -179,13 +179,20 @@
                                     <input 
                                         type="number" 
                                         name="items[{{ $index }}][tax_rate]" 
-                                        value="{{ ($item->tax / (($item->quantity * $item->price) - $item->discount)) * 100 }}"
+                                        value="{{ ((($item->quantity * $item->price) - $item->discount) > 0) ? ($item->tax / (($item->quantity * $item->price) - $item->discount)) * 100 : 0 }}"
                                         step="0.01"
                                         min="0"
                                         max="100"
                                         class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-yellow-500"
                                     >
                                 </div>
+
+                                <!-- Hidden fields for required data -->
+                                <input type="hidden" name="items[{{ $index }}][selling_unit_id]" value="{{ $item->selling_unit_id }}">
+                                <input type="hidden" name="items[{{ $index }}][weight]" value="{{ $item->weight ?? 0 }}">
+                                <input type="hidden" name="items[{{ $index }}][base_unit_type]" value="{{ $item->base_unit_type ?? 'piece' }}">
+                                <input type="hidden" name="items[{{ $index }}][base_unit_code]" value="{{ $item->base_unit_code ?? $item->sellingUnit?->unit_code ?? 'piece' }}">
+                                <input type="hidden" name="items[{{ $index }}][base_unit_label]" value="{{ $item->base_unit_label ?? $item->sellingUnit?->unit_label ?? 'قطعة' }}">
                             </div>
                         </div>
                         @endforeach

@@ -77,6 +77,10 @@ document.addEventListener('alpine:init', () => {
         grandTotal: 0,
         paid: 0,
         remaining: 0,
+        
+        // ✅ متغيرات تحذير تجاوز الدفع
+        showOverpaymentWarning: false,
+        overpaymentMessage: '',
 
         // ✅ التحقق هل المنتج يُباع بالوزن
         isWeightBased(productId) {
@@ -129,6 +133,16 @@ document.addEventListener('alpine:init', () => {
             const defaultUnit = productData.selling_units.find(u => u.is_default);
             const firstUnit = productData.selling_units[0];
             
+            // ✅ حساب الكمية المتاحة بالوحدة المناسبة
+            if (productData.base_unit_type === 'weight') {
+                // للمنتجات المرجحة، الكمية المتاحة تكون كما هي (بالوحدة الأساسية)
+                item.available_stock_in_unit = item.available_stock;
+                // ✅ للمنتجات المرجحة، الكمية الافتراضية تكون 1
+                item.quantity = 1;
+            } else {
+                item.available_stock_in_unit = Math.floor(item.available_stock / (firstUnit?.conversion_factor || 1));
+            }
+            
             if (defaultUnit) {
                 this.selectUnit(index, defaultUnit.id);
             } else if (firstUnit) {
@@ -172,7 +186,14 @@ document.addEventListener('alpine:init', () => {
             item.discount = productData.discount;
             
             // حساب الكمية المتاحة بالوحدة المختارة
-            item.available_stock_in_unit = Math.floor(item.available_stock / item.conversion_factor);
+            // ✅ بالنسبة للمنتجات المرجحة (weight)، الكمية المتاحة تكون كما هي بدون قسمة
+            if (item.base_unit_type === 'weight') {
+                item.available_stock_in_unit = item.available_stock;
+                // ✅ للمنتجات المرجحة، الكمية تكون 1
+                item.quantity = 1;
+            } else {
+                item.available_stock_in_unit = Math.floor(item.available_stock / item.conversion_factor);
+            }
             
             this.checkStockAvailability(index);
             this.calculateItemTotal(index);
@@ -211,10 +232,17 @@ document.addEventListener('alpine:init', () => {
             const weight = parseFloat(item.weight) || 0;
             
             if (weight > 0 && item.base_unit_price > 0) {
-                // السعر = الوزن × سعر الوحدة الأساسية
+                // ✅ السعر = الوزن × سعر الوحدة الأساسية
+                // مثال: 5 طن × 10000 ج.م/طن = 50000 ج.م
                 item.price = Math.round(weight * item.base_unit_price * 100) / 100;
+                
+                // ✅ Untuk produk tertimbang, pastikan quantity = 1
+                if (item.base_unit_type === 'weight') {
+                    item.quantity = 1;
+                }
             }
             
+            this.checkStockAvailability(index);
             this.calculateItemTotal(index);
         },
 
@@ -226,9 +254,15 @@ document.addEventListener('alpine:init', () => {
                 return;
             }
 
-            // التحقق من الكمية المطلوبة مقابل المتاحة
-            const requiredInBaseUnit = item.quantity * item.conversion_factor;
-            item.show_stock_warning = requiredInBaseUnit > item.available_stock;
+            // ✅ بالنسبة للمنتجات المرجحة (weight)، نتحقق من الوزن المدخل وليس الكمية
+            if (item.base_unit_type === 'weight') {
+                const weight = parseFloat(item.weight) || 0;
+                item.show_stock_warning = weight > item.available_stock;
+            } else {
+                // للمنتجات العادية، نتحقق من الكمية
+                const requiredInBaseUnit = item.quantity * item.conversion_factor;
+                item.show_stock_warning = requiredInBaseUnit > item.available_stock;
+            }
         },
 
         // تحديث كل الأصناف عند تغيير المخزن
@@ -236,7 +270,10 @@ document.addEventListener('alpine:init', () => {
             this.items.forEach((item, index) => {
                 if (item.product_id) {
                     item.available_stock = this.getAvailableStock(item.product_id);
-                    if (item.conversion_factor) {
+                    // ✅ بالنسبة للمنتجات المرجحة (weight)، الكمية المتاحة تكون كما هي
+                    if (item.base_unit_type === 'weight') {
+                        item.available_stock_in_unit = item.available_stock;
+                    } else if (item.conversion_factor) {
                         item.available_stock_in_unit = Math.floor(item.available_stock / item.conversion_factor);
                     }
                     this.checkStockAvailability(index);
@@ -298,10 +335,16 @@ document.addEventListener('alpine:init', () => {
 
         calculateItemTotal(index) {
             const item = this.items[index];
-            const subtotal = item.quantity * item.price;
-            const discount = subtotal * (item.discount / 100);
+            
+            // ✅ التأكد من أن القيم الرقمية صحيحة
+            const qty = parseFloat(item.quantity) || 0;
+            const priceValue = parseFloat(item.price) || 0;
+            
+            // الإجمالي = الكمية × السعر
+            const subtotal = qty * priceValue;
+            const discount = subtotal * ((parseFloat(item.discount) || 0) / 100);
             const afterDiscount = subtotal - discount;
-            const tax = afterDiscount * (item.tax_rate / 100);
+            const tax = afterDiscount * ((parseFloat(item.tax_rate) || 0) / 100);
             item.total = Math.round((afterDiscount + tax) * 100) / 100;
             
             this.checkStockAvailability(index);
@@ -309,15 +352,27 @@ document.addEventListener('alpine:init', () => {
         },
 
         calculateTotals() {
-            this.subtotal = Math.round(this.items.reduce((s, i) => s + (i.quantity * i.price), 0) * 100) / 100;
+            // ✅ التأكد من أن القيم الرقمية صحيحة
+            this.subtotal = Math.round(this.items.reduce((s, i) => {
+                const qty = parseFloat(i.quantity) || 0;
+                const priceValue = parseFloat(i.price) || 0;
+                return s + (qty * priceValue);
+            }, 0) * 100) / 100;
             
             this.totalDiscount = Math.round(this.items.reduce((s, i) => {
-                return s + ((i.quantity * i.price) * (i.discount / 100));
+                const qty = parseFloat(i.quantity) || 0;
+                const priceValue = parseFloat(i.price) || 0;
+                const discount = parseFloat(i.discount) || 0;
+                return s + ((qty * priceValue) * (discount / 100));
             }, 0) * 100) / 100;
             
             this.totalTax = Math.round(this.items.reduce((s, i) => {
-                const afterDiscount = (i.quantity * i.price) - ((i.quantity * i.price) * (i.discount / 100));
-                return s + (afterDiscount * (i.tax_rate / 100));
+                const qty = parseFloat(i.quantity) || 0;
+                const priceValue = parseFloat(i.price) || 0;
+                const discount = parseFloat(i.discount) || 0;
+                const taxRate = parseFloat(i.tax_rate) || 0;
+                const afterDiscount = (qty * priceValue) - ((qty * priceValue) * (discount / 100));
+                return s + (afterDiscount * (taxRate / 100));
             }, 0) * 100) / 100;
             
             this.grandTotal = Math.round((this.subtotal - this.totalDiscount + this.totalTax + Number(this.shipping || 0)) * 100) / 100;
@@ -326,6 +381,16 @@ document.addEventListener('alpine:init', () => {
 
         updatePaid() {
             this.remaining = Math.round((this.grandTotal - (Number(this.paid) || 0)) * 100) / 100;
+            
+            // ✅ إظهار تحذير عند تجاوز المبلغ المدفوع للمطلوب
+            if (this.remaining < 0) {
+                const excessAmount = Math.abs(this.remaining);
+                this.showOverpaymentWarning = true;
+                this.overpaymentMessage = '⚠️ تحذير: المبلغ المدفوع أكبر من الإجمالي المطلوب بمبلغ ' + excessAmount.toFixed(2) + ' ج.م';
+            } else {
+                this.showOverpaymentWarning = false;
+                this.overpaymentMessage = '';
+            }
         },
 
         // التحقق قبل الحفظ
@@ -361,14 +426,27 @@ document.addEventListener('alpine:init', () => {
             // التحقق من وجود أصناف تتجاوز المخزون المتاح
             const outOfStockItems = this.items.filter(item => {
                 if (!item.product_id) return false;
-                const requiredInBaseUnit = item.quantity * item.conversion_factor;
-                return requiredInBaseUnit > item.available_stock;
+                
+                // ✅ بالنسبة للمنتجات المرجحة (weight)، نتحقق من الوزن المدخل
+                if (item.base_unit_type === 'weight') {
+                    const requiredWeight = parseFloat(item.weight) || 0;
+                    return requiredWeight > item.available_stock;
+                } else {
+                    const requiredInBaseUnit = item.quantity * item.conversion_factor;
+                    return requiredInBaseUnit > item.available_stock;
+                }
             });
 
             if (outOfStockItems.length > 0) {
                 const itemsList = outOfStockItems.map(item => {
-                    const requiredInBaseUnit = item.quantity * item.conversion_factor;
-                    return `- ${item.product_name} (${item.unit_label}): مطلوب ${item.quantity}، متوفر ${item.available_stock_in_unit}`;
+                    // ✅ للوزن نعرض الوزن المطلوب والمتاح
+                    if (item.base_unit_type === 'weight') {
+                        const requiredWeight = parseFloat(item.weight) || 0;
+                        return `- ${item.product_name} (${item.base_unit_label}): مطلوب ${requiredWeight} ${item.base_unit_label}، متوفر ${item.available_stock} ${item.base_unit_label}`;
+                    } else {
+                        const requiredInBaseUnit = item.quantity * item.conversion_factor;
+                        return `- ${item.product_name} (${item.unit_label}): مطلوب ${item.quantity}، متوفر ${item.available_stock_in_unit}`;
+                    }
                 }).join('\n');
                 
                 alert(`⚠️ الأصناف التالية تتجاوز الكمية المتاحة:\n\n${itemsList}\n\nيرجى تعديل الكميات قبل الحفظ.`);
@@ -777,6 +855,13 @@ document.addEventListener('alpine:init', () => {
                         <div class="text-3xl font-bold px-4 py-3 rounded-lg" 
                              :class="remaining > 0 ? 'text-orange-600 bg-orange-50' : 'text-green-600 bg-green-50'"
                              x-text="remaining.toFixed(2) + ' ج.م'"></div>
+                    </div>
+                    
+                    <!-- ✅ تحذير تجاوز الدفع -->
+                    <div x-show="showOverpaymentWarning" 
+                         x-transition.duration.300ms
+                         class="mt-3 p-3 bg-red-100 border-2 border-red-400 rounded-lg">
+                        <p class="text-red-700 font-semibold text-sm" x-text="overpaymentMessage"></p>
                     </div>
                 </div>
             </div>

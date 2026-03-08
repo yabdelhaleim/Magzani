@@ -99,6 +99,130 @@ class ProductController extends Controller
     }
 
     /**
+     * حفظ منتج سريع (من داخل الفاتورة)
+     */
+    public function quickStore(Request $request)
+    {
+        try {
+            // التحقق من البيانات
+            $validated = $request->validate([
+                'name' => 'required|string|max:255',
+                'base_unit' => 'required|string|max:50',
+                'base_unit_type' => 'nullable|string|max:50',
+                'base_unit_label' => 'nullable|string|max:100',
+                'purchase_price' => 'nullable|numeric|min:0',
+                'selling_price' => 'nullable|numeric|min:0',
+            ]);
+
+            // تحديد نوع الوحدة
+            $unitTypeMap = [
+                'piece' => 'count',
+                'kg' => 'weight',
+                'ton' => 'weight',
+                'gram' => 'weight',
+                'meter' => 'length',
+                'cm' => 'length',
+                'liter' => 'volume',
+                'ml' => 'volume',
+                'box' => 'count',
+                'pack' => 'count',
+            ];
+            $baseUnitType = $validated['base_unit_type'] ?? $unitTypeMap[$validated['base_unit']] ?? 'count';
+            $baseUnitLabel = $validated['base_unit_label'] ?? $validated['base_unit'];
+
+            // إنشاء المنتج
+            $product = Product::create([
+                'name' => $validated['name'],
+                'code' => 'PRD-' . strtoupper(uniqid()),
+                'sku' => null,
+                'barcode' => null,
+                'category' => 'غير مصنف',
+                'base_unit' => $validated['base_unit'],
+                'base_unit_label' => $baseUnitLabel,
+                'purchase_price' => $validated['purchase_price'] ?? 0,
+                'selling_price' => $validated['selling_price'] ?? 0,
+                'is_active' => true,
+            ]);
+
+            // إنشاء الوحدة الأساسية
+            $baseUnit = $product->baseunit()->create([
+                'product_code' => $product->code,
+                'base_unit_type' => $baseUnitType,
+                'base_unit_code' => $validated['base_unit'],
+                'base_unit_label' => $baseUnitLabel,
+                'base_unit_weight_kg' => $this->getUnitWeight($validated['base_unit']),
+                'base_purchase_price' => $validated['purchase_price'] ?? 0,
+                'base_selling_price' => $validated['selling_price'] ?? 0,
+                'is_active' => true,
+                'effective_from' => now(),
+            ]);
+
+            // إنشاء وحدة بيع افتراضية
+            $product->sellingUnits()->create([
+                'base_unit_id' => $baseUnit->id,
+                'unit_name' => $baseUnitLabel,
+                'unit_code' => $validated['base_unit'],
+                'unit_label' => $baseUnitLabel,
+                'conversion_factor' => 1,
+                'quantity_in_base_unit' => 1,
+                'unit_purchase_price' => $validated['purchase_price'] ?? 0,
+                'unit_selling_price' => $validated['selling_price'] ?? 0,
+                'is_base' => true,
+                'is_default' => true,
+                'is_active' => true,
+                'display_order' => 1,
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'تم إضافة المنتج بنجاح',
+                'product' => [
+                    'id' => $product->id,
+                    'name' => $product->name,
+                    'base_unit_type' => $baseUnitType,
+                    'base_unit_code' => $validated['base_unit'],
+                    'base_unit_label' => $baseUnitLabel,
+                    'base_unit_purchase_price' => (float)($validated['purchase_price'] ?? 0),
+                    'selling_units' => [[
+                        'id' => $product->sellingUnits()->first()->id,
+                        'unit_code' => $validated['base_unit'],
+                        'unit_label' => $baseUnitLabel,
+                        'conversion_factor' => 1,
+                        'purchase_price' => (float)($validated['purchase_price'] ?? 0),
+                        'selling_price' => (float)($validated['selling_price'] ?? 0),
+                        'is_default' => true
+                    ]]
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Quick product creation failed', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 422);
+        }
+    }
+
+    /**
+     * تحويل الوزن لكل وحدة
+     */
+    private function getUnitWeight(string $unit): float
+    {
+        $weights = [
+            'ton' => 1000,
+            'kg' => 1,
+            'gram' => 0.001,
+            'mg' => 0.000001,
+        ];
+        return $weights[$unit] ?? 1;
+    }
+
+    /**
      * حفظ منتج جديد
      */
     public function store(StoreProductRequest $request)

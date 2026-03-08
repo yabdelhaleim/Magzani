@@ -146,6 +146,10 @@ class ReturnService
 
             // حساب الإجمالي
             $total = $this->calculateTotal($data['items']);
+            
+            // حساب المبلغ المرتجع الفعلي (لا يتجاوز المبلغ المدفوع)
+            $paidAmount = $invoice->paid ?? 0;
+            $refundableAmount = min($total, $paidAmount);
 
             // إنشاء المرتجع
             $return = SalesReturn::create([
@@ -159,6 +163,7 @@ class ReturnService
                 'tax_amount'       => 0,
                 'total'            => $total,
                 'status'           => 'confirmed',
+                'return_type'      => $data['return_type'] ?? 'partial', // ✅ تحديد نوع الإرجاع
                 'return_reason'    => $data['notes'] ?? null,
                 'notes'            => $data['notes'] ?? null,
                 'created_by'       => auth()->id(),
@@ -195,19 +200,23 @@ class ReturnService
                 );
             }
 
-            // تحديث رصيد العميل (إضافة المبلغ المرتجع)
-            $this->customerService->updateBalance(
-                $invoice->customer_id,
-                $total,
-                'add'
-            );
+            // تحديث رصيد العميل (إضافة المبلغ المرتجع الفعلي فقط - لا يتجاوز المدفوع)
+            if ($refundableAmount > 0) {
+                $this->customerService->updateBalance(
+                    $invoice->customer_id,
+                    $refundableAmount,
+                    'add'
+                );
+            }
 
-            // تحديث الفاتورة (تقليل الإجمالي والمتبقي)
+            // تحديث الفاتورة (تقليل الإجمالي والمتبقي والمدفوع)
             $newTotal = max(0, $invoice->total - $total);
-            $newRemaining = max(0, $invoice->remaining - $total);
+            $newPaid = max(0, $invoice->paid - $refundableAmount);
+            $newRemaining = max(0, $newTotal - $newPaid);
 
             $invoice->update([
                 'total'     => $newTotal,
+                'paid'      => $newPaid,
                 'remaining' => $newRemaining,
             ]);
 

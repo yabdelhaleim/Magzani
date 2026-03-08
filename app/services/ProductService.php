@@ -8,6 +8,7 @@ use App\Models\ProductSellingUnit;
 use App\Models\ProductPriceHistory;
 use App\Models\PriceChangeHistory;
 use App\Models\Warehouse;
+use App\Models\ProductWarehouse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
@@ -786,7 +787,9 @@ private function attachToWarehouseSecure(
         ]);
         throw new RuntimeException("فشل إضافة المنتج للمخزن: " . $e->getMessage());
     }
-}    private function logInitialStock(Product $product, int $warehouseId, float $quantity): void
+}
+
+    private function logInitialStock(Product $product, int $warehouseId, float $quantity): void
     {
         try {
             DB::table('inventory_movements')->insert([
@@ -895,10 +898,10 @@ private function attachToWarehouseSecure(
     }
 
 /**
- * 🗑️ مسح الكاش (متوافق مع جميع أنواع الكاش)
- */
-private function clearProductCache(): void
-{
+     * 🗑️ مسح الكاش (متوافق مع جميع أنواع الكاش)
+     */
+    private function clearProductCache(): void
+    {
     try {
         // ✅ مسح الـ keys المحددة
         $keys = [
@@ -1157,8 +1160,7 @@ private function clearProductCache(): void
             ];
         });
     }
-
-    public function getSuggestedPricing(string $baseUnit, ?string $category = null): array
+public function getSuggestedPricing(string $baseUnit, ?string $category = null): array
     {
         $cacheKey = "suggested_pricing_{$baseUnit}_" . ($category ?? 'all');
 
@@ -1211,5 +1213,25 @@ private function clearProductCache(): void
                 ])
                 ->first();
         });
+    }
+
+    /**
+     * تحديث المخزون في المخزن
+     */
+    public function updateStock(int $productId, int $warehouseId, float $quantity, string $type = 'add'): bool
+    {
+        $productWarehouse = ProductWarehouse::where('product_id', $productId)
+            ->where('warehouse_id', $warehouseId)
+            ->first();
+
+        if (!$productWarehouse) {
+            throw new RuntimeException("المنتج غير موجود في المخزن المحدد");
+        }
+
+        if ($type === 'add') {
+            return $productWarehouse->addStock($quantity);
+        } else {
+            return $productWarehouse->deductStock($quantity);
+        }
     }
 }

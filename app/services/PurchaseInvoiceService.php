@@ -131,7 +131,7 @@ class PurchaseInvoiceService
             'notes' => $data['notes'] ?? null,
             'discount' => $data['discount'] ?? 0,
             'tax' => $data['tax'] ?? 0,
-            'status' => 'pending', // معلقة - مدفوعة - ملغاة
+            'status' => 'draft', // مسودة - مؤكدة - ملغاة
             'total' => 0, // سيتم حسابه لاحقاً
         ]);
     }
@@ -142,12 +142,39 @@ class PurchaseInvoiceService
     private function attachItems(PurchaseInvoice $invoice, array $items): void
     {
         foreach ($items as $item) {
+            // استخراج البيانات - الفورم يرسل قيم فارغة '' فيجب تحويلها لعدد أو null
+            $quantity = (float) ($item['qty'] ?? 1) ?: 1;
+            $price = (float) ($item['price'] ?? 0);
+            $conversionFactor = (float) ($item['conversion_factor'] ?? 1) ?: 1;
+            $weight = isset($item['weight']) && $item['weight'] !== '' && $item['weight'] !== null
+                ? (float) $item['weight'] : null;
+            $baseUnitType = !empty($item['base_unit_type']) ? $item['base_unit_type'] : null;
+            $unitCode = !empty($item['unit_code']) ? $item['unit_code'] : null;
+            
+            // حساب الكمية بالوحدة الأساسية
+            $baseQuantity = $quantity * $conversionFactor;
+            
+            // للمنتجات بالوزن: الكمية الأساسية = الوزن
+            if ($baseUnitType === 'weight' && $weight) {
+                $baseQuantity = $weight;
+            }
+            
+            $itemTotal = $quantity * $price;
             PurchaseInvoiceItem::create([
                 'purchase_invoice_id' => $invoice->id,
                 'product_id' => $item['product_id'],
-                'qty' => $item['qty'],
-                'price' => $item['price'],
-                'total' => $item['qty'] * $item['price'],
+                'purchase_unit_id' => null, // لا نستخدم foreign key مؤقتاً
+                'unit_code' => $unitCode,
+                'conversion_factor' => $conversionFactor,
+                'quantity' => $quantity,
+                'base_quantity' => $baseQuantity,
+                'weight' => $weight,
+                'base_unit_type' => $baseUnitType,
+                'unit_price' => $price,
+                'unit_cost' => $price,
+                'cost_price' => $price,
+                'subtotal' => $itemTotal,
+                'total' => $itemTotal,
             ]);
         }
     }
@@ -175,6 +202,15 @@ class PurchaseInvoiceService
     private function updateInventory(PurchaseInvoice $invoice): void
     {
         foreach ($invoice->items as $item) {
+            // تحديد الكمية المضافة للمخزون
+            // للمنتجات بالوزن: نستخدم الوزن، وإلا نستخدم الكمية بالوحدة الأساسية
+            $quantityToAdd = $item->base_quantity;
+            
+            // إذا كان المنتج بالوزن وله وزن محدد، نستخدم الوزن
+            if ($item->base_unit_type === 'weight' && $item->weight) {
+                $quantityToAdd = $item->weight;
+            }
+            
             // تحديث رصيد المنتج في المخزن
             DB::table('product_warehouse')
                 ->updateOrInsert(
@@ -183,7 +219,7 @@ class PurchaseInvoiceService
                         'warehouse_id' => $invoice->warehouse_id,
                     ],
                     [
-                        'qty' => DB::raw('qty + ' . $item->qty),
+                        'quantity' => DB::raw('quantity + ' . $quantityToAdd),
                         'updated_at' => now(),
                     ]
                 );
@@ -196,11 +232,19 @@ class PurchaseInvoiceService
     private function reverseInventory(PurchaseInvoice $invoice): void
     {
         foreach ($invoice->items as $item) {
+            // تحديد الكمية المراد إرجاعها
+            $quantityToReverse = $item->base_quantity;
+            
+            // إذا كان المنتج بالوزن وله وزن محدد، نستخدم الوزن
+            if ($item->base_unit_type === 'weight' && $item->weight) {
+                $quantityToReverse = $item->weight;
+            }
+            
             // إرجاع الكمية من المخزن
             DB::table('product_warehouse')
                 ->where('product_id', $item->product_id)
                 ->where('warehouse_id', $invoice->warehouse_id)
-                ->decrement('qty', $item->qty);
+                ->decrement('quantity', $quantityToReverse);
         }
     }
 
