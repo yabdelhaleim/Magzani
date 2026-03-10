@@ -55,3 +55,5 @@
   background: linear-gradient(to bottom, #3b82f6, #8b5cf6);
   border-radius: 0 4px 4px 0;
 }
+/* build-v2 */
+html { scroll-behavior: smooth; }

@@ -28,10 +28,10 @@
             "Database\\Factories\\": "database/factories/",
             "Database\\Seeders\\": "database/seeders/"
         },
-        "classmap": [
-            "app/services",
-            "app/Exports"
-        ]
+       "classmap": [
+    "app/Services",
+    "app/Exports"
+]
     },
     "autoload-dev": {
         "psr-4": {
@@ -52,3 +52,4 @@
     "minimum-stability": "stable",
     "prefer-stable": true
 }
+
