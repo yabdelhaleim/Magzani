@@ -391,21 +391,32 @@
                 <i class="fas fa-cog w-5"></i>
                 <span x-show="sidebarOpen">الإعدادات</span>
             </a>
+
+            <!-- إدارة المستخدمين (للإدارة فقط) -->
+            @if(Auth::user()->isAdmin())
+            <a href="{{ route('users.index') }}" 
+               class="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-800 transition-all {{ request()->routeIs('users.*') ? 'bg-gray-800 menu-active' : '' }}">
+                <i class="fas fa-users-cog w-5"></i>
+                <span x-show="sidebarOpen">إدارة المستخدمين</span>
+            </a>
+            @endif
         </nav>
 
         <!-- User Profile -->
         <div class="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-800 bg-gray-900">
+            @auth
             <div class="flex items-center gap-3">
                 <div class="relative">
-                    <img src="https://ui-avatars.com/api/?name=Admin&background=667eea&color=fff" 
+                    <img src="https://ui-avatars.com/api/?name={{ urlencode(Auth::user()->name) }}&background=667eea&color=fff" 
                          class="w-10 h-10 rounded-full ring-2 ring-blue-500">
                     <span class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-gray-900 rounded-full"></span>
                 </div>
                 <div x-show="sidebarOpen" class="flex-1 min-w-0">
-                    <p class="font-semibold text-sm truncate">المسؤول</p>
-                    <p class="text-xs text-gray-400 truncate">مدير النظام</p>
+                    <p class="font-semibold text-sm truncate">{{ Auth::user()->name }}</p>
+                    <p class="text-xs text-gray-400 truncate">{{ Auth::user()->role_name }}</p>
                 </div>
             </div>
+            @endauth
         </div>
     </aside>
 
@@ -456,7 +467,7 @@
                     <div class="relative" x-data="{ open: false }">
                         <button @click="open = !open" 
                                 class="flex items-center gap-2 p-2 hover:bg-gray-100 rounded-lg transition-all">
-                            <img src="https://ui-avatars.com/api/?name=Admin&background=667eea&color=fff" 
+                            <img src="https://ui-avatars.com/api/?name={{ urlencode(Auth::user()->name) }}&background=667eea&color=fff" 
                                  class="w-8 h-8 rounded-full ring-2 ring-gray-200">
                             <i class="fas fa-chevron-down text-xs text-gray-600"></i>
                         </button>
@@ -466,23 +477,28 @@
                              x-transition
                              class="absolute left-0 mt-2 w-48 bg-white rounded-lg shadow-xl border animate-slide-in">
                             <div class="p-3 border-b bg-gradient-to-r from-blue-50 to-purple-50">
-                                <p class="font-semibold text-sm text-gray-800">المسؤول</p>
-                                <p class="text-xs text-gray-600">مدير النظام</p>
+                                <p class="font-semibold text-sm text-gray-800">{{ Auth::user()->name }}</p>
+                                <p class="text-xs text-gray-600">{{ Auth::user()->role_name }}</p>
                             </div>
                             <a href="#" class="flex items-center gap-2 px-4 py-3 hover:bg-gray-50 transition-colors">
                                 <i class="fas fa-user-circle text-gray-600"></i>
                                 <span class="text-sm">الملف الشخصي</span>
                             </a>
-                            <a href="#" 
+                            @if(Auth::user()->isAdmin())
+                            <a href="{{ route('settings.index') }}" 
                                class="flex items-center gap-2 px-4 py-3 hover:bg-gray-50 transition-colors">
                                 <i class="fas fa-cog text-gray-600"></i>
                                 <span class="text-sm">الإعدادات</span>
                             </a>
+                            @endif
                             <hr class="border-gray-200">
-                            <a href="#" class="w-full flex items-center gap-2 px-4 py-3 hover:bg-red-50 text-red-600 transition-colors">
-                                <i class="fas fa-sign-out-alt"></i>
-                                <span class="text-sm">تسجيل الخروج</span>
-                            </a>
+                            <form method="POST" action="{{ route('logout') }}">
+                                @csrf
+                                <button type="submit" class="w-full flex items-center gap-2 px-4 py-3 hover:bg-red-50 text-red-600 transition-colors">
+                                    <i class="fas fa-sign-out-alt"></i>
+                                    <span class="text-sm">تسجيل الخروج</span>
+                                </button>
+                            </form>
                         </div>
                     </div>
                 </div>

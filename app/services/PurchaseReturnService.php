@@ -276,7 +276,7 @@ class PurchaseReturnService
             });
         }
 
-        return $query->paginate($filters['per_page'] ?? 15);
+           return $query->paginate($filters['per_page'] ?? 15);
     }
 
     /**

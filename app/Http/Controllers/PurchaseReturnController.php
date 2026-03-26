@@ -11,7 +11,7 @@ use Illuminate\Http\Request;
 class PurchaseReturnController extends Controller
 {
     protected $returnService;
-
+                                                     
     public function __construct(PurchaseReturnService $returnService)
     {
         $this->returnService = $returnService;
@@ -52,7 +52,10 @@ class PurchaseReturnController extends Controller
         // قائمة الفواتير المتاحة للإرجاع
         $invoices = PurchaseInvoice::with('supplier')->get();
 
-        return view('invoices.purchase-returns.index', compact('invoices', 'invoice', 'availableItems'));
+        // جلب قائمة المرتجعات للعرض في الجدول
+        $returns = $this->returnService->getReturns($request->all());
+
+        return view('invoices.purchase-returns.index', compact('invoices', 'invoice', 'availableItems', 'returns'));
     }
 
     /**
@@ -85,7 +88,10 @@ class PurchaseReturnController extends Controller
             'items.purchaseInvoiceItem.product'
         ]);
 
-        return view('invoices.purchase-returns.index', compact('purchaseReturn'));
+        // جلب قائمة المرتجعات للعرض في الجدول
+        $returns = $this->returnService->getReturns([]);
+
+        return view('invoices.purchase-returns.index', compact('purchaseReturn', 'returns'));
     }
 
     /**
@@ -121,7 +127,10 @@ class PurchaseReturnController extends Controller
             }
         }
 
-        return view('invoices.purchase-returns.index', compact('purchaseReturn', 'invoice', 'availableItems'));
+        // جلب قائمة المرتجعات للعرض في الجدول
+        $returns = $this->returnService->getReturns([]);
+
+        return view('invoices.purchase-returns.index', compact('purchaseReturn', 'invoice', 'availableItems', 'returns'));
     }
 
     /**

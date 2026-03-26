@@ -28,6 +28,14 @@ class PurchaseReturn extends Model
         return $this->belongsTo(PurchaseInvoice::class, 'purchase_invoice_id');
     }
 
+    /**
+     * Alias for invoice relationship
+     */
+    public function purchaseInvoice()
+    {
+        return $this->belongsTo(PurchaseInvoice::class, 'purchase_invoice_id');
+    }
+
     public function items()
     {
         return $this->hasMany(PurchaseReturnItem::class);

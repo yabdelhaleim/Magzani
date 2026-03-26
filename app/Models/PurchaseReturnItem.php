@@ -11,10 +11,17 @@ class PurchaseReturnItem extends Model
 
     protected $fillable = [
         'purchase_return_id',
+        'purchase_invoice_item_id',
         'product_id',
         'quantity',
-        'cost',
+        'quantity_returned',
+        'unit_price',
+        'discount_amount',
+        'tax_amount',
         'total',
+        'item_condition',
+        'return_reason',
+        'notes',
     ];
 
     // ==================== Relationships ====================
@@ -27,5 +34,13 @@ class PurchaseReturnItem extends Model
     public function product()
     {
         return $this->belongsTo(Product::class);
+    }
+
+    /**
+     * Get the purchase invoice item
+     */
+    public function purchaseInvoiceItem()
+    {
+        return $this->belongsTo(PurchaseInvoiceItem::class, 'purchase_invoice_item_id');
     }
 }

@@ -17,6 +17,7 @@ class User extends Authenticatable
         'password',
         'phone',
         'is_active',
+        'role',
     ];
 
     protected $hidden = [
@@ -28,6 +29,36 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'is_active'         => 'boolean',
     ];
+
+    // ==================== Role Methods ====================
+
+    /**
+     * Check if user is admin
+     */
+    public function isAdmin(): bool
+    {
+        return $this->role === 'admin';
+    }
+
+    /**
+     * Check if user is employee
+     */
+    public function isEmployee(): bool
+    {
+        return $this->role === 'employee';
+    }
+
+    /**
+     * Get user's role name (Arabic)
+     */
+    public function getRoleNameAttribute(): string
+    {
+        return match($this->role) {
+            'admin' => 'مدير النظام',
+            'employee' => 'موظف',
+            default => 'غير معروف',
+        };
+    }
 
     // ==================== Relationships ====================
 
