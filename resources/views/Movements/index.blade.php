@@ -4,7 +4,7 @@
 @section('page-title', 'سجل حركات المخزون')
 
 @section('content')
-<div class="space-y-6" x-data="{ 
+<div class="space-y-4 md:space-y-6" x-data="{ 
     showFilters: false,
     selectedType: '{{ request('movement_type') }}',
     selectedWarehouse: '{{ request('warehouse_id') }}',
@@ -12,52 +12,52 @@
 }">
 
     <!-- Stats Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4">
         <!-- إجمالي الحركات -->
-        <div class="bg-white rounded-xl shadow-sm p-6 border-r-4 border-blue-500 hover:shadow-md transition-shadow">
+        <div class="bg-white rounded-xl shadow-sm p-4 md:p-6 border-r-2 md:border-r-4 border-blue-500 hover:shadow-md transition-shadow">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-gray-600 text-sm mb-1">إجمالي الحركات</p>
-                    <h3 class="text-2xl font-bold text-gray-800">{{ number_format($movements->total()) }}</h3>
+                    <p class="text-gray-600 text-xs md:text-sm mb-1">إجمالي الحركات</p>
+                    <h3 class="text-xl md:text-2xl font-bold text-gray-800">{{ number_format($movements->total()) }}</h3>
                 </div>
-                <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                    <i class="fas fa-arrow-right-arrow-left text-blue-600 text-xl"></i>
+                <div class="w-8 h-8 md:w-12 md:h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-arrow-right-arrow-left text-blue-600 text-sm md:text-xl"></i>
                 </div>
             </div>
         </div>
 
         <!-- حركات الإدخال -->
-        <div class="bg-white rounded-xl shadow-sm p-6 border-r-4 border-green-500 hover:shadow-md transition-shadow">
+        <div class="bg-white rounded-xl shadow-sm p-4 md:p-6 border-r-2 md:border-r-4 border-green-500 hover:shadow-md transition-shadow">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-gray-600 text-sm mb-1">حركات إدخال</p>
-                    <h3 class="text-2xl font-bold text-gray-800">{{ number_format($movements->where('quantity', '>', 0)->count()) }}</h3>
+                    <p class="text-gray-600 text-xs md:text-sm mb-1">حركات إدخال</p>
+                    <h3 class="text-xl md:text-2xl font-bold text-gray-800">{{ number_format($movements->where('quantity', '>', 0)->count()) }}</h3>
                 </div>
-                <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                    <i class="fas fa-arrow-down text-green-600 text-xl"></i>
+                <div class="w-8 h-8 md:w-12 md:h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-arrow-down text-green-600 text-sm md:text-xl"></i>
                 </div>
             </div>
         </div>
 
         <!-- حركات الإخراج -->
-        <div class="bg-white rounded-xl shadow-sm p-6 border-r-4 border-red-500 hover:shadow-md transition-shadow">
+        <div class="bg-white rounded-xl shadow-sm p-4 md:p-6 border-r-2 md:border-r-4 border-red-500 hover:shadow-md transition-shadow">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-gray-600 text-sm mb-1">حركات إخراج</p>
-                    <h3 class="text-2xl font-bold text-gray-800">{{ number_format($movements->where('quantity', '<', 0)->count()) }}</h3>
+                    <p class="text-gray-600 text-xs md:text-sm mb-1">حركات إخراج</p>
+                    <h3 class="text-xl md:text-2xl font-bold text-gray-800">{{ number_format($movements->where('quantity', '<', 0)->count()) }}</h3>
                 </div>
-                <div class="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
-                    <i class="fas fa-arrow-up text-red-600 text-xl"></i>
+                <div class="w-8 h-8 md:w-12 md:h-12 bg-red-100 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-arrow-up text-red-600 text-sm md:text-xl"></i>
                 </div>
             </div>
         </div>
 
         <!-- المخازن النشطة -->
-        <div class="bg-white rounded-xl shadow-sm p-6 border-r-4 border-purple-500 hover:shadow-md transition-shadow">
+        <div class="bg-white rounded-xl shadow-sm p-4 md:p-6 border-r-2 md:border-r-4 border-purple-500 hover:shadow-md transition-shadow">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-gray-600 text-sm mb-1">المخازن النشطة</p>
-                    <h3 class="text-2xl font-bold text-gray-800">{{ number_format($warehouses->count()) }}</h3>
+                    <p class="text-gray-600 text-xs md:text-sm mb-1">المخازن النشطة</p>
+                    <h3 class="text-xl md:text-2xl font-bold text-gray-800">{{ number_format($warehouses->count()) }}</h3>
                 </div>
                 <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
                     <i class="fas fa-warehouse text-purple-600 text-xl"></i>

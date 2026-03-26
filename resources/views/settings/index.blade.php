@@ -5,56 +5,56 @@
 
 @section('content')
 <div class="max-w-5xl mx-auto">
-    <div class="mb-6">
-        <h2 class="text-2xl font-bold text-gray-800">إعدادات النظام</h2>
-        <p class="text-gray-600 mt-1">إدارة إعدادات الشركة والنظام</p>
+    <div class="mb-4 md:mb-6">
+        <h2 class="text-xl md:text-2xl font-bold text-gray-800">إعدادات النظام</h2>
+        <p class="text-gray-600 text-sm mt-1">إدارة إعدادات الشركة والنظام</p>
     </div>
 
     <!-- Tabs -->
-    <div class="bg-white rounded-xl shadow-sm mb-6" x-data="{ tab: 'company' }">
-        <div class="border-b border-gray-200">
-            <nav class="flex gap-4 px-6">
+    <div class="bg-white rounded-xl shadow-sm mb-4 md:mb-6" x-data="{ tab: 'company' }">
+        <div class="border-b border-gray-200 overflow-x-auto">
+            <nav class="flex gap-2 md:gap-4 px-2 md:px-6 min-w-max">
                 <button @click="tab = 'company'" 
                         :class="tab === 'company' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-600 hover:text-gray-800'"
-                        class="py-4 px-2 border-b-2 font-semibold transition">
-                    <i class="fas fa-building ml-2"></i>
-                    معلومات الشركة
+                        class="py-3 md:py-4 px-2 md:px-2 border-b-2 font-semibold transition text-sm">
+                    <i class="fas fa-building ml-1 md:ml-2"></i>
+                    <span class="hidden sm:inline">معلومات الشركة</span>
                 </button>
                 <button @click="tab = 'system'" 
                         :class="tab === 'system' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-600 hover:text-gray-800'"
-                        class="py-4 px-2 border-b-2 font-semibold transition">
-                    <i class="fas fa-cog ml-2"></i>
-                    إعدادات النظام
+                        class="py-3 md:py-4 px-2 md:px-2 border-b-2 font-semibold transition text-sm">
+                    <i class="fas fa-cog ml-1 md:ml-2"></i>
+                    <span class="hidden sm:inline">إعدادات النظام</span>
                 </button>
                 <button @click="tab = 'users'" 
                         :class="tab === 'users' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-600 hover:text-gray-800'"
-                        class="py-4 px-2 border-b-2 font-semibold transition">
-                    <i class="fas fa-users-cog ml-2"></i>
-                    المستخدمين والصلاحيات
+                        class="py-3 md:py-4 px-2 md:px-2 border-b-2 font-semibold transition text-sm">
+                    <i class="fas fa-users-cog ml-1 md:ml-2"></i>
+                    <span class="hidden sm:inline">المستخدمين</span>
                 </button>
                 <button @click="tab = 'backup'" 
                         :class="tab === 'backup' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-600 hover:text-gray-800'"
-                        class="py-4 px-2 border-b-2 font-semibold transition">
-                    <i class="fas fa-database ml-2"></i>
-                    النسخ الاحتياطي
+                        class="py-3 md:py-4 px-2 md:px-2 border-b-2 font-semibold transition text-sm">
+                    <i class="fas fa-database ml-1 md:ml-2"></i>
+                    <span class="hidden sm:inline">النسخ الاحتياطي</span>
                 </button>
             </nav>
         </div>
 
         <!-- Company Info Tab -->
-        <div x-show="tab === 'company'" class="p-6">
-            <form class="space-y-6">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div x-show="tab === 'company'" class="p-4 md:p-6">
+            <form class="space-y-4 md:space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                     <div class="md:col-span-2">
                         <label class="block text-sm font-semibold text-gray-700 mb-2">اسم الشركة</label>
                         <input type="text" value="نظام إدارة المخازن" 
-                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                               class="w-full px-3 md:px-4 py-2 md:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                     </div>
 
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-2">رقم الهاتف</label>
                         <input type="tel" value="02-12345678" 
-                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                               class="w-full px-3 md:px-4 py-2 md:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                     </div>
 
                     <div>

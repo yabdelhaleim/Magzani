@@ -6,18 +6,18 @@
 @section('content')
 
 {{-- Header --}}
-<div class="flex items-center justify-between mb-6">
+<div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4 md:mb-6">
     <div>
-        <h2 class="text-2xl font-bold text-gray-800">جميع العملاء</h2>
-        <p class="text-gray-600 mt-1">إدارة وتتبع العملاء والحسابات</p>
+        <h2 class="text-xl md:text-2xl font-bold text-gray-800">جميع العملاء</h2>
+        <p class="text-gray-600 text-sm mt-1">إدارة وتتبع العملاء والحسابات</p>
     </div>
-    <div class="flex gap-3">
-        <button class="px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold transition flex items-center gap-2">
+    <div class="flex flex-col sm:flex-row gap-2 sm:gap-3">
+        <button class="px-4 md:px-6 py-2 md:py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold transition flex items-center gap-2 justify-center text-sm">
             <i class="fas fa-file-export"></i>
-            تصدير Excel
+            <span class="hidden sm:inline">تصدير Excel</span>
         </button>
         <a href="{{ route('customers.create') }}"
-           class="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition flex items-center gap-2">
+           class="px-4 md:px-6 py-2 md:py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition flex items-center gap-2 justify-center text-sm">
             <i class="fas fa-plus"></i>
             إضافة عميل جديد
         </a>
@@ -25,73 +25,73 @@
 </div>
 
 {{-- Stats --}}
-<div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-    <div class="bg-white rounded-xl shadow-sm p-6">
-        <p class="text-gray-500 text-sm mb-1">إجمالي العملاء</p>
-        <h3 class="text-2xl font-bold">{{ $customers->total() }}</h3>
+<div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6 mb-4 md:mb-6">
+    <div class="bg-white rounded-xl shadow-sm p-4 md:p-6">
+        <p class="text-gray-500 text-xs md:text-sm mb-1">إجمالي العملاء</p>
+        <h3 class="text-xl md:text-2xl font-bold">{{ $customers->total() }}</h3>
     </div>
 
-    <div class="bg-white rounded-xl shadow-sm p-6">
-        <p class="text-gray-500 text-sm mb-1">عملاء نشطون</p>
-        <h3 class="text-2xl font-bold">{{ $activeCustomers ?? 0 }}</h3>
+    <div class="bg-white rounded-xl shadow-sm p-4 md:p-6">
+        <p class="text-gray-500 text-xs md:text-sm mb-1">عملاء نشطون</p>
+        <h3 class="text-xl md:text-2xl font-bold">{{ $activeCustomers ?? 0 }}</h3>
     </div>
 
-    <div class="bg-white rounded-xl shadow-sm p-6">
-        <p class="text-gray-500 text-sm mb-1">إجمالي الديون</p>
-        <h3 class="text-2xl font-bold">{{ number_format($totalDebt ?? 0) }} ج.م</h3>
+    <div class="bg-white rounded-xl shadow-sm p-4 md:p-6">
+        <p class="text-gray-500 text-xs md:text-sm mb-1">إجمالي الديون</p>
+        <h3 class="text-xl md:text-2xl font-bold">{{ number_format($totalDebt ?? 0) }} ج.م</h3>
     </div>
 
-    <div class="bg-white rounded-xl shadow-sm p-6">
-        <p class="text-gray-500 text-sm mb-1">متوسط المشتريات</p>
-        <h3 class="text-2xl font-bold">{{ number_format($avgSales ?? 0) }} ج.م</h3>
+    <div class="bg-white rounded-xl shadow-sm p-4 md:p-6">
+        <p class="text-gray-500 text-xs md:text-sm mb-1">متوسط المشتريات</p>
+        <h3 class="text-xl md:text-2xl font-bold">{{ number_format($avgSales ?? 0) }} ج.م</h3>
     </div>
 </div>
 
 {{-- Table --}}
 <div class="bg-white rounded-xl shadow-sm overflow-hidden">
     <div class="overflow-x-auto">
-        <table class="w-full">
+        <table class="w-full min-w-[600px]">
             <thead class="bg-gray-50 border-b">
                 <tr>
-                    <th class="px-6 py-4"></th>
-                    <th class="px-6 py-4">الكود</th>
-                    <th class="px-6 py-4">اسم العميل</th>
-                    <th class="px-6 py-4">الهاتف</th>
-                    <th class="px-6 py-4">البريد</th>
-                    <th class="px-6 py-4">الرصيد</th>
-                    <th class="px-6 py-4">الحالة</th>
-                    <th class="px-6 py-4">إجراءات</th>
+                    <th class="px-3 md:px-6 py-3 md:py-4"></th>
+                    <th class="px-3 md:px-6 py-3 md:py-4 text-right text-xs md:text-sm font-medium text-gray-700">الكود</th>
+                    <th class="px-3 md:px-6 py-3 md:py-4 text-right text-xs md:text-sm font-medium text-gray-700">اسم العميل</th>
+                    <th class="px-3 md:px-6 py-3 md:py-4 text-right text-xs md:text-sm font-medium text-gray-700 hidden md:table-cell">الهاتف</th>
+                    <th class="px-3 md:px-6 py-3 md:py-4 text-right text-xs md:text-sm font-medium text-gray-700 hidden lg:table-cell">البريد</th>
+                    <th class="px-3 md:px-6 py-3 md:py-4 text-right text-xs md:text-sm font-medium text-gray-700 hidden md:table-cell">الرصيد</th>
+                    <th class="px-3 md:px-6 py-3 md:py-4 text-right text-xs md:text-sm font-medium text-gray-700">الحالة</th>
+                    <th class="px-3 md:px-6 py-3 md:py-4 text-right text-xs md:text-sm font-medium text-gray-700">إجراءات</th>
                 </tr>
             </thead>
 
             <tbody class="divide-y">
                 @forelse($customers as $customer)
                 <tr class="hover:bg-gray-50">
-                    <td class="px-6 py-4">
-                        <input type="checkbox">
+                    <td class="px-3 md:px-6 py-3 md:py-4">
+                        <input type="checkbox" class="rounded">
                     </td>
 
-                    <td class="px-6 py-4 font-semibold">
+                    <td class="px-3 md:px-6 py-3 md:py-4 font-semibold text-sm">
                         C-{{ str_pad($customer->id, 3, '0', STR_PAD_LEFT) }}
                     </td>
 
-                    <td class="px-6 py-4">
-                        <div class="flex items-center gap-3">
+                    <td class="px-3 md:px-6 py-3 md:py-4">
+                        <div class="flex items-center gap-2 md:gap-3">
                             <img src="https://ui-avatars.com/api/?name={{ urlencode($customer->name) }}"
-                                 class="w-10 h-10 rounded-full">
+                                 class="w-8 h-8 md:w-10 md:h-10 rounded-full">
                             <div>
-                                <div class="font-semibold">{{ $customer->name }}</div>
-                                <div class="text-xs text-gray-500">
+                                <div class="font-semibold text-sm">{{ $customer->name }}</div>
+                                <div class="text-xs text-gray-500 hidden md:block">
                                     عميل منذ {{ $customer->created_at->format('Y') }}
                                 </div>
                             </div>
                         </div>
                     </td>
 
-                    <td class="px-6 py-4">{{ $customer->phone }}</td>
-                    <td class="px-6 py-4">{{ $customer->email }}</td>
+                    <td class="px-3 md:px-6 py-3 md:py-4 text-sm hidden md:table-cell">{{ $customer->phone }}</td>
+                    <td class="px-3 md:px-6 py-3 md:py-4 text-sm hidden lg:table-cell">{{ $customer->email }}</td>
 
-                    <td class="px-6 py-4 font-semibold">
+                    <td class="px-3 md:px-6 py-3 md:py-4 font-semibold text-sm hidden md:table-cell">
                         {{ number_format($customer->balance ?? 0) }} ج.م
                     </td>
 

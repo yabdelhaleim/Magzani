@@ -3,26 +3,26 @@
 @section('title', 'فواتير المبيعات')
 
 @section('content')
-<div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-8 px-4">
-    <div class="container mx-auto max-w-7xl">
+<div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-4 md:py-8 px-2 md:px-4">
+    <div class="max-w-7xl mx-auto">
         
         <!-- Header Section -->
-        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+        <div class="bg-white rounded-lg shadow-lg p-4 md:p-6 mb-4 md:mb-6">
             <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                <div class="flex items-center space-x-3 space-x-reverse">
-                    <div class="bg-gradient-to-r from-green-500 to-green-600 p-3 rounded-lg">
-                        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="flex items-center gap-3">
+                    <div class="bg-gradient-to-r from-green-500 to-green-600 p-2 md:p-3 rounded-lg">
+                        <svg class="w-6 h-6 md:w-8 md:h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                         </svg>
                     </div>
                     <div>
-                        <h2 class="text-2xl font-bold text-gray-800">فواتير المبيعات</h2>
+                        <h2 class="text-xl md:text-2xl font-bold text-gray-800">فواتير المبيعات</h2>
                         <p class="text-sm text-gray-500 mt-1">إدارة ومتابعة جميع فواتير المبيعات</p>
                     </div>
                 </div>
                 <a href="{{ route('invoices.sales.create') }}" 
-                   class="flex items-center justify-center space-x-2 space-x-reverse bg-gradient-to-r from-green-500 to-green-600 text-white px-6 py-3 rounded-lg hover:from-green-600 hover:to-green-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 font-semibold">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                   class="flex items-center justify-center gap-2 bg-gradient-to-r from-green-500 to-green-600 text-white px-4 md:px-6 py-2 md:py-3 rounded-lg hover:from-green-600 hover:to-green-700 transition-all duration-200 shadow-lg font-semibold text-sm">
+                    <svg class="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                     </svg>
                     <span>فاتورة جديدة</span>
@@ -31,34 +31,34 @@
         </div>
 
         <!-- 🔍 Smart Search Bar -->
-        <div class="bg-white rounded-lg shadow-lg p-4 mb-6">
+        <div class="bg-white rounded-lg shadow-lg p-3 md:p-4 mb-4 md:mb-6">
             <form method="GET" action="{{ route('invoices.sales.index') }}">
-                <div class="flex gap-3">
+                <div class="flex flex-col sm:flex-row gap-2 md:gap-3">
                     <div class="flex-1">
                         <input 
                             type="text" 
                             name="search" 
                             value="{{ request('search') }}"
-                            placeholder="🔍 بحث ذكي (رقم الفاتورة، اسم العميل، رقم الهاتف...)"
-                            class="w-full border-2 border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all text-lg"
+                            placeholder="بحث (رقم الفاتورة، اسم العميل...)"
+                            class="w-full border-2 border-gray-300 rounded-lg px-3 md:px-4 py-2 md:py-3 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all text-sm md:text-lg"
                         >
                     </div>
                     <button 
                         type="submit"
-                        class="bg-green-600 text-white px-8 py-3 rounded-lg hover:bg-green-700 transition-all duration-200 shadow-md hover:shadow-lg font-semibold flex items-center gap-2">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        class="bg-green-600 text-white px-4 md:px-8 py-2 md:py-3 rounded-lg hover:bg-green-700 transition-all duration-200 shadow-md font-semibold flex items-center justify-center gap-2 text-sm">
+                        <svg class="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                         </svg>
-                        بحث
+                        <span class="hidden sm:inline">بحث</span>
                     </button>
                     @if(request()->hasAny(['search', 'invoice_number', 'customer_id', 'warehouse_id', 'status', 'date_from', 'date_to', 'amount_from', 'amount_to']))
                         <a 
                             href="{{ route('invoices.sales.index') }}"
-                            class="bg-gray-200 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-300 transition-all duration-200 font-semibold flex items-center gap-2">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            class="bg-gray-200 text-gray-700 px-4 md:px-6 py-2 md:py-3 rounded-lg hover:bg-gray-300 transition-all duration-200 font-semibold flex items-center justify-center gap-2 text-sm">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                             </svg>
-                            مسح
+                            <span class="hidden sm:inline">مسح</span>
                         </a>
                     @endif
                 </div>

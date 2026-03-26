@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>تسجيل الدخول - نظام المخازن</title>
     
@@ -20,6 +20,13 @@
             font-family: 'Cairo', sans-serif;
         }
         
+        /* Prevent zoom on input focus on mobile */
+        @media (max-width: 640px) {
+            input, select, textarea {
+                font-size: 16px;
+            }
+        }
+        
         .login-bg {
             background: linear-gradient(135deg, #1e3a5f 0%, #0f172a 100%);
         }
@@ -34,20 +41,20 @@
         }
     </style>
 </head>
-<body class="login-bg min-h-screen flex items-center justify-center">
+<body class="login-bg min-h-screen flex items-center justify-center p-4">
     
-    <div class="w-full max-w-md px-4">
+    <div class="w-full max-w-md">
         <!-- Logo & Title -->
-        <div class="text-center mb-8">
-            <div class="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-2xl mx-auto mb-4">
-                <i class="fas fa-warehouse text-4xl text-white"></i>
+        <div class="text-center mb-6">
+            <div class="w-16 h-16 md:w-20 md:h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-2xl mx-auto mb-4">
+                <i class="fas fa-warehouse text-3xl md:text-4xl text-white"></i>
             </div>
-            <h1 class="text-3xl font-bold text-white">نظام المخازن</h1>
-            <p class="text-gray-400 mt-2">تسجيل الدخول</p>
+            <h1 class="text-2xl md:text-3xl font-bold text-white">نظام المخازن</h1>
+            <p class="text-gray-400 mt-2 text-sm md:text-base">تسجيل الدخول</p>
         </div>
 
         <!-- Login Form -->
-        <div class="glass-card rounded-2xl shadow-2xl p-8">
+        <div class="glass-card rounded-2xl shadow-2xl p-6 md:p-8">
             @if(session('error'))
                 <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg mb-6" role="alert">
                     <span class="block sm:inline">{{ session('error') }}</span>
@@ -58,7 +65,7 @@
                 @csrf
 
                 <!-- Email -->
-                <div class="mb-6">
+                <div class="mb-4 md:mb-6">
                     <label for="email" class="block text-gray-700 text-sm font-bold mb-2">
                         <i class="fas fa-envelope ml-2 text-gray-400"></i>
                         البريد الإلكتروني
@@ -71,7 +78,7 @@
                         required 
                         autocomplete="email"
                         autofocus
-                        class="input-focus w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-indigo-500 focus:outline-none transition-all @error('email') border-red-500 @else @enderror"
+                        class="input-focus w-full px-3 md:px-4 py-3 rounded-lg border border-gray-300 focus:border-indigo-500 focus:outline-none transition-all @error('email') border-red-500 @else @enderror"
                         placeholder="أدخل البريد الإلكتروني"
                     >
                     @error('email')
@@ -80,7 +87,7 @@
                 </div>
 
                 <!-- Password -->
-                <div class="mb-6">
+                <div class="mb-4 md:mb-6">
                     <label for="password" class="block text-gray-700 text-sm font-bold mb-2">
                         <i class="fas fa-lock ml-2 text-gray-400"></i>
                         كلمة المرور
@@ -91,7 +98,7 @@
                         name="password" 
                         required 
                         autocomplete="current-password"
-                        class="input-focus w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-indigo-500 focus:outline-none transition-all @error('password') border-red-500 @else @enderror"
+                        class="input-focus w-full px-3 md:px-4 py-3 rounded-lg border border-gray-300 focus:border-indigo-500 focus:outline-none transition-all @error('password') border-red-500 @else @enderror"
                         placeholder="أدخل كلمة المرور"
                     >
                     @error('password')

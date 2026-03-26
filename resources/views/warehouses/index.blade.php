@@ -3,19 +3,19 @@
 @section('title', 'إدارة المخازن')
 
 @section('content')
-<div class="container-fluid py-4">
+<div class="py-4 md:py-6 px-2 md:px-4">
     <!-- Header -->
-    <div class="flex items-center justify-between mb-6">
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4 md:mb-6">
         <div>
-            <h2 class="text-2xl font-bold text-gray-800">إدارة المخازن</h2>
+            <h2 class="text-xl md:text-2xl font-bold text-gray-800">إدارة المخازن</h2>
             <p class="text-gray-600 text-sm mt-1">عرض وإدارة جميع المخازن</p>
         </div>
         <a href="{{ route('warehouses.create') }}" 
-           class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors flex items-center gap-2 shadow-lg">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+           class="bg-blue-600 hover:bg-blue-700 text-white px-4 md:px-6 py-2 md:py-3 rounded-lg font-semibold transition-colors flex items-center justify-center gap-2 shadow-lg text-sm">
+            <svg class="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
             </svg>
-            مخزن جديد
+            <span>مخزن جديد</span>
         </a>
     </div>
 
@@ -33,7 +33,7 @@
     @endif
 
     <!-- Warehouses Grid -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
         @forelse($warehouses as $warehouse)
         <div class="bg-white rounded-xl shadow-sm hover:shadow-lg transition-shadow overflow-hidden border border-gray-200">
             <!-- Header -->

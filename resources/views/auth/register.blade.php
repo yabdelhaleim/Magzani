@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>إنشاء حساب - نظام المخازن</title>
     
@@ -20,6 +20,13 @@
             font-family: 'Cairo', sans-serif;
         }
         
+        /* Prevent zoom on input focus on mobile */
+        @media (max-width: 640px) {
+            input, select, textarea {
+                font-size: 16px;
+            }
+        }
+        
         .register-bg {
             background: linear-gradient(135deg, #1e3a5f 0%, #0f172a 100%);
         }
@@ -34,20 +41,20 @@
         }
     </style>
 </head>
-<body class="register-bg min-h-screen flex items-center justify-center py-8">
+<body class="register-bg min-h-screen flex items-center justify-center py-8 px-4">
     
-    <div class="w-full max-w-md px-4">
+    <div class="w-full max-w-md">
         <!-- Logo & Title -->
-        <div class="text-center mb-8">
-            <div class="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-2xl mx-auto mb-4">
-                <i class="fas fa-warehouse text-4xl text-white"></i>
+        <div class="text-center mb-6">
+            <div class="w-16 h-16 md:w-20 md:h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-2xl mx-auto mb-4">
+                <i class="fas fa-warehouse text-3xl md:text-4xl text-white"></i>
             </div>
-            <h1 class="text-3xl font-bold text-white">نظام المخازن</h1>
-            <p class="text-gray-400 mt-2">إنشاء حساب جديد</p>
+            <h1 class="text-2xl md:text-3xl font-bold text-white">نظام المخازن</h1>
+            <p class="text-gray-400 mt-2 text-sm md:text-base">إنشاء حساب جديد</p>
         </div>
 
         <!-- Register Form -->
-        <div class="glass-card rounded-2xl shadow-2xl p-8">
+        <div class="glass-card rounded-2xl shadow-2xl p-6 md:p-8">
             @if(session('error'))
                 <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg mb-6" role="alert">
                     <span class="block sm:inline">{{ session('error') }}</span>
@@ -77,7 +84,7 @@
                         required 
                         autocomplete="name"
                         autofocus
-                        class="input-focus w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-indigo-500 focus:outline-none transition-all @error('name') border-red-500 @else @enderror"
+                        class="input-focus w-full px-3 md:px-4 py-3 rounded-lg border border-gray-300 focus:border-indigo-500 focus:outline-none transition-all @error('name') border-red-500 @else @enderror"
                         placeholder="أدخل الاسم الكامل"
                     >
                     @error('name')

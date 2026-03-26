@@ -5,16 +5,16 @@
 @section('page-title', 'إدارة الجرد')
 
 @section('content')
-<div class="space-y-6">
+<div class="space-y-4 md:space-y-6">
     <!-- Header -->
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-            <h1 class="text-4xl font-black text-gray-900 mb-2">إدارة الجرد</h1>
-            <p class="text-gray-500">جرد المخزون ومطابقة الكميات</p>
+            <h1 class="text-2xl md:text-4xl font-black text-gray-900 mb-2">إدارة الجرد</h1>
+            <p class="text-gray-500 text-sm">جرد المخزون ومطابقة الكميات</p>
         </div>
         <a href="{{ route('stock-counts.create') }}" 
-           class="inline-flex items-center gap-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-6 py-4 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all group">
-            <svg class="w-6 h-6 group-hover:rotate-90 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+           class="inline-flex items-center justify-center gap-2 md:gap-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-4 md:px-6 py-2 md:py-4 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all group text-sm">
+            <svg class="w-5 h-5 md:w-6 md:h-6 group-hover:rotate-90 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
             </svg>
             <span>إنشاء جرد جديد</span>
@@ -23,11 +23,11 @@
 
     <!-- Filters -->
     <div class="bg-white rounded-2xl shadow-sm border-2 border-gray-100">
-        <div class="p-6">
-            <form method="GET" class="grid grid-cols-1 md:grid-cols-5 gap-4">
+        <div class="p-4 md:p-6">
+            <form method="GET" class="grid grid-cols-1 md:grid-cols-5 gap-3 md:gap-4">
                 <div class="md:col-span-2">
                     <label class="block text-sm font-bold text-gray-900 mb-2">المخزن</label>
-                    <select name="warehouse_id" class="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all font-medium">
+                    <select name="warehouse_id" class="w-full px-3 md:px-4 py-2 md:py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all font-medium text-sm">
                         <option value="">جميع المخازن</option>
                         @foreach($warehouses as $warehouse)
                         <option value="{{ $warehouse->id }}" {{ request('warehouse_id') == $warehouse->id ? 'selected' : '' }}>
@@ -39,7 +39,7 @@
 
                 <div class="md:col-span-2">
                     <label class="block text-sm font-bold text-gray-900 mb-2">الحالة</label>
-                    <select name="status" class="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all font-medium">
+                    <select name="status" class="w-full px-3 md:px-4 py-2 md:py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all font-medium text-sm">
                         <option value="">جميع الحالات</option>
                         <option value="draft" {{ request('status') == 'draft' ? 'selected' : '' }}>مسودة</option>
                         <option value="in_progress" {{ request('status') == 'in_progress' ? 'selected' : '' }}>جاري التنفيذ</option>
@@ -49,15 +49,15 @@
                 </div>
 
                 <div class="flex items-end gap-2">
-                    <button type="submit" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-bold transition-all shadow-sm hover:shadow-md flex items-center justify-center gap-2">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <button type="submit" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 md:px-6 py-2 md:py-3 rounded-xl font-bold transition-all shadow-sm hover:shadow-md flex items-center justify-center gap-2 text-sm">
+                        <svg class="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                         </svg>
-                        بحث
+                        <span class="hidden sm:inline">بحث</span>
                     </button>
                     <a href="{{ route('stock-counts.index') }}" 
-                       class="bg-gray-100 hover:bg-gray-200 text-gray-700 p-3 rounded-xl transition-all">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                       class="bg-gray-100 hover:bg-gray-200 text-gray-700 p-2 md:p-3 rounded-xl transition-all">
+                        <svg class="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
                         </svg>
                     </a>

@@ -3,81 +3,79 @@
 @section('title', 'إدارة المستخدمين')
 
 @section('content')
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-12">
-            <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
-                <!-- Header -->
-                <div class="bg-gradient-to-r from-blue-600 to-purple-600 p-6">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <h2 class="text-2xl font-bold text-white">إدارة المستخدمين</h2>
-                            <p class="text-blue-100 mt-1">إضافة وتعديل وإدارة حسابات المستخدمين</p>
-                        </div>
-                        <a href="{{ route('users.create') }}" 
-                           class="bg-white text-blue-600 px-6 py-3 rounded-xl font-bold hover:bg-blue-50 transition-all shadow-lg flex items-center gap-2">
-                            <i class="fas fa-plus"></i>
-                            إضافة مستخدم جديد
-                        </a>
-                    </div>
+<div class="space-y-4">
+    <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
+        <!-- Header -->
+        <div class="bg-gradient-to-r from-blue-600 to-purple-600 p-4 md:p-6">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div>
+                    <h2 class="text-xl md:text-2xl font-bold text-white">إدارة المستخدمين</h2>
+                    <p class="text-blue-100 text-sm mt-1">إضافة وتعديل وإدارة حسابات المستخدمين</p>
                 </div>
+                <a href="{{ route('users.create') }}" 
+                   class="bg-white text-blue-600 px-4 md:px-6 py-2 md:py-3 rounded-xl font-bold hover:bg-blue-50 transition-all shadow-lg flex items-center gap-2 justify-center">
+                    <i class="fas fa-plus"></i>
+                    <span class="text-sm md:text-base">إضافة مستخدم جديد</span>
+                </a>
+            </div>
+        </div>
 
-                <!-- Alerts -->
-                <div class="p-6">
-                    @if(session('success'))
-                        <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-xl mb-4 flex items-center gap-2">
-                            <i class="fas fa-check-circle text-xl"></i>
-                            <span>{{ session('success') }}</span>
-                        </div>
-                    @endif
-
-                    @if(session('error'))
-                        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-xl mb-4 flex items-center gap-2">
-                            <i class="fas fa-exclamation-circle text-xl"></i>
-                            <span>{{ session('error') }}</span>
-                        </div>
-                    @endif
+        <!-- Alerts -->
+        <div class="p-4 md:p-6">
+            @if(session('success'))
+                <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-xl mb-4 flex items-center gap-2">
+                    <i class="fas fa-check-circle text-xl"></i>
+                    <span>{{ session('success') }}</span>
                 </div>
+            @endif
 
-                <!-- Table -->
-                <div class="px-6 pb-6">
-                    <div class="overflow-x-auto">
-                        <table class="w-full">
-                            <thead>
-                                <tr class="border-b-2 border-gray-200">
-                                    <th class="text-right py-4 px-4 font-bold text-gray-700">#</th>
-                                    <th class="text-right py-4 px-4 font-bold text-gray-700">الاسم</th>
-                                    <th class="text-right py-4 px-4 font-bold text-gray-700">البريد الإلكتروني</th>
-                                    <th class="text-right py-4 px-4 font-bold text-gray-700">الهاتف</th>
-                                    <th class="text-right py-4 px-4 font-bold text-gray-700">الدور</th>
-                                    <th class="text-right py-4 px-4 font-bold text-gray-700">الحالة</th>
-                                    <th class="text-right py-4 px-4 font-bold text-gray-700">تاريخ الإنشاء</th>
-                                    <th class="text-right py-4 px-4 font-bold text-gray-700">الإجراءات</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-gray-100">
-                                @foreach($users as $user)
-                                <tr class="hover:bg-gray-50 transition-colors">
-                                    <td class="py-4 px-4 text-gray-600">{{ $loop->iteration }}</td>
-                                    <td class="py-4 px-4">
-                                        <div class="flex items-center gap-3">
-                                            <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold">
-                                                {{ substr($user->name, 0, 1) }}
-                                            </div>
-                                            <span class="font-semibold text-gray-800">{{ $user->name }}</span>
-                                        </div>
-                                    </td>
-                                    <td class="py-4 px-4 text-gray-600">{{ $user->email }}</td>
-                                    <td class="py-4 px-4 text-gray-600">{{ $user->phone ?? '-' }}</td>
-                                    <td class="py-4 px-4">
-                                        <span class="px-3 py-1 rounded-full text-sm font-bold {{ $user->role === 'admin' ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700' }}">
-                                            {{ $user->role_name }}
-                                        </span>
-                                    </td>
-                                    <td class="py-4 px-4">
-                                        <span class="px-3 py-1 rounded-full text-sm font-bold {{ $user->is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600' }}">
-                                            {{ $user->is_active ? 'نشط' : 'غير نشط' }}
-                                        </span>
+            @if(session('error'))
+                <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-xl mb-4 flex items-center gap-2">
+                    <i class="fas fa-exclamation-circle text-xl"></i>
+                    <span>{{ session('error') }}</span>
+                </div>
+            @endif
+        </div>
+
+        <!-- Table -->
+        <div class="px-4 md:px-6 pb-6">
+            <div class="overflow-x-auto">
+                <table class="w-full min-w-[600px]">
+                    <thead>
+                        <tr class="border-b-2 border-gray-200">
+                            <th class="text-right py-4 px-2 md:px-4 font-bold text-gray-700 text-sm">#</th>
+                            <th class="text-right py-4 px-2 md:px-4 font-bold text-gray-700 text-sm">الاسم</th>
+                            <th class="text-right py-4 px-2 md:px-4 font-bold text-gray-700 text-sm">البريد الإلكتروني</th>
+                            <th class="text-right py-4 px-2 md:px-4 font-bold text-gray-700 text-sm hidden md:table-cell">الهاتف</th>
+                            <th class="text-right py-4 px-2 md:px-4 font-bold text-gray-700 text-sm">الدور</th>
+                            <th class="text-right py-4 px-2 md:px-4 font-bold text-gray-700 text-sm">الحالة</th>
+                            <th class="text-right py-4 px-2 md:px-4 font-bold text-gray-700 text-sm hidden lg:table-cell">تاريخ الإنشاء</th>
+                            <th class="text-right py-4 px-2 md:px-4 font-bold text-gray-700 text-sm">الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100">
+                        @foreach($users as $user)
+                        <tr class="hover:bg-gray-50 transition-colors">
+                            <td class="py-4 px-2 md:px-4 text-gray-600 text-sm">{{ $loop->iteration }}</td>
+                            <td class="py-4 px-2 md:px-4">
+                                <div class="flex items-center gap-2 md:gap-3">
+                                    <div class="w-8 h-8 md:w-10 md:h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                                        {{ substr($user->name, 0, 1) }}
+                                    </div>
+                                    <span class="font-semibold text-gray-800 text-sm">{{ $user->name }}</span>
+                                </div>
+                            </td>
+                            <td class="py-4 px-2 md:px-4 text-gray-600 text-sm">{{ $user->email }}</td>
+                            <td class="py-4 px-2 md:px-4 text-gray-600 text-sm hidden md:table-cell">{{ $user->phone ?? '-' }}</td>
+                            <td class="py-4 px-2 md:px-4">
+                                <span class="px-2 md:px-3 py-1 rounded-full text-xs md:text-sm font-bold {{ $user->role === 'admin' ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700' }}">
+                                    {{ $user->role_name }}
+                                </span>
+                            </td>
+                            <td class="py-4 px-2 md:px-4">
+                                <span class="px-2 md:px-3 py-1 rounded-full text-xs md:text-sm font-bold {{ $user->is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600' }}">
+                                    {{ $user->is_active ? 'نشط' : 'غير نشط' }}
+                                </span>
                                     </td>
                                     <td class="py-4 px-4 text-gray-500 text-sm">{{ $user->created_at->format('Y-m-d') }}</td>
                                     <td class="py-4 px-4">

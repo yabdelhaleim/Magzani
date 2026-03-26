@@ -45,4 +45,9 @@ class PurchaseReturn extends Model
     {
         return $this->belongsTo(User::class, 'created_by');
     }
+
+    public function confirmer()
+    {
+        return $this->belongsTo(User::class, 'confirmed_by');
+    }
 }

@@ -4,74 +4,74 @@
 @section('page-title', 'إدارة الموردين')
 
 @section('content')
-<div class="space-y-6">
+<div class="space-y-4 md:space-y-6">
     
     <!-- Header Actions -->
-    <div class="flex justify-between items-center">
+    <div class="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
         <div>
-            <h2 class="text-2xl font-bold text-gray-800">قائمة الموردين</h2>
-            <p class="text-gray-600 mt-1">عرض وإدارة جميع الموردين في النظام</p>
+            <h2 class="text-xl md:text-2xl font-bold text-gray-800">قائمة الموردين</h2>
+            <p class="text-gray-600 text-sm mt-1">عرض وإدارة جميع الموردين في النظام</p>
         </div>
         <a href="{{ route('suppliers.create') }}" 
-           class="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all shadow-lg hover:shadow-xl">
+           class="flex items-center justify-center gap-2 px-4 md:px-6 py-2 md:py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all shadow-lg hover:shadow-xl text-sm">
             <i class="fas fa-plus-circle"></i>
-            <span>إضافة مورد جديد</span>
+            <span>إضافة مورد</span>
         </a>
     </div>
 
     <!-- Statistics Cards -->
     @if(isset($statistics))
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6">
         <!-- Total Suppliers -->
-        <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100 hover:shadow-md transition-shadow">
+        <div class="bg-white rounded-xl shadow-sm p-4 md:p-6 border border-gray-100 hover:shadow-md transition-shadow">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-sm text-gray-600 mb-1">إجمالي الموردين</p>
-                    <h3 class="text-3xl font-bold text-gray-800">{{ $statistics['total_suppliers'] ?? 0 }}</h3>
+                    <p class="text-xs md:text-sm text-gray-600 mb-1">إجمالي الموردين</p>
+                    <h3 class="text-xl md:text-3xl font-bold text-gray-800">{{ $statistics['total_suppliers'] ?? 0 }}</h3>
                 </div>
-                <div class="w-14 h-14 bg-blue-100 rounded-full flex items-center justify-center">
-                    <i class="fas fa-users text-2xl text-blue-600"></i>
+                <div class="w-10 h-10 md:w-14 md:h-14 bg-blue-100 rounded-full flex items-center justify-center">
+                    <i class="fas fa-users text-lg md:text-2xl text-blue-600"></i>
                 </div>
             </div>
         </div>
 
         <!-- Active Suppliers -->
-        <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100 hover:shadow-md transition-shadow">
+        <div class="bg-white rounded-xl shadow-sm p-4 md:p-6 border border-gray-100 hover:shadow-md transition-shadow">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-sm text-gray-600 mb-1">الموردين النشطين</p>
-                    <h3 class="text-3xl font-bold text-green-600">{{ $statistics['active_suppliers'] ?? 0 }}</h3>
+                    <p class="text-xs md:text-sm text-gray-600 mb-1">الموردين النشطين</p>
+                    <h3 class="text-xl md:text-3xl font-bold text-green-600">{{ $statistics['active_suppliers'] ?? 0 }}</h3>
                 </div>
-                <div class="w-14 h-14 bg-green-100 rounded-full flex items-center justify-center">
-                    <i class="fas fa-check-circle text-2xl text-green-600"></i>
+                <div class="w-10 h-10 md:w-14 md:h-14 bg-green-100 rounded-full flex items-center justify-center">
+                    <i class="fas fa-check-circle text-lg md:text-2xl text-green-600"></i>
                 </div>
             </div>
         </div>
 
         <!-- Total Purchases -->
-        <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100 hover:shadow-md transition-shadow">
+        <div class="bg-white rounded-xl shadow-sm p-4 md:p-6 border border-gray-100 hover:shadow-md transition-shadow">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-sm text-gray-600 mb-1">إجمالي المشتريات</p>
-                    <h3 class="text-2xl font-bold text-purple-600">{{ number_format($statistics['total_purchases'] ?? 0, 2) }}</h3>
-                    <p class="text-xs text-gray-500 mt-1">جنيه مصري</p>
+                    <p class="text-xs md:text-sm text-gray-600 mb-1">إجمالي المشتريات</p>
+                    <h3 class="text-lg md:text-2xl font-bold text-purple-600">{{ number_format($statistics['total_purchases'] ?? 0, 2) }}</h3>
+                    <p class="text-xs text-gray-500 mt-1 hidden md:block">جنيه مصري</p>
                 </div>
-                <div class="w-14 h-14 bg-purple-100 rounded-full flex items-center justify-center">
-                    <i class="fas fa-shopping-cart text-2xl text-purple-600"></i>
+                <div class="w-10 h-10 md:w-14 md:h-14 bg-purple-100 rounded-full flex items-center justify-center">
+                    <i class="fas fa-shopping-cart text-lg md:text-2xl text-purple-600"></i>
                 </div>
             </div>
         </div>
 
         <!-- Total Balance -->
-        <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100 hover:shadow-md transition-shadow">
+        <div class="bg-white rounded-xl shadow-sm p-4 md:p-6 border border-gray-100 hover:shadow-md transition-shadow">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-sm text-gray-600 mb-1">إجمالي المستحقات</p>
-                    <h3 class="text-2xl font-bold text-red-600">{{ number_format($statistics['total_balance'] ?? 0, 2) }}</h3>
-                    <p class="text-xs text-gray-500 mt-1">جنيه مصري</p>
+                    <p class="text-xs md:text-sm text-gray-600 mb-1">إجمالي المستحقات</p>
+                    <h3 class="text-lg md:text-2xl font-bold text-red-600">{{ number_format($statistics['total_balance'] ?? 0, 2) }}</h3>
+                    <p class="text-xs text-gray-500 mt-1 hidden md:block">جنيه مصري</p>
                 </div>
-                <div class="w-14 h-14 bg-red-100 rounded-full flex items-center justify-center">
-                    <i class="fas fa-wallet text-2xl text-red-600"></i>
+                <div class="w-10 h-10 md:w-14 md:h-14 bg-red-100 rounded-full flex items-center justify-center">
+                    <i class="fas fa-wallet text-lg md:text-2xl text-red-600"></i>
                 </div>
             </div>
         </div>

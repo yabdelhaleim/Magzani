@@ -85,13 +85,12 @@ class PurchaseReturnController extends Controller
         $purchaseReturn->load([
             'purchaseInvoice.supplier',
             'purchaseInvoice.warehouse',
-            'items.purchaseInvoiceItem.product'
+            'items.purchaseInvoiceItem.product',
+            'creator',
+            'confirmer'
         ]);
 
-        // جلب قائمة المرتجعات للعرض في الجدول
-        $returns = $this->returnService->getReturns([]);
-
-        return view('invoices.purchase-returns.index', compact('purchaseReturn', 'returns'));
+        return view('invoices.purchase-returns.show', compact('purchaseReturn'));
     }
 
     /**

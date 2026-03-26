@@ -1,65 +1,50 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>إدارة التحويلات</title>
-    
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
-    
-    <style>
-        * { font-family: 'Cairo', sans-serif; }
-        .card-shadow { box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
-    </style>
-</head>
-<body class="bg-gray-50">
-    <div class="container mx-auto px-4 py-6 max-w-7xl">
-        
-        <!-- ============================================ -->
-        <!-- Header -->
-        <!-- ============================================ -->
-        <div class="mb-6">
-            <div class="flex justify-between items-center mb-6">
-                <div>
-                    <h1 class="text-3xl font-bold text-gray-800">📦 إدارة التحويلات</h1>
-                    <p class="text-gray-600 text-sm mt-1">إدارة ومتابعة تحويلات المخزون</p>
-                </div>
-                <a href="{{ route('transfers.create') }}" 
-                   class="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold flex items-center gap-2">
-                    <i class="fas fa-plus"></i>
-                    تحويل جديد
-                </a>
-            </div>
+@extends('layouts.app')
 
-            <!-- Stats -->
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                <div class="bg-white rounded-lg p-4 card-shadow">
-                    <div class="flex justify-between items-center">
-                        <div>
-                            <p class="text-sm text-gray-500">الإجمالي</p>
-                            <p class="text-2xl font-bold text-gray-800">{{ $transfers->total() }}</p>
-                        </div>
-                        <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                            <i class="fas fa-exchange-alt text-blue-600"></i>
-                        </div>
+@section('title', 'إدارة التحويلات')
+
+@section('content')
+<div class="py-4 md:py-6 px-2 md:px-4">
+    
+    <!-- ============================================ -->
+    <!-- Header -->
+    <!-- ============================================ -->
+    <div class="mb-4 md:mb-6">
+        <div class="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-4 md:mb-6">
+            <div>
+                <h1 class="text-xl md:text-3xl font-bold text-gray-800">📦 إدارة التحويلات</h1>
+                <p class="text-gray-600 text-sm mt-1">إدارة ومتابعة تحويلات المخزون</p>
+            </div>
+            <a href="{{ route('transfers.create') }}" 
+               class="px-4 md:px-6 py-2 md:py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold flex items-center justify-center gap-2 text-sm">
+                <i class="fas fa-plus"></i>
+                <span>تحويل جديد</span>
+            </a>
+        </div>
+
+        <!-- Stats -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4 mb-4 md:mb-6">
+            <div class="bg-white rounded-lg p-3 md:p-4 shadow">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <p class="text-xs md:text-sm text-gray-500">الإجمالي</p>
+                        <p class="text-xl md:text-2xl font-bold text-gray-800">{{ $transfers->total() }}</p>
+                    </div>
+                    <div class="w-8 h-8 md:w-12 md:h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-exchange-alt text-blue-600 text-sm md:text-base"></i>
                     </div>
                 </div>
-                
-                <div class="bg-white rounded-lg p-4 card-shadow">
-                    <div class="flex justify-between items-center">
-                        <div>
-                            <p class="text-sm text-gray-500">مستلمة</p>
-                            <p class="text-2xl font-bold text-green-600">
-                                {{ $transfers->where('status', 'received')->count() }}
-                            </p>
-                        </div>
-                        <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                            <i class="fas fa-check-circle text-green-600"></i>
-                        </div>
+            </div>
+            
+            <div class="bg-white rounded-lg p-3 md:p-4 shadow">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <p class="text-xs md:text-sm text-gray-500">مستلمة</p>
+                        <p class="text-xl md:text-2xl font-bold text-green-600">
+                            {{ $transfers->where('status', 'received')->count() }}
+                        </p>
+                    </div>
+                    <div class="w-8 h-8 md:w-12 md:h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-check-circle text-green-600 text-sm md:text-base"></i>
                     </div>
                 </div>
                 
