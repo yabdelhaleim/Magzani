@@ -620,7 +620,7 @@ public function getShowData(int $countId, array $filters = []): array
             ->where('stock_count_id', $countId)
             ->where('variance', '!=', 0)
             ->update([
-                'status' => DB::raw("IF(adjustment_approved = 1, 'adjusted', 'skipped')"),
+                'status' => DB::raw("CASE WHEN adjustment_approved = 1 THEN 'adjusted' ELSE 'skipped' END"),
                 'updated_at' => now(),
             ]);
     }

@@ -19,7 +19,7 @@ use Illuminate\Support\Facades\Cache;
  * - تتبع تاريخ الأسعار
  * - مقارنة الأسعار عبر الوقت
  */
-class Priceupdateservice
+class PriceUpdateService
 {
     /**
      * 📋 إنشاء منتج جديد مع نظام التسعير الذكي

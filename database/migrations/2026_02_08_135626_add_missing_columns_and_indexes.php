@@ -53,8 +53,7 @@ return new class extends Migration
                 }
                 
                 // Indexes للبحث السريع (تحقق من عدم وجودها)
-                $sm = Schema::getConnection()->getDoctrineSchemaManager();
-                $indexesFound = $sm->listTableIndexes('product_selling_units');
+                $indexesFound = collect(DB::select("SHOW INDEX FROM product_selling_units"))->pluck('Key_name')->unique()->toArray();
                 
                 if (!isset($indexesFound['idx_product_active_default'])) {
                     if (Schema::hasColumn('product_selling_units', 'product_id') && 
@@ -81,8 +80,7 @@ return new class extends Migration
         // ✅ فقط إذا كان الجدول موجود
         if (Schema::hasTable('product_price_history')) {
             Schema::table('product_price_history', function (Blueprint $table) {
-                $sm = Schema::getConnection()->getDoctrineSchemaManager();
-                $indexesFound = $sm->listTableIndexes('product_price_history');
+                $indexesFound = collect(DB::select("SHOW INDEX FROM product_price_history"))->pluck('Key_name')->unique()->toArray();
                 
                 if (!isset($indexesFound['idx_product_changed']) && 
                     Schema::hasColumn('product_price_history', 'product_id') && 
@@ -145,8 +143,7 @@ return new class extends Migration
 
         if (Schema::hasTable('product_price_history')) {
             Schema::table('product_price_history', function (Blueprint $table) {
-                $sm = Schema::getConnection()->getDoctrineSchemaManager();
-                $indexesFound = $sm->listTableIndexes('product_price_history');
+                $indexesFound = collect(DB::select("SHOW INDEX FROM product_price_history"))->pluck('Key_name')->unique()->toArray();
                 
                 if (isset($indexesFound['idx_product_changed'])) {
                     $table->dropIndex('idx_product_changed');

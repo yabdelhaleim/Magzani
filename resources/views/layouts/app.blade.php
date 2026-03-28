@@ -101,11 +101,25 @@
 
     @stack('styles')
 </head>
-<body class="bg-gray-50" x-data="{ sidebarOpen: true }">
-    
+<body class="bg-gray-50" x-data="{ sidebarOpen: window.innerWidth >= 1024 }" @resize.window="sidebarOpen = window.innerWidth >= 1024">
+
+    <!-- Mobile Backdrop -->
+    <div x-show="sidebarOpen && window.innerWidth < 1024"
+         x-transition:enter="transition-opacity ease-linear duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition-opacity ease-linear duration-300"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         @click="sidebarOpen = false"
+         class="fixed inset-0 bg-black/50 z-40 lg:hidden"
+         style="display: none;"></div>
+
     <!-- Sidebar -->
-    <aside :class="sidebarOpen ? 'w-64' : 'w-20'" 
-           class="fixed right-0 top-0 h-screen bg-gray-900 text-white transition-all duration-300 z-50 sidebar-scrollbar overflow-y-auto">
+    <aside :class="[
+        sidebarOpen ? 'w-64 translate-x-0' : 'w-64 translate-x-full lg:translate-x-0 lg:w-20',
+        'fixed right-0 top-0 h-screen bg-gray-900 text-white transition-all duration-300 z-50 sidebar-scrollbar overflow-y-auto'
+    ]">
         
         <!-- Logo & Toggle -->
         <div class="p-4 flex items-center justify-between border-b border-gray-800">
@@ -118,8 +132,12 @@
                     <p class="text-xs text-gray-400">إدارة متكاملة</p>
                 </div>
             </div>
-            <button @click="sidebarOpen = !sidebarOpen" 
-                    class="text-gray-400 hover:text-white hover:bg-gray-800 p-2 rounded-lg transition-all">
+            <button @click="sidebarOpen = !sidebarOpen"
+                    class="text-gray-400 hover:text-white hover:bg-gray-800 p-2 rounded-lg transition-all lg:hidden">
+                <i class="fas fa-times"></i>
+            </button>
+            <button @click="sidebarOpen = !sidebarOpen"
+                    class="text-gray-400 hover:text-white hover:bg-gray-800 p-2 rounded-lg transition-all hidden lg:block">
                 <i class="fas" :class="sidebarOpen ? 'fa-times' : 'fa-bars'"></i>
             </button>
         </div>
@@ -421,22 +439,45 @@
     </aside>
 
     <!-- Main Content -->
-    <main :class="sidebarOpen ? 'mr-64' : 'mr-20'" class="transition-all duration-300 min-h-screen">
-        
+    <main :class="sidebarOpen ? 'lg:mr-64' : 'lg:mr-20'" class="transition-all duration-300 min-h-screen mr-0">
+
         <!-- Top Bar -->
         <header class="bg-white shadow-sm sticky top-0 z-40">
-            <div class="px-6 py-4 flex items-center justify-between">
-                <div class="flex items-center gap-4">
-                    <h1 class="text-2xl font-bold text-gray-800">@yield('page-title', 'لوحة التحكم')</h1>
+            <div class="px-4 lg:px-6 py-4 flex items-center justify-between gap-4">
+                <div class="flex items-center gap-4 flex-1">
+                    <!-- Mobile Menu Button -->
+                    <button @click="sidebarOpen = !sidebarOpen"
+                            class="lg:hidden p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-all">
+                        <i class="fas fa-bars text-xl"></i>
+                    </button>
+                    <h1 class="text-xl lg:text-2xl font-bold text-gray-800 truncate">@yield('page-title', 'لوحة التحكم')</h1>
                 </div>
 
-                <div class="flex items-center gap-4">
-                    <!-- Search -->
-                    <div class="relative">
-                        <input type="text" 
-                               placeholder="بحث سريع..." 
-                               class="w-64 px-4 py-2 pr-10 bg-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all">
-                        <i class="fas fa-search absolute right-3 top-3 text-gray-400"></i>
+                <div class="flex items-center gap-2 lg:gap-4">
+                    <!-- Mobile Search Toggle -->
+                    <div class="sm:hidden relative" x-data="{ searchOpen: false }">
+                        <button @click="searchOpen = !searchOpen"
+                                class="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-all">
+                            <i class="fas fa-search text-lg"></i>
+                        </button>
+                        <div x-show="searchOpen"
+                             @click.away="searchOpen = false"
+                             x-transition
+                             class="absolute left-0 top-full mt-2 w-64 bg-white rounded-lg shadow-lg border p-2 z-50"
+                             style="display: none;">
+                            <input type="text"
+                                   placeholder="بحث سريع..."
+                                   class="w-full px-4 py-2 pr-10 bg-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all">
+                            <i class="fas fa-search absolute right-3 top-3 text-gray-400 pointer-events-none"></i>
+                        </div>
+                    </div>
+
+                    <!-- Desktop Search -->
+                    <div class="relative hidden sm:block">
+                        <input type="text"
+                               placeholder="بحث سريع..."
+                               class="w-48 lg:w-64 px-4 py-2 pr-10 bg-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all">
+                        <i class="fas fa-search absolute right-3 top-3 text-gray-400 pointer-events-none"></i>
                     </div>
 
                     <!-- Notifications -->
@@ -446,11 +487,12 @@
                             <i class="fas fa-bell text-xl"></i>
                             <span class="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
                         </button>
-                        
-                        <div x-show="open" 
+
+                        <div x-show="open"
                              @click.away="open = false"
                              x-transition
-                             class="absolute left-0 mt-2 w-80 bg-white rounded-lg shadow-xl border animate-slide-in">
+                             class="absolute left-0 right-auto lg:left-0 mt-2 w-80 max-w-[calc(100vw-2rem)] bg-white rounded-lg shadow-xl border animate-slide-in"
+                             style="display: none;">
                             <div class="p-4 border-b bg-gradient-to-r from-blue-50 to-purple-50">
                                 <h3 class="font-bold text-gray-800">الإشعارات</h3>
                             </div>
@@ -471,11 +513,12 @@
                                  class="w-8 h-8 rounded-full ring-2 ring-gray-200">
                             <i class="fas fa-chevron-down text-xs text-gray-600"></i>
                         </button>
-                        
-                        <div x-show="open" 
+
+                        <div x-show="open"
                              @click.away="open = false"
                              x-transition
-                             class="absolute left-0 mt-2 w-48 bg-white rounded-lg shadow-xl border animate-slide-in">
+                             class="absolute left-0 right-auto lg:left-0 mt-2 w-48 max-w-[calc(100vw-2rem)] bg-white rounded-lg shadow-xl border animate-slide-in"
+                             style="display: none;">
                             <div class="p-3 border-b bg-gradient-to-r from-blue-50 to-purple-50">
                                 <p class="font-semibold text-sm text-gray-800">{{ Auth::user()->name }}</p>
                                 <p class="text-xs text-gray-600">{{ Auth::user()->role_name }}</p>

@@ -488,8 +488,6 @@ class AdvancedPricingService
                 'change_reason' => $changeReason ?? 'تحديث جماعي ذكي',
                 'changed_by' => $userId,
                 'changed_at' => $now,
-                'created_at' => $now,
-                'updated_at' => $now,
             ];
 
             if ($product->pricing_id) {
@@ -519,7 +517,7 @@ class AdvancedPricingService
 
         // ✅ Bulk Insert - Price History
         if (!empty($priceHistoryData)) {
-            DB::table('product_price_histories')->insert($priceHistoryData);
+            DB::table('product_price_history')->insert($priceHistoryData);
         }
 
         // ✅ Bulk Update - Existing Pricing
