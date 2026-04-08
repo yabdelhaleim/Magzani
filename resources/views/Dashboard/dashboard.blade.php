@@ -519,13 +519,13 @@
                     <div class="alert-dot"></div>
                     <div class="flex-1 min-w-0">
                         <div class="alert-name">{{ $product->name ?? 'منتج غير محدد' }}</div>
-                        <div class="alert-wh"><i class="fas fa-warehouse" style="font-size:9px;margin-left:3px;"></i>{{ $product->warehouse->name ?? 'مخزن غير محدد' }}</div>
+                        <div class="alert-wh"><i class="fas fa-warehouse" style="font-size:9px;margin-left:3px;"></i>{{ $product->warehouse ?? 'مخزن غير محدد' }}</div>
                         <div class="alert-qty-row">
-                            <span style="color:var(--rose);">متوفر: {{ $product->qty ?? 0 }}</span>
-                            <span style="color:var(--text-m);">الحد: {{ $product->min_qty ?? 0 }}</span>
+                            <span style="color:var(--rose);">متوفر: {{ $product->quantity ?? 0 }}</span>
+                            <span style="color:var(--text-m);">الحد: {{ $product->min_stock ?? 0 }}</span>
                         </div>
                         @php
-                            $qty=$product->qty??0; $min=$product->min_qty??1;
+                            $qty=$product->quantity??0; $min=$product->min_stock??1;
                             $pct=min(100,($qty/max(1,$min))*100);
                             $barClr=$pct<50?'linear-gradient(90deg,#e84b5a,#fb7185)':'linear-gradient(90deg,#e8930a,#fbbf24)';
                         @endphp
