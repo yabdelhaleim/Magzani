@@ -3,270 +3,382 @@
 @section('title', 'تقرير المخزون')
 @section('page-title', 'تقرير المخزون')
 
+@push('styles')
+<style>
+    :root {
+        --tf-bg:          #f4f7fe;
+        --tf-surface:     #ffffff;
+        --tf-surface2:    #f8faff;
+        --tf-border:      #e4eaf7;
+        --tf-border-soft: #edf0f9;
+
+        --tf-indigo:      #4338ca;
+        --tf-indigo-light:#6366f1;
+        --tf-indigo-soft: #e0e7ff;
+
+        --tf-blue:        #0ea5e9;
+        --tf-blue-soft:   #e0f2fe;
+        --tf-green:       #059669;
+        --tf-green-soft:  #d1fae5;
+        --tf-red:         #dc2626;
+        --tf-red-soft:    #fee2e2;
+        --tf-amber:       #d97706;
+        --tf-amber-soft:  #fef3c7;
+        --tf-violet:      #7c3aed;
+        --tf-violet-soft: #ede9fe;
+
+        --tf-text-h:      #1a2140;
+        --tf-text-b:      #3d4f72;
+        --tf-text-m:      #64748b;
+        --tf-text-d:      #94a3b8;
+
+        --tf-shadow-sm:   0 2px 12px rgba(79,99,210,0.07);
+        --tf-shadow-card: 0 2px 0 0 rgba(0,0,0,0.04), 0 4px 20px rgba(79,99,210,0.08);
+        --tf-shadow-lg:   0 8px 30px rgba(79,99,210,0.10);
+    }
+
+    .tf-page {
+        background: var(--tf-bg);
+        background-image:
+            radial-gradient(ellipse 90% 70% at 5% -15%,  rgba(14,165,233,0.15) 0%, transparent 50%),
+            radial-gradient(ellipse 70% 60% at 95% 115%, rgba(6,182,212,0.12) 0%, transparent 50%);
+        min-height: 100vh;
+        padding: 26px 22px;
+    }
+
+    @keyframes tfFadeUp {
+        from { opacity: 0; transform: translateY(18px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .tf-section { animation: tfFadeUp 0.55s cubic-bezier(0.22,1,0.36,1) both; }
+    .tf-section:nth-child(1) { animation-delay: 0.04s; }
+    .tf-section:nth-child(2) { animation-delay: 0.12s; }
+    .tf-section:nth-child(3) { animation-delay: 0.20s; }
+    .tf-section:nth-child(4) { animation-delay: 0.28s; }
+
+    .tf-card {
+        background: var(--tf-surface); border-radius: 20px;
+        border: 1px solid var(--tf-border);
+        overflow: hidden; box-shadow: var(--tf-shadow-card);
+        margin-bottom: 20px; position: relative;
+        transition: all .35s cubic-bezier(.22,1,.36,1);
+    }
+    .tf-card:hover { transform: translateY(-3px); box-shadow: var(--tf-shadow-lg); }
+
+    .tf-card-head {
+        padding: 20px 24px;
+        background: linear-gradient(135deg, var(--tf-blue), #06b6d4);
+        color: white;
+    }
+    .tf-card-head h3 { margin: 0; font-size: 1.25rem; font-weight: 700; }
+
+    .tf-stat-card {
+        background: var(--tf-surface); border-radius: 20px;
+        padding: 1.5rem; position: relative; overflow: hidden;
+        box-shadow: var(--tf-shadow-card);
+        transition: all .35s cubic-bezier(.22,1,.36,1);
+    }
+    .tf-stat-card:hover { transform: translateY(-4px); box-shadow: var(--tf-shadow-lg); }
+
+    .tf-stat-icon {
+        width: 56px; height: 56px; border-radius: 14px;
+        display: flex; align-items: center; justify-content: center;
+        margin-bottom: 1rem; box-shadow: var(--tf-shadow-sm);
+    }
+
+    .tf-stat-label { font-size: 13px; color: var(--tf-text-m); margin-bottom: 4px; }
+    .tf-stat-value { font-size: 1.75rem; font-weight: 800; color: var(--tf-text-h); }
+
+    .tf-input, .tf-select {
+        width: 100%; padding: 12px 16px;
+        background: var(--tf-surface2);
+        border: 1px solid var(--tf-border);
+        border-radius: 12px; font-size: 14px;
+        color: var(--tf-text-h); transition: all .25s;
+    }
+    .tf-input:focus, .tf-select:focus {
+        outline: none; border-color: var(--tf-blue);
+        box-shadow: 0 0 0 3px rgba(14,165,233,0.12);
+    }
+    .tf-input::placeholder { color: var(--tf-text-d); }
+
+    .tf-label {
+        display: block; font-size: 13px; font-weight: 600;
+        color: var(--tf-text-b); margin-bottom: 8px;
+    }
+    .tf-label i { margin-left: 6px; color: var(--tf-blue); }
+
+    .tf-btn {
+        display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+        padding: 12px 20px; border-radius: 12px; font-size: 14px; font-weight: 600;
+        cursor: pointer; transition: all .3s cubic-bezier(.22,1,.36,1);
+        border: none;
+    }
+    .tf-btn-primary {
+        background: linear-gradient(135deg, var(--tf-blue), #06b6d4);
+        color: white;
+    }
+    .tf-btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(14,165,233,0.35);
+    }
+    .tf-btn-secondary {
+        background: var(--tf-surface2); color: var(--tf-text-b);
+        border: 1px solid var(--tf-border);
+    }
+    .tf-btn-secondary:hover { background: var(--tf-border-soft); }
+
+    .tf-table { width: 100%; border-collapse: collapse; }
+    .tf-table thead {
+        background: linear-gradient(to right, var(--tf-surface2), var(--tf-surface));
+    }
+    .tf-table th {
+        padding: 16px 20px; text-align: right;
+        font-size: 12px; font-weight: 700; text-transform: uppercase;
+        color: var(--tf-text-m); letter-spacing: 0.5px;
+    }
+    .tf-table td {
+        padding: 16px 20px; border-top: 1px solid var(--tf-border-soft);
+        color: var(--tf-text-b); font-size: 14px;
+    }
+    .tf-table tbody tr { transition: all .25s; }
+    .tf-table tbody tr:hover { background: var(--tf-surface2); }
+
+    .tf-badge {
+        display: inline-flex; align-items: center; gap: 6px;
+        padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 600;
+    }
+    .tf-badge-green { background: var(--tf-green-soft); color: var(--tf-green); }
+    .tf-badge-red { background: var(--tf-red-soft); color: var(--tf-red); }
+    .tf-badge-amber { background: var(--tf-amber-soft); color: var(--tf-amber); }
+    .tf-badge-violet { background: var(--tf-violet-soft); color: var(--tf-violet); }
+    .tf-badge-blue { background: var(--tf-blue-soft); color: var(--tf-blue); }
+
+    .tf-avatar {
+        width: 42px; height: 42px; border-radius: 12px;
+        display: flex; align-items: center; justify-content: center;
+        font-weight: 700; font-size: 15px; color: white;
+    }
+
+    .tf-tfoot {
+        background: linear-gradient(to right, var(--tf-blue-soft), var(--tf-surface));
+        border-top: 2px solid var(--tf-blue-soft);
+    }
+
+    .tf-empty-state { padding: 4rem 2rem; text-align: center; }
+    .tf-empty-icon {
+        width: 96px; height: 96px; border-radius: 50%;
+        background: var(--tf-surface2); display: flex; align-items: center; justify-content: center;
+        margin: 0 auto 1rem;
+    }
+    .tf-empty-icon i { font-size: 2.5rem; color: var(--tf-text-d); }
+
+    .tf-header-gradient {
+        background: linear-gradient(135deg, #0284c7 0%, #06b6d4 50%, #14b8a6 100%);
+        border-radius: 20px; padding: 2rem; color: white;
+        position: relative; overflow-hidden;
+    }
+    .tf-header-gradient::before {
+        content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+        background: radial-gradient(circle at 20% 20%, rgba(255,255,255,0.15) 0%, transparent 40%),
+                    radial-gradient(circle at 80% 80%, rgba(255,255,255,0.1) 0%, transparent 40%);
+    }
+    .tf-header-content { position: relative; z-index: 1; }
+
+    @media print {
+        .no-print { display: none !important; }
+    }
+</style>
+@endpush
+
 @section('content')
-<div class="space-y-6">
-    
+<div class="tf-page">
     <!-- Header -->
-    <div class="bg-gradient-to-r from-blue-600 via-cyan-600 to-teal-600 rounded-2xl p-8 text-white shadow-2xl relative overflow-hidden">
-        <div class="absolute top-0 left-0 w-full h-full opacity-10">
-            <div class="absolute top-10 right-10 w-32 h-32 bg-white rounded-full blur-3xl"></div>
-            <div class="absolute bottom-10 left-10 w-40 h-40 bg-white rounded-full blur-3xl"></div>
-        </div>
-        <div class="relative z-10">
+    <div class="tf-header-gradient tf-section mb-6">
+        <div class="tf-header-content">
             <h2 class="text-4xl font-bold mb-2">تقرير المخزون الشامل</h2>
             <p class="text-white/80 text-lg">عرض تفصيلي لجميع الأصناف والكميات المتاحة</p>
         </div>
     </div>
 
     <!-- Filters -->
-    <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
-        <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-            <i class="fas fa-filter text-blue-600"></i>
-            تصفية التقرير
-        </h3>
-        <form method="GET" action="{{ route('reports.inventory') }}" class="grid grid-cols-1 md:grid-cols-12 gap-4">
-            
-            <div class="md:col-span-4">
-                <label class="block text-sm font-semibold text-gray-700 mb-2">
-                    <i class="fas fa-warehouse ml-1 text-gray-400"></i>
-                    المخزن
-                </label>
-                <select name="warehouse_id" class="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
-                    <option value="">كل المخازن</option>
-                    @foreach($warehouses as $warehouse)
-                        <option value="{{ $warehouse->id }}" {{ request('warehouse_id') == $warehouse->id ? 'selected' : '' }}>
-                            {{ $warehouse->name }}
-                        </option>
-                    @endforeach
-                </select>
-            </div>
-
-            <div class="md:col-span-3">
-                <label class="block text-sm font-semibold text-gray-700 mb-2">
-                    <i class="fas fa-search ml-1 text-gray-400"></i>
-                    بحث
-                </label>
-                <input type="text" 
-                       name="search" 
-                       value="{{ request('search') }}"
-                       placeholder="اسم المنتج أو الكود..."
-                       class="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
-            </div>
-
-            <div class="md:col-span-3">
-                <label class="block text-sm font-semibold text-gray-700 mb-2">
-                    <i class="fas fa-layer-group ml-1 text-gray-400"></i>
-                    الحالة
-                </label>
-                <select name="status" class="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
-                    <option value="">الكل</option>
-                    <option value="low" {{ request('status') == 'low' ? 'selected' : '' }}>مخزون منخفض</option>
-                    <option value="normal" {{ request('status') == 'normal' ? 'selected' : '' }}>مخزون طبيعي</option>
-                    <option value="zero" {{ request('status') == 'zero' ? 'selected' : '' }}>نفذ من المخزون</option>
-                </select>
-            </div>
-
-            <div class="md:col-span-2 flex items-end gap-2">
-                <button type="submit" class="flex-1 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white px-6 py-2.5 rounded-lg font-semibold transition hover-scale shadow-md">
-                    <i class="fas fa-search ml-2"></i>
-                    بحث
-                </button>
-                <button type="button" onclick="window.print()" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2.5 rounded-lg transition">
-                    <i class="fas fa-print"></i>
-                </button>
-            </div>
-        </form>
+    <div class="tf-card tf-section">
+        <div class="p-6">
+            <h3 class="text-xl font-bold mb-4" style="color: var(--tf-text-h);">
+                <i class="fas fa-filter" style="color: var(--tf-blue); margin-left: 8px;"></i>
+                تصفية التقرير
+            </h3>
+            <form method="GET" action="{{ route('reports.inventory') }}" class="grid grid-cols-1 md:grid-cols-12 gap-4">
+                <div class="md:col-span-4">
+                    <label class="tf-label"><i class="fas fa-warehouse"></i>المخزن</label>
+                    <select name="warehouse_id" class="tf-select">
+                        <option value="">كل المخازن</option>
+                        @foreach($warehouses as $warehouse)
+                            <option value="{{ $warehouse->id }}" {{ request('warehouse_id') == $warehouse->id ? 'selected' : '' }}>
+                                {{ $warehouse->name }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="md:col-span-3">
+                    <label class="tf-label"><i class="fas fa-search"></i>بحث</label>
+                    <input type="text" name="search" value="{{ request('search') }}" placeholder="اسم المنتج أو الكود..." class="tf-input">
+                </div>
+                <div class="md:col-span-3">
+                    <label class="tf-label"><i class="fas fa-layer-group"></i>الحالة</label>
+                    <select name="status" class="tf-select">
+                        <option value="">الكل</option>
+                        <option value="low" {{ request('status') == 'low' ? 'selected' : '' }}>مخزون منخفض</option>
+                        <option value="normal" {{ request('status') == 'normal' ? 'selected' : '' }}>مخزون طبيعي</option>
+                        <option value="zero" {{ request('status') == 'zero' ? 'selected' : '' }}>نفذ من المخزون</option>
+                    </select>
+                </div>
+                <div class="md:col-span-2 flex items-end gap-2">
+                    <button type="submit" class="tf-btn tf-btn-primary flex-1">
+                        <i class="fas fa-search"></i>بحث
+                    </button>
+                    <button type="button" onclick="window.print()" class="tf-btn tf-btn-secondary">
+                        <i class="fas fa-print"></i>
+                    </button>
+                </div>
+            </form>
+        </div>
     </div>
 
     <!-- Summary Stats -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        
-        <!-- Total Products -->
-        <div class="bg-white rounded-2xl p-6 shadow-lg border border-gray-100 hover:shadow-xl transition-all hover:-translate-y-1">
-            <div class="flex items-start justify-between mb-4">
-                <div class="w-14 h-14 bg-gradient-to-br from-blue-400 to-blue-600 rounded-xl flex items-center justify-center shadow-lg">
-                    <i class="fas fa-boxes text-2xl text-white"></i>
-                </div>
-                <span class="text-xs font-semibold text-blue-600 bg-blue-100 px-3 py-1 rounded-full">منتجات</span>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mb-6">
+        <div class="tf-stat-card tf-section">
+            <div class="tf-stat-icon" style="background: linear-gradient(135deg, var(--tf-blue), #38bdf8);">
+                <i class="fas fa-boxes text-2xl text-white"></i>
             </div>
-            <h3 class="text-gray-500 text-sm font-semibold mb-2">إجمالي الأصناف</h3>
-            <p class="text-3xl font-bold text-gray-800">{{ $totalProducts }}</p>
+            <div class="tf-stat-label">إجمالي الأصناف</div>
+            <div class="tf-stat-value">{{ $totalProducts }}</div>
         </div>
-
-        <!-- Total Value -->
-        <div class="bg-white rounded-2xl p-6 shadow-lg border border-gray-100 hover:shadow-xl transition-all hover:-translate-y-1">
-            <div class="flex items-start justify-between mb-4">
-                <div class="w-14 h-14 bg-gradient-to-br from-green-400 to-green-600 rounded-xl flex items-center justify-center shadow-lg">
-                    <i class="fas fa-dollar-sign text-2xl text-white"></i>
-                </div>
-                <span class="text-xs font-semibold text-green-600 bg-green-100 px-3 py-1 rounded-full">قيمة</span>
+        <div class="tf-stat-card tf-section" style="animation-delay: 0.06s;">
+            <div class="tf-stat-icon" style="background: linear-gradient(135deg, var(--tf-green), #34d399);">
+                <i class="fas fa-dollar-sign text-2xl text-white"></i>
             </div>
-            <h3 class="text-gray-500 text-sm font-semibold mb-2">إجمالي القيمة</h3>
-            <p class="text-3xl font-bold text-gray-800" dir="ltr" style="text-align: right;">
-                {{ number_format($totalValue, 0) }} 
-                <span class="text-lg text-gray-500">ج.م</span>
-            </p>
+            <div class="tf-stat-label">إجمالي القيمة</div>
+            <div class="tf-stat-value" dir="ltr" style="text-align: right;">{{ number_format($totalValue, 0) }} <span style="font-size: 1rem; color: var(--tf-text-m);">ج.م</span></div>
         </div>
-
-        <!-- Low Stock -->
-        <div class="bg-white rounded-2xl p-6 shadow-lg border border-gray-100 hover:shadow-xl transition-all hover:-translate-y-1">
-            <div class="flex items-start justify-between mb-4">
-                <div class="w-14 h-14 bg-gradient-to-br from-orange-400 to-orange-600 rounded-xl flex items-center justify-center shadow-lg">
-                    <i class="fas fa-exclamation-triangle text-2xl text-white"></i>
-                </div>
-                <span class="text-xs font-semibold text-orange-600 bg-orange-100 px-3 py-1 rounded-full">تحذير</span>
+        <div class="tf-stat-card tf-section" style="animation-delay: 0.12s;">
+            <div class="tf-stat-icon" style="background: linear-gradient(135deg, var(--tf-amber), #fbbf24);">
+                <i class="fas fa-exclamation-triangle text-2xl text-white"></i>
             </div>
-            <h3 class="text-gray-500 text-sm font-semibold mb-2">مخزون منخفض</h3>
-            <p class="text-3xl font-bold text-orange-600">{{ $lowStockCount }}</p>
+            <div class="tf-stat-label">مخزون منخفض</div>
+            <div class="tf-stat-value" style="color: var(--tf-amber);">{{ $lowStockCount }}</div>
         </div>
-
-        <!-- Warehouses -->
-        <div class="bg-white rounded-2xl p-6 shadow-lg border border-gray-100 hover:shadow-xl transition-all hover:-translate-y-1">
-            <div class="flex items-start justify-between mb-4">
-                <div class="w-14 h-14 bg-gradient-to-br from-purple-400 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
-                    <i class="fas fa-warehouse text-2xl text-white"></i>
-                </div>
-                <span class="text-xs font-semibold text-purple-600 bg-purple-100 px-3 py-1 rounded-full">مخازن</span>
+        <div class="tf-stat-card tf-section" style="animation-delay: 0.18s;">
+            <div class="tf-stat-icon" style="background: linear-gradient(135deg, var(--tf-violet), #a78bfa);">
+                <i class="fas fa-warehouse text-2xl text-white"></i>
             </div>
-            <h3 class="text-gray-500 text-sm font-semibold mb-2">عدد المخازن</h3>
-            <p class="text-3xl font-bold text-gray-800">{{ $warehouses->count() }}</p>
+            <div class="tf-stat-label">عدد المخازن</div>
+            <div class="tf-stat-value">{{ $warehouses->count() }}</div>
         </div>
     </div>
 
     <!-- Inventory Table -->
-    <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
-        <div class="bg-gradient-to-r from-blue-600 to-cyan-600 px-6 py-4">
-            <h3 class="text-xl font-bold text-white flex items-center gap-2">
-                <i class="fas fa-list-alt"></i>
-                تفاصيل المخزون
-            </h3>
+    <div class="tf-card tf-section" style="animation-delay: 0.20s;">
+        <div class="tf-card-head">
+            <h3><i class="fas fa-list-alt ml-2"></i>تفاصيل المخزون</h3>
         </div>
 
         <div class="overflow-x-auto">
-            <table class="w-full">
-                <thead class="bg-gradient-to-r from-gray-50 to-gray-100 border-b-2 border-gray-200">
+            <table class="tf-table">
+                <thead>
                     <tr>
-                        <th class="px-6 py-4 text-right text-xs font-bold text-gray-600 uppercase tracking-wider">
-                            <i class="fas fa-barcode ml-1"></i>
-                            الكود / الباركود
-                        </th>
-                        <th class="px-6 py-4 text-right text-xs font-bold text-gray-600 uppercase tracking-wider">
-                            <i class="fas fa-box ml-1"></i>
-                            اسم الصنف
-                        </th>
-                        <th class="px-6 py-4 text-right text-xs font-bold text-gray-600 uppercase tracking-wider">
-                            <i class="fas fa-warehouse ml-1"></i>
-                            المخزن
-                        </th>
-                        <th class="px-6 py-4 text-center text-xs font-bold text-gray-600 uppercase tracking-wider">
-                            <i class="fas fa-cubes ml-1"></i>
-                            الكمية
-                        </th>
-                        <th class="px-6 py-4 text-center text-xs font-bold text-gray-600 uppercase tracking-wider">
-                            <i class="fas fa-chart-line ml-1"></i>
-                            الحد الأدنى
-                        </th>
-                        <th class="px-6 py-4 text-center text-xs font-bold text-gray-600 uppercase tracking-wider">
-                            <i class="fas fa-money-bill ml-1"></i>
-                            سعر الشراء
-                        </th>
-                        <th class="px-6 py-4 text-center text-xs font-bold text-gray-600 uppercase tracking-wider">
-                            <i class="fas fa-tag ml-1"></i>
-                            سعر البيع
-                        </th>
-                        <th class="px-6 py-4 text-center text-xs font-bold text-gray-600 uppercase tracking-wider">
-                            <i class="fas fa-calculator ml-1"></i>
-                            القيمة الإجمالية
-                        </th>
-                        <th class="px-6 py-4 text-center text-xs font-bold text-gray-600 uppercase tracking-wider">
-                            الحالة
-                        </th>
+                        <th><i class="fas fa-barcode ml-1"></i>الكود / الباركود</th>
+                        <th><i class="fas fa-box ml-1"></i>اسم الصنف</th>
+                        <th><i class="fas fa-warehouse ml-1"></i>المخزن</th>
+                        <th class="text-center"><i class="fas fa-cubes ml-1"></i>الكمية</th>
+                        <th class="text-center"><i class="fas fa-chart-line ml-1"></i>الحد الأدنى</th>
+                        <th class="text-center"><i class="fas fa-money-bill ml-1"></i>سعر الشراء</th>
+                        <th class="text-center"><i class="fas fa-tag ml-1"></i>سعر البيع</th>
+                        <th class="text-center"><i class="fas fa-calculator ml-1"></i>القيمة الإجمالية</th>
+                        <th class="text-center">الحالة</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-gray-200">
+                <tbody>
                     @forelse($inventory as $item)
-                        <tr class="hover:bg-gray-50 transition-colors duration-150">
-                            <td class="px-6 py-4 whitespace-nowrap">
+                        <tr>
+                            <td>
                                 <div>
-                                    <p class="font-semibold text-gray-800">{{ $item->code }}</p>
+                                    <p class="font-semibold" style="color: var(--tf-text-h);">{{ $item->code }}</p>
                                     @if($item->barcode)
-                                        <p class="text-xs text-gray-500">{{ $item->barcode }}</p>
+                                        <p class="text-xs" style="color: var(--tf-text-m);">{{ $item->barcode }}</p>
                                     @endif
                                 </div>
                             </td>
-                            <td class="px-6 py-4">
+                            <td>
                                 <div class="flex items-center gap-3">
-                                    <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-lg flex items-center justify-center text-white font-bold shadow-md">
+                                    <div class="tf-avatar" style="background: linear-gradient(135deg, var(--tf-blue), #38bdf8);">
                                         {{ mb_substr($item->name, 0, 1) }}
                                     </div>
-                                    <span class="font-medium text-gray-700">{{ $item->name }}</span>
+                                    <span class="font-medium" style="color: var(--tf-text-b);">{{ $item->name }}</span>
                                 </div>
                             </td>
-                            <td class="px-6 py-4">
-                                <span class="inline-flex items-center gap-1 bg-purple-100 text-purple-700 px-3 py-1 rounded-lg text-sm font-semibold">
+                            <td>
+                                <span class="tf-badge tf-badge-violet">
                                     <i class="fas fa-warehouse text-xs"></i>
                                     {{ $item->warehouse_name }}
                                 </span>
                             </td>
-                            <td class="px-6 py-4 text-center">
-                                <span class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-100 to-cyan-100 text-blue-700 rounded-xl text-xl font-bold shadow-sm">
+                            <td class="text-center">
+                                <span class="inline-flex items-center justify-center w-16 h-16" 
+                                      style="background: linear-gradient(135deg, var(--tf-blue-soft), #e0f2fe); color: var(--tf-blue); border-radius: 12px; font-size: 1.25rem; font-weight: 700;">
                                     {{ $item->quantity }}
                                 </span>
                             </td>
-                            <td class="px-6 py-4 text-center">
-                                <span class="text-gray-600 font-semibold">{{ $item->min_stock }}</span>
+                            <td class="text-center">
+                                <span style="color: var(--tf-text-b); font-weight: 600;">{{ $item->min_stock }}</span>
                             </td>
-                            <td class="px-6 py-4 text-center">
-                                <span class="text-gray-700 font-semibold" dir="ltr">{{ number_format($item->purchase_price, 2) }}</span>
+                            <td class="text-center">
+                                <span style="color: var(--tf-text-b); font-weight: 600;" dir="ltr">{{ number_format($item->purchase_price, 2) }}</span>
                             </td>
-                            <td class="px-6 py-4 text-center">
-                                <span class="text-green-600 font-bold" dir="ltr">{{ number_format($item->selling_price, 2) }}</span>
+                            <td class="text-center">
+                                <span style="color: var(--tf-green); font-weight: 700;" dir="ltr">{{ number_format($item->selling_price, 2) }}</span>
                             </td>
-                            <td class="px-6 py-4 text-center">
+                            <td class="text-center">
                                 <div>
-                                    <p class="font-bold text-blue-600" dir="ltr">{{ number_format($item->total_value, 2) }} ج.م</p>
-                                    <p class="text-xs text-gray-500" dir="ltr">ربح: {{ number_format($item->potential_profit, 0) }}</p>
+                                    <p style="color: var(--tf-blue); font-weight: 700;" dir="ltr">{{ number_format($item->total_value, 2) }} ج.م</p>
+                                    <p class="text-xs" style="color: var(--tf-text-m);" dir="ltr">ربح: {{ number_format($item->potential_profit, 0) }}</p>
                                 </div>
                             </td>
-                            <td class="px-6 py-4 text-center">
+                            <td class="text-center">
                                 @if($item->quantity == 0)
-                                    <span class="inline-flex items-center gap-1 bg-red-100 text-red-700 px-3 py-2 rounded-full text-xs font-bold">
-                                        <i class="fas fa-times-circle"></i>
-                                        نفذ
+                                    <span class="tf-badge tf-badge-red">
+                                        <i class="fas fa-times-circle"></i>نفذ
                                     </span>
                                 @elseif($item->quantity <= $item->min_stock)
-                                    <span class="inline-flex items-center gap-1 bg-orange-100 text-orange-700 px-3 py-2 rounded-full text-xs font-bold">
-                                        <i class="fas fa-exclamation-triangle"></i>
-                                        منخفض
+                                    <span class="tf-badge tf-badge-amber">
+                                        <i class="fas fa-exclamation-triangle"></i>منخفض
                                     </span>
                                 @else
-                                    <span class="inline-flex items-center gap-1 bg-green-100 text-green-700 px-3 py-2 rounded-full text-xs font-bold">
-                                        <i class="fas fa-check-circle"></i>
-                                        متوفر
+                                    <span class="tf-badge tf-badge-green">
+                                        <i class="fas fa-check-circle"></i>متوفر
                                     </span>
                                 @endif
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="9" class="px-6 py-16 text-center">
-                                <div class="flex flex-col items-center justify-center">
-                                    <div class="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-                                        <i class="fas fa-inbox text-5xl text-gray-300"></i>
-                                    </div>
-                                    <h3 class="text-xl font-bold text-gray-800 mb-2">لا توجد بيانات</h3>
-                                    <p class="text-gray-500">لم يتم العثور على أي منتجات في المخزون</p>
+                            <td colspan="9">
+                                <div class="tf-empty-state">
+                                    <div class="tf-empty-icon"><i class="fas fa-inbox"></i></div>
+                                    <h3 style="color: var(--tf-text-h);">لا توجد بيانات</h3>
+                                    <p style="color: var(--tf-text-m);">لم يتم العثور على أي منتجات في المخزون</p>
                                 </div>
                             </td>
                         </tr>
                     @endforelse
                 </tbody>
-                <tfoot class="bg-gradient-to-r from-blue-50 to-cyan-50 border-t-2 border-blue-200">
+                <tfoot class="tf-tfoot">
                     <tr>
-                        <td colspan="7" class="px-6 py-4 text-right font-bold text-blue-900 text-lg">
+                        <td colspan="7" class="px-6 py-4 text-right font-bold" style="color: var(--tf-blue); font-size: 1.1rem;">
                             الإجمالي الكلي
                         </td>
-                        <td class="px-6 py-4 text-center font-bold text-blue-900 text-xl" dir="ltr">
+                        <td class="px-6 py-4 text-center font-bold" style="color: var(--tf-blue); font-size: 1.25rem;" dir="ltr">
                             {{ number_format($totalValue, 2) }} ج.م
                         </td>
                         <td></td>
@@ -275,17 +387,5 @@
             </table>
         </div>
     </div>
-
 </div>
-
-@push('styles')
-<style>
-@media print {
-    .no-print {
-        display: none !important;
-    }
-}
-</style>
-@endpush
-
 @endsection

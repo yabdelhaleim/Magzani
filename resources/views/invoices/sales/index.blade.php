@@ -1,593 +1,562 @@
 @extends('layouts.app')
 
 @section('title', 'فواتير المبيعات')
+@section('page-title', 'فواتير المبيعات')
+
+@push('styles')
+<style>
+    :root {
+        --tf-bg:          #f4f7fe;
+        --tf-surface:     #ffffff;
+        --tf-surface2:    #f8faff;
+        --tf-border:      #e4eaf7;
+        --tf-border-soft: #edf0f9;
+
+        --tf-indigo:      #4f63d2;
+        --tf-indigo-light:#7088e8;
+        --tf-indigo-soft: #eef0fc;
+
+        --tf-blue:        #3a8ef0;
+        --tf-blue-soft:   #e8f2ff;
+        --tf-green:       #0faa7e;
+        --tf-green-soft:  #e6f8f3;
+        --tf-red:         #dc2626;
+        --tf-red-soft:    #fee2e2;
+        --tf-amber:       #e8930a;
+        --tf-amber-soft:  #fff4e0;
+        --tf-violet:      #7c5cec;
+        --tf-violet-soft: #f0ecff;
+
+        --tf-text-h:      #1a2140;
+        --tf-text-b:      #3d4f72;
+        --tf-text-m:      #7e90b0;
+        --tf-text-d:      #94a3b8;
+
+        --tf-shadow-sm:   0 2px 12px rgba(79,99,210,0.07);
+        --tf-shadow-card: 0 2px 0 0 rgba(0,0,0,0.04), 0 4px 20px rgba(79,99,210,0.08);
+        --tf-shadow-lg:   0 8px 30px rgba(79,99,210,0.10);
+    }
+
+    .tf-page {
+        background: var(--tf-bg);
+        background-image:
+            radial-gradient(ellipse 80% 60% at 10% -10%,  rgba(79,99,210,0.12) 0%, transparent 50%),
+            radial-gradient(ellipse 60% 50% at 90% 110%, rgba(58,142,240,0.1) 0%, transparent 50%);
+        min-height: 100vh;
+        padding: 26px 22px;
+    }
+
+    @keyframes tfFadeUp {
+        from { opacity: 0; transform: translateY(18px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes tfShimmer {
+        0%   { background-position: -600px 0; }
+        100% { background-position: 600px 0; }
+    }
+    @keyframes iconBounce {
+        0%,100% { transform: translateY(0) rotate(0deg); }
+        30%     { transform: translateY(-4px) rotate(-8deg); }
+        60%     { transform: translateY(-2px) rotate(4deg); }
+    }
+
+    .tf-section { animation: tfFadeUp 0.55s cubic-bezier(0.22,1,0.36,1) both; }
+    .tf-section:nth-child(1) { animation-delay: 0.04s; }
+    .tf-section:nth-child(2) { animation-delay: 0.12s; }
+    .tf-section:nth-child(3) { animation-delay: 0.20s; }
+    .tf-section:nth-child(4) { animation-delay: 0.28s; }
+
+    /* Card */
+    .tf-card {
+        background: var(--tf-surface); border-radius: 20px;
+        border: 1px solid var(--tf-border);
+        overflow: hidden; box-shadow: var(--tf-shadow-card);
+        margin-bottom: 20px; position: relative;
+        transition: all .35s cubic-bezier(.22,1,.36,1);
+    }
+    .tf-card:hover { transform: translateY(-3px); box-shadow: var(--tf-shadow-lg); }
+    .tf-card::after {
+        content: ''; position: absolute; inset: 0;
+        background: linear-gradient(105deg, transparent 40%, rgba(255,255,255,.45) 50%, transparent 60%);
+        background-size: 600px 100%; opacity: 0; pointer-events: none; transition: opacity .3s;
+    }
+    .tf-card:hover::after { opacity: 1; animation: tfShimmer .7s ease forwards; }
+
+    .tf-card-head {
+        display: flex; justify-content: space-between; align-items: center;
+        padding: 20px 24px; border-bottom: 1px solid var(--tf-border-soft);
+        background: var(--tf-surface2); flex-wrap: wrap; gap: 12px;
+    }
+    .tf-card-title { display: flex; align-items: center; gap: 12px; }
+    .tf-card-icon {
+        width: 48px; height: 48px; border-radius: 14px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 18px;
+        transition: transform .4s cubic-bezier(.34,1.56,.64,1);
+    }
+    .tf-card:hover .tf-card-icon { animation: iconBounce .6s ease; }
+    .tf-card.green .tf-card-icon { background: var(--tf-green-soft); color: var(--tf-green); }
+
+    .tf-title-text { font-size: 18px; font-weight: 800; color: var(--tf-text-h); }
+    .tf-title-sub { font-size: 12px; color: var(--tf-text-m); font-weight: 600; }
+
+    .tf-card-body { padding: 20px; }
+
+    /* Buttons */
+    .tf-btn {
+        display: inline-flex; align-items: center; gap: 8px;
+        padding: 12px 20px; border-radius: 14px;
+        font-size: 14px; font-weight: 800; cursor: pointer;
+        font-family: 'Cairo', sans-serif; text-decoration: none;
+        transition: all .25s;
+    }
+    .tf-btn-primary {
+        background: linear-gradient(135deg, var(--tf-green), #0d8a6e);
+        color: var(--tf-surface); border: none;
+        box-shadow: 0 4px 16px rgba(15,170,126,0.35);
+    }
+    .tf-btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(15,170,126,0.45); }
+    .tf-btn-secondary {
+        background: var(--tf-surface); color: var(--tf-text-b);
+        border: 1.5px solid var(--tf-border);
+    }
+    .tf-btn-secondary:hover { background: var(--tf-surface2); }
+
+    /* Form Controls */
+    .tf-input, .tf-select {
+        width: 100%; padding: 12px 16px;
+        border: 1.5px solid var(--tf-border); border-radius: 14px;
+        font-size: 14px; font-family: 'Cairo', sans-serif;
+        color: var(--tf-text-h); background: var(--tf-surface);
+        transition: all .25s; outline: none;
+    }
+    .tf-input:focus, .tf-select:focus {
+        border-color: var(--tf-green);
+        box-shadow: 0 0 0 3px rgba(15,170,126,0.12);
+    }
+
+    /* Stats Cards */
+    .tf-stats-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; margin-bottom: 20px; }
+    @media (max-width: 1100px) { .tf-stats-grid { grid-template-columns: repeat(3, 1fr); } }
+    @media (max-width: 600px) { .tf-stats-grid { grid-template-columns: repeat(2, 1fr); } }
+
+    .tf-stat-card {
+        padding: 18px 20px; border-radius: 16px;
+        position: relative; overflow: hidden;
+    }
+    .tf-stat-card::before {
+        content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px;
+    }
+    .tf-stat-card.blue::before   { background: linear-gradient(90deg, var(--tf-indigo), var(--tf-blue)); }
+    .tf-stat-card.green::before  { background: linear-gradient(90deg, var(--tf-green), var(--tf-indigo-light)); }
+    .tf-stat-card.amber::before  { background: linear-gradient(90deg, var(--tf-amber), var(--tf-blue)); }
+    .tf-stat-card.violet::before { background: linear-gradient(90deg, var(--tf-violet), var(--tf-indigo-light)); }
+    .tf-stat-card.pink::before   { background: linear-gradient(90deg, var(--tf-red), var(--tf-violet)); }
+
+    .tf-stat-card { background: var(--tf-surface); border: 1px solid var(--tf-border); }
+    .tf-stat-card.blue   { border-color: rgba(58,142,240,0.2); }
+    .tf-stat-card.green  { border-color: rgba(15,170,126,0.2); }
+    .tf-stat-card.amber { border-color: rgba(232,147,10,0.2); }
+    .tf-stat-card.violet { border-color: rgba(124,92,236,0.2); }
+    .tf-stat-card.pink   { border-color: rgba(232,75,90,0.2); }
+
+    .tf-stat-label { font-size: 11px; font-weight: 700; color: var(--tf-text-m); margin-bottom: 6px; text-transform: uppercase; }
+    .tf-stat-value { font-size: 24px; font-weight: 900; color: var(--tf-text-h); font-family: 'Cairo', sans-serif; }
+    .tf-stat-card.blue .tf-stat-value   { color: var(--tf-blue); }
+    .tf-stat-card.green .tf-stat-value  { color: var(--tf-green); }
+    .tf-stat-card.amber .tf-stat-value  { color: var(--tf-amber); }
+    .tf-stat-card.violet .tf-stat-value { color: var(--tf-violet); }
+    .tf-stat-card.pink .tf-stat-value   { color: var(--tf-red); }
+
+    /* Table */
+    .tf-table-wrapper { overflow-x: auto; }
+    .tf-table { width: 100%; border-collapse: collapse; }
+    .tf-table thead th {
+        padding: 14px 16px; text-align: right;
+        font-size: 11px; font-weight: 800; color: var(--tf-text-m);
+        text-transform: uppercase; letter-spacing: .5px;
+        border-bottom: 1.5px solid var(--tf-border-soft);
+        background: var(--tf-surface2); white-space: nowrap;
+    }
+    .tf-table tbody tr { transition: background .18s; }
+    .tf-table tbody tr:hover { background: var(--tf-surface2); }
+    .tf-table tbody td { padding: 14px 16px; border-bottom: 1px solid var(--tf-border-soft); vertical-align: middle; }
+
+    /* Badges */
+    .tf-badge {
+        display: inline-flex; align-items: center; gap: 6px;
+        padding: 6px 14px; border-radius: 50px;
+        font-size: 11px; font-weight: 800;
+    }
+    .tf-badge.green  { background: var(--tf-green-soft); color: var(--tf-green); }
+    .tf-badge.amber  { background: var(--tf-amber-soft); color: var(--tf-amber); }
+    .tf-badge.red    { background: var(--tf-red-soft); color: var(--tf-red); }
+    .tf-badge.blue   { background: var(--tf-blue-soft); color: var(--tf-blue); }
+    .tf-badge.gray   { background: var(--tf-surface2); color: var(--tf-text-m); }
+
+    /* Action Buttons */
+    .tf-action-btn {
+        display: inline-flex; align-items: center; justify-content: center;
+        width: 36px; height: 36px; border-radius: 10px;
+        cursor: pointer; transition: all .2s; border: none;
+    }
+    .tf-action-btn.view  { background: var(--tf-blue-soft); color: var(--tf-blue); }
+    .tf-action-btn.view:hover { background: var(--tf-blue); color: var(--tf-surface); }
+    .tf-action-btn.edit  { background: var(--tf-amber-soft); color: var(--tf-amber); }
+    .tf-action-btn.edit:hover { background: var(--tf-amber); color: var(--tf-surface); }
+    .tf-action-btn.del   { background: var(--tf-red-soft); color: var(--tf-red); }
+    .tf-action-btn.del:hover { background: var(--tf-red); color: var(--tf-surface); }
+    .tf-action-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    /* Invoice Number */
+    .tf-invoice-num {
+        display: inline-block; padding: 6px 14px;
+        border-radius: 50px; font-size: 12px; font-weight: 800;
+        background: var(--tf-indigo-soft); color: var(--tf-indigo);
+    }
+
+    /* Customer Avatar */
+    .tf-avatar {
+        width: 36px; height: 36px; border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 14px; font-weight: 800; color: var(--tf-surface);
+        background: linear-gradient(135deg, var(--tf-blue), var(--tf-indigo));
+    }
+
+    /* Alerts */
+    .tf-alert {
+        position: fixed; bottom: 24px; left: 24px;
+        display: flex; align-items: center; gap: 12px;
+        padding: 16px 20px; border-radius: 16px;
+        z-index: 50; animation: tfFadeUp 0.4s ease;
+        box-shadow: var(--tf-shadow-lg);
+    }
+    .tf-alert-success { background: var(--tf-green); color: var(--tf-surface); }
+    .tf-alert-error { background: var(--tf-red); color: var(--tf-surface); }
+
+    /* Empty State */
+    .tf-empty {
+        display: flex; flex-direction: column; align-items: center;
+        padding: 50px 24px; text-align: center;
+    }
+    .tf-empty-icon {
+        width: 80px; height: 80px; border-radius: 22px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 28px; margin-bottom: 16px;
+        background: var(--tf-surface2); color: var(--tf-text-m);
+    }
+    .tf-empty-title { font-size: 16px; font-weight: 800; color: var(--tf-text-h); margin-bottom: 6px; }
+    .tf-empty-sub { font-size: 13px; color: var(--tf-text-m); margin-bottom: 20px; }
+
+    /* Pagination */
+    .tf-pagination {
+        padding: 16px 24px; border-top: 1px solid var(--tf-border-soft);
+        background: var(--tf-surface2); display: flex;
+        justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;
+    }
+    .tf-pagination-info { font-size: 13px; color: var(--tf-text-m); font-weight: 600; }
+
+    /* Search */
+    .tf-search-row { display: flex; gap: 10px; margin-bottom: 20px; }
+    .tf-search-input { flex: 1; }
+    .tf-search-btn { background: var(--tf-green); color: var(--tf-surface); }
+    .tf-search-btn:hover { background: var(--tf-indigo); }
+
+    /* Filters */
+    .tf-filters { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+    @media (max-width: 900px) { .tf-filters { grid-template-columns: repeat(2, 1fr); } }
+
+    /* Mini Stats Row */
+    .tf-mini-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 20px; }
+    .tf-mini-stat {
+        padding: 16px; border-radius: 14px; border-right: 4px solid;
+        background: var(--tf-surface);
+    }
+    .tf-mini-stat.indigo { border-color: var(--tf-indigo); }
+    .tf-mini-stat.teal { border-color: var(--tf-green); }
+    .tf-mini-stat.orange { border-color: var(--tf-amber); }
+    .tf-mini-stat-label { font-size: 11px; color: var(--tf-text-m); font-weight: 700; }
+    .tf-mini-stat-value { font-size: 22px; font-weight: 900; color: var(--tf-text-h); margin-top: 4px; }
+    .tf-mini-stat.indigo .tf-mini-stat-value { color: var(--tf-indigo); }
+    .tf-mini-stat.teal .tf-mini-stat-value { color: var(--tf-green); }
+    .tf-mini-stat.orange .tf-mini-stat-value { color: var(--tf-amber); }
+</style>
+@endpush
 
 @section('content')
-<div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-8 px-4">
-    <div class="container mx-auto max-w-7xl">
-        
-        <!-- Header Section -->
-        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
-            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                <div class="flex items-center space-x-3 space-x-reverse">
-                    <div class="bg-gradient-to-r from-green-500 to-green-600 p-3 rounded-lg">
-                        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                        </svg>
-                    </div>
+<div class="tf-page" x-data="{ showFilters: false }">
+
+    {{-- Header --}}
+    <div class="tf-card tf-section">
+        <div class="tf-card-body" style="padding: 20px 24px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px;">
+                <div class="tf-card-title">
+                    <div class="tf-card-icon"><i class="fas fa-file-invoice"></i></div>
                     <div>
-                        <h2 class="text-2xl font-bold text-gray-800">فواتير المبيعات</h2>
-                        <p class="text-sm text-gray-500 mt-1">إدارة ومتابعة جميع فواتير المبيعات</p>
+                        <h2 class="tf-title-text">فواتير المبيعات</h2>
+                        <p class="tf-title-sub">إدارة ومتابعة جميع فواتير المبيعات</p>
                     </div>
                 </div>
-                <a href="{{ route('invoices.sales.create') }}" 
-                   class="flex items-center justify-center space-x-2 space-x-reverse bg-gradient-to-r from-green-500 to-green-600 text-white px-6 py-3 rounded-lg hover:from-green-600 hover:to-green-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 font-semibold">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                    </svg>
-                    <span>فاتورة جديدة</span>
+                <a href="{{ route('invoices.sales.create') }}" class="tf-btn tf-btn-primary">
+                    <i class="fas fa-plus"></i> فاتورة جديدة
                 </a>
             </div>
         </div>
+    </div>
 
-        <!-- 🔍 Smart Search Bar -->
-        <div class="bg-white rounded-lg shadow-lg p-4 mb-6">
+    {{-- Search --}}
+    <div class="tf-card tf-section">
+        <div class="tf-card-body">
             <form method="GET" action="{{ route('invoices.sales.index') }}">
-                <div class="flex gap-3">
-                    <div class="flex-1">
-                        <input 
-                            type="text" 
-                            name="search" 
-                            value="{{ request('search') }}"
-                            placeholder="🔍 بحث ذكي (رقم الفاتورة، اسم العميل، رقم الهاتف...)"
-                            class="w-full border-2 border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all text-lg"
-                        >
-                    </div>
-                    <button 
-                        type="submit"
-                        class="bg-green-600 text-white px-8 py-3 rounded-lg hover:bg-green-700 transition-all duration-200 shadow-md hover:shadow-lg font-semibold flex items-center gap-2">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                        </svg>
-                        بحث
+                <div class="tf-search-row">
+                    <input type="text" name="search" value="{{ request('search') }}" 
+                        placeholder="🔍 بحث ذكي (رقم الفاتورة، اسم العميل...)" class="tf-input tf-search-input">
+                    <button type="submit" class="tf-btn tf-search-btn">
+                        <i class="fas fa-search"></i> بحث
                     </button>
-                    @if(request()->hasAny(['search', 'invoice_number', 'customer_id', 'warehouse_id', 'status', 'date_from', 'date_to', 'amount_from', 'amount_to']))
-                        <a 
-                            href="{{ route('invoices.sales.index') }}"
-                            class="bg-gray-200 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-300 transition-all duration-200 font-semibold flex items-center gap-2">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                            </svg>
-                            مسح
-                        </a>
+                    @if(request()->hasAny(['search', 'invoice_number', 'customer_id', 'warehouse_id', 'status']))
+                    <a href="{{ route('invoices.sales.index') }}" class="tf-btn tf-btn-secondary">
+                        <i class="fas fa-times"></i> مسح
+                    </a>
                     @endif
                 </div>
             </form>
-        </div>
 
-        <!-- Advanced Filters (Collapsible) -->
-        <div class="bg-white rounded-lg shadow-lg mb-6" x-data="{ showFilters: {{ request()->hasAny(['invoice_number', 'customer_id', 'warehouse_id', 'status', 'date_from', 'date_to', 'amount_from', 'amount_to']) ? 'true' : 'false' }} }">
-            <div class="p-4 border-b border-gray-200">
-                <button 
-                    @click="showFilters = !showFilters"
-                    class="flex items-center justify-between w-full text-left">
-                    <span class="font-semibold text-gray-700 flex items-center gap-2">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/>
-                        </svg>
-                        فلاتر متقدمة
-                    </span>
-                    <svg 
-                        class="w-5 h-5 transition-transform duration-200" 
-                        :class="showFilters ? 'rotate-180' : ''"
-                        fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-                    </svg>
+            {{-- Filters Toggle --}}
+            <div style="border-top:1px solid var(--tf-border-soft);padding-top:16px;">
+                <button @click="showFilters = !showFilters" style="display:flex;align-items:center;gap:8px;background:none;border:none;cursor:pointer;color:var(--tf-text-b);font-weight:700;font-size:14px;">
+                    <i class="fas" :class="showFilters ? 'fa-chevron-up' : 'fa-chevron-down'" style="transition:transform .2s;"></i>
+                    فلاتر متقدمة
                 </button>
             </div>
 
-            <div x-show="showFilters" x-collapse>
-                <form method="GET" action="{{ route('invoices.sales.index') }}" class="p-6">
-                    <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                        
-                        <!-- رقم الفاتورة -->
+            {{-- Filters --}}
+            <div x-show="showFilters" x-transition style="margin-top:16px;">
+                <form method="GET" action="{{ route('invoices.sales.index') }}">
+                    <div class="tf-filters">
                         <div>
-                            <label class="block text-sm font-semibold text-gray-700 mb-2">رقم الفاتورة</label>
-                            <input 
-                                type="text" 
-                                name="invoice_number" 
-                                value="{{ request('invoice_number') }}"
-                                placeholder="ابحث برقم الفاتورة"
-                                class="w-full border-2 border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all"
-                            >
+                            <label class="tf-label">رقم الفاتورة</label>
+                            <input type="text" name="invoice_number" value="{{ request('invoice_number') }}" class="tf-input" placeholder="ابحث برقم الفاتورة">
                         </div>
-
-                        <!-- العميل -->
                         <div>
-                            <label class="block text-sm font-semibold text-gray-700 mb-2">العميل</label>
-                            <select 
-                                name="customer_id" 
-                                class="w-full border-2 border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all"
-                            >
+                            <label class="tf-label">العميل</label>
+                            <select name="customer_id" class="tf-select">
                                 <option value="">جميع العملاء</option>
                                 @foreach($customers ?? [] as $customer)
-                                    <option value="{{ $customer->id }}" {{ request('customer_id') == $customer->id ? 'selected' : '' }}>
-                                        {{ $customer->name }}
-                                    </option>
+                                <option value="{{ $customer->id }}" {{ request('customer_id') == $customer->id ? 'selected' : '' }}>{{ $customer->name }}</option>
                                 @endforeach
                             </select>
                         </div>
-
-                        <!-- المخزن -->
                         <div>
-                            <label class="block text-sm font-semibold text-gray-700 mb-2">المخزن</label>
-                            <select 
-                                name="warehouse_id" 
-                                class="w-full border-2 border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all"
-                            >
+                            <label class="tf-label">المخزن</label>
+                            <select name="warehouse_id" class="tf-select">
                                 <option value="">جميع المخازن</option>
                                 @foreach($warehouses ?? [] as $warehouse)
-                                    <option value="{{ $warehouse->id }}" {{ request('warehouse_id') == $warehouse->id ? 'selected' : '' }}>
-                                        {{ $warehouse->name }}
-                                    </option>
+                                <option value="{{ $warehouse->id }}" {{ request('warehouse_id') == $warehouse->id ? 'selected' : '' }}>{{ $warehouse->name }}</option>
                                 @endforeach
                             </select>
                         </div>
-
-                        <!-- الحالة -->
                         <div>
-                            <label class="block text-sm font-semibold text-gray-700 mb-2">الحالة</label>
-                            <select 
-                                name="status" 
-                                class="w-full border-2 border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all"
-                            >
+                            <label class="tf-label">الحالة</label>
+                            <select name="status" class="tf-select">
                                 <option value="">جميع الحالات</option>
-                                <option value="paid" {{ request('status') == 'paid' ? 'selected' : '' }}>مكتملة (مدفوعة)</option>
-                                <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>معلقة (لها مبلغ متبقي)</option>
+                                <option value="paid" {{ request('status') == 'paid' ? 'selected' : '' }}>مكتملة</option>
+                                <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>معلقة</option>
                                 <option value="cancelled" {{ request('status') == 'cancelled' ? 'selected' : '' }}>ملغاة</option>
                             </select>
                         </div>
-
-                        <!-- من تاريخ -->
                         <div>
-                            <label class="block text-sm font-semibold text-gray-700 mb-2">من تاريخ</label>
-                            <input 
-                                type="date" 
-                                name="date_from" 
-                                value="{{ request('date_from') }}"
-                                class="w-full border-2 border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all"
-                            >
+                            <label class="tf-label">من تاريخ</label>
+                            <input type="date" name="date_from" value="{{ request('date_from') }}" class="tf-input">
                         </div>
-
-                        <!-- إلى تاريخ -->
                         <div>
-                            <label class="block text-sm font-semibold text-gray-700 mb-2">إلى تاريخ</label>
-                            <input 
-                                type="date" 
-                                name="date_to" 
-                                value="{{ request('date_to') }}"
-                                class="w-full border-2 border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all"
-                            >
+                            <label class="tf-label">إلى تاريخ</label>
+                            <input type="date" name="date_to" value="{{ request('date_to') }}" class="tf-input">
                         </div>
-
-                        <!-- من مبلغ -->
-                        <div>
-                            <label class="block text-sm font-semibold text-gray-700 mb-2">من مبلغ</label>
-                            <input 
-                                type="number" 
-                                name="amount_from" 
-                                value="{{ request('amount_from') }}"
-                                placeholder="0.00"
-                                step="0.01"
-                                class="w-full border-2 border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all"
-                            >
+                        <div style="display:flex;gap:10px;align-items:flex-end;">
+                            <button type="submit" class="tf-btn tf-btn-primary">
+                                <i class="fas fa-filter"></i> تطبيق
+                            </button>
+                            <a href="{{ route('invoices.sales.index') }}" class="tf-btn tf-btn-secondary">
+                                <i class="fas fa-redo"></i> إعادة
+                            </a>
                         </div>
-
-                        <!-- إلى مبلغ -->
-                        <div>
-                            <label class="block text-sm font-semibold text-gray-700 mb-2">إلى مبلغ</label>
-                            <input 
-                                type="number" 
-                                name="amount_to" 
-                                value="{{ request('amount_to') }}"
-                                placeholder="0.00"
-                                step="0.01"
-                                class="w-full border-2 border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all"
-                            >
-                        </div>
-
-                        <!-- الترتيب -->
-                        <div>
-                            <label class="block text-sm font-semibold text-gray-700 mb-2">الترتيب حسب</label>
-                            <select 
-                                name="sort_by" 
-                                class="w-full border-2 border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all"
-                            >
-                                <option value="invoice_date" {{ request('sort_by') == 'invoice_date' ? 'selected' : '' }}>التاريخ</option>
-                                <option value="invoice_number" {{ request('sort_by') == 'invoice_number' ? 'selected' : '' }}>رقم الفاتورة</option>
-                                <option value="total" {{ request('sort_by') == 'total' ? 'selected' : '' }}>المبلغ</option>
-                                <option value="created_at" {{ request('sort_by') == 'created_at' ? 'selected' : '' }}>تاريخ الإنشاء</option>
-                            </select>
-                        </div>
-
-                        <!-- اتجاه الترتيب -->
-                        <div>
-                            <label class="block text-sm font-semibold text-gray-700 mb-2">الاتجاه</label>
-                            <select 
-                                name="sort_order" 
-                                class="w-full border-2 border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all"
-                            >
-                                <option value="desc" {{ request('sort_order') == 'desc' ? 'selected' : '' }}>تنازلي</option>
-                                <option value="asc" {{ request('sort_order') == 'asc' ? 'selected' : '' }}>تصاعدي</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <!-- Filter Buttons -->
-                    <div class="flex items-center gap-3 pt-4 mt-4 border-t border-gray-200">
-                        <button 
-                            type="submit"
-                            class="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition-all duration-200 shadow-md hover:shadow-lg font-semibold flex items-center gap-2"
-                        >
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/>
-                            </svg>
-                            تطبيق الفلاتر
-                        </button>
-                        <a 
-                            href="{{ route('invoices.sales.index') }}"
-                            class="bg-gray-200 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-300 transition-all duration-200 font-semibold flex items-center gap-2"
-                        >
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-                            </svg>
-                            إعادة تعيين
-                        </a>
                     </div>
                 </form>
             </div>
         </div>
+    </div>
 
-        <!-- Enhanced Statistics Cards -->
-        @if(isset($statistics))
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
-            <!-- إجمالي الفواتير النشطة -->
-            <div class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg shadow-lg p-6 text-white">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-blue-100 text-sm font-semibold">نشطة</p>
-                        <p class="text-3xl font-bold mt-2">{{ $statistics['total_count'] ?? 0 }}</p>
-                    </div>
-                    <svg class="w-12 h-12 text-blue-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                    </svg>
-                </div>
-            </div>
+    {{-- Stats --}}
+    @if(isset($statistics))
+    <div class="tf-stats-grid tf-section">
+        <div class="tf-stat-card blue">
+            <div class="tf-stat-label">نشطة</div>
+            <div class="tf-stat-value">{{ $statistics['total_count'] ?? 0 }}</div>
+        </div>
+        <div class="tf-stat-card green">
+            <div class="tf-stat-label">مكتملة</div>
+            <div class="tf-stat-value">{{ $statistics['paid_count'] ?? 0 }}</div>
+        </div>
+        <div class="tf-stat-card amber">
+            <div class="tf-stat-label">معلقة</div>
+            <div class="tf-stat-value">{{ $statistics['pending_count'] ?? 0 }}</div>
+        </div>
+        <div class="tf-stat-card violet">
+            <div class="tf-stat-label">إجمالي المبيعات</div>
+            <div class="tf-stat-value">{{ number_format($statistics['total_amount'] ?? 0, 0) }}</div>
+        </div>
+        <div class="tf-stat-card pink">
+            <div class="tf-stat-label">إجمالي الربح</div>
+            <div class="tf-stat-value">{{ number_format($statistics['total_profit'] ?? 0, 0) }}</div>
+        </div>
+    </div>
 
-            <!-- فواتير مكتملة -->
-            <div class="bg-gradient-to-br from-green-500 to-green-600 rounded-lg shadow-lg p-6 text-white">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-green-100 text-sm font-semibold">مكتملة</p>
-                        <p class="text-3xl font-bold mt-2">{{ $statistics['paid_count'] ?? 0 }}</p>
-                    </div>
-                    <svg class="w-12 h-12 text-green-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                    </svg>
-                </div>
-            </div>
+    <div class="tf-mini-stats tf-section">
+        <div class="tf-mini-stat indigo">
+            <div class="tf-mini-stat-label">فواتير اليوم</div>
+            <div class="tf-mini-stat-value">{{ $statistics['today_count'] ?? 0 }}</div>
+        </div>
+        <div class="tf-mini-stat teal">
+            <div class="tf-mini-stat-label">فواتير الشهر</div>
+            <div class="tf-mini-stat-value">{{ $statistics['month_count'] ?? 0 }}</div>
+        </div>
+        <div class="tf-mini-stat orange">
+            <div class="tf-mini-stat-label">المتبقي</div>
+            <div class="tf-mini-stat-value">{{ number_format($statistics['remaining_amount'] ?? 0, 0) }}</div>
+        </div>
+    </div>
+    @endif
 
-            <!-- فواتير معلقة -->
-            <div class="bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-lg shadow-lg p-6 text-white">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-yellow-100 text-sm font-semibold">معلقة</p>
-                        <p class="text-3xl font-bold mt-2">{{ $statistics['pending_count'] ?? 0 }}</p>
-                    </div>
-                    <svg class="w-12 h-12 text-yellow-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                    </svg>
-                </div>
-            </div>
-
-            <!-- إجمالي المبيعات -->
-            <div class="bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg shadow-lg p-6 text-white">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-purple-100 text-sm font-semibold">إجمالي المبيعات</p>
-                        <p class="text-2xl font-bold mt-2">{{ number_format($statistics['total_amount'] ?? 0, 2) }}</p>
-                        <p class="text-purple-100 text-xs mt-1">جنيه</p>
-                    </div>
-                    <svg class="w-12 h-12 text-purple-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                    </svg>
-                </div>
-            </div>
-
-            <!-- 💰 إجمالي الربح -->
-            <div class="bg-gradient-to-br from-pink-500 to-pink-600 rounded-lg shadow-lg p-6 text-white">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-pink-100 text-sm font-semibold">إجمالي الربح</p>
-                        <p class="text-2xl font-bold mt-2">{{ number_format($statistics['total_profit'] ?? 0, 2) }}</p>
-                        <p class="text-pink-100 text-xs mt-1">جنيه</p>
-                    </div>
-                    <svg class="w-12 h-12 text-pink-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
-                    </svg>
-                </div>
-            </div>
+    {{-- Table --}}
+    <div class="tf-card tf-section">
+        <div class="tf-table-wrapper">
+            <table class="tf-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>رقم الفاتورة</th>
+                        <th>التاريخ</th>
+                        <th>العميل</th>
+                        <th>المخزن</th>
+                        <th>الإجمالي</th>
+                        <th>المدفوع</th>
+                        <th>المتبقي</th>
+                        <th>الربح</th>
+                        <th>الحالة</th>
+                        <th style="text-align:center;">إجراءات</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($invoices as $index => $invoice)
+                    <tr>
+                        <td>{{ $invoices->firstItem() + $index }}</td>
+                        <td><span class="tf-invoice-num">{{ $invoice->invoice_number }}</span></td>
+                        <td>{{ $invoice->invoice_date->format('Y-m-d') }}</td>
+                        <td>
+                            <div style="display:flex;align-items:center;gap:10px;">
+                                <div class="tf-avatar">{{ mb_substr($invoice->customer->name ?? 'غ', 0, 1) }}</div>
+                                <span style="font-weight:700;color:var(--tf-text-h);">{{ $invoice->customer->name ?? 'غير محدد' }}</span>
+                            </div>
+                        </td>
+                        <td>{{ $invoice->warehouse->name ?? '-' }}</td>
+                        <td><strong>{{ number_format($invoice->calculated_details['net_total'] ?? 0, 2) }}</strong></td>
+                        <td style="color:var(--tf-green);font-weight:700;">{{ number_format($invoice->calculated_details['paid'] ?? 0, 2) }}</td>
+                        <td style="color:var(--tf-blue);font-weight:700;">{{ number_format($invoice->calculated_details['remaining'] ?? 0, 2) }}</td>
+                        <td>
+                            <div style="font-weight:800;color:var(--tf-violet);">{{ number_format($invoice->calculated_details['total_profit'] ?? 0, 2) }}</div>
+                            <div style="font-size:10px;color:var(--tf-text-m);">({{ number_format($invoice->calculated_details['profit_margin'] ?? 0, 1) }}%)</div>
+                        </td>
+                        <td>
+                            @php
+                                if ($invoice->status === 'cancelled') { $statusText = 'ملغاة'; $statusClass = 'red'; }
+                                elseif ($invoice->payment_status === 'paid') { $statusText = 'مكتملة'; $statusClass = 'green'; }
+                                else { $statusText = 'معلقة'; $statusClass = 'amber'; }
+                            @endphp
+                            <span class="tf-badge {{ $statusClass }}">{{ $statusText }}</span>
+                        </td>
+                        <td style="text-align:center;">
+                            <div style="display:flex;justify-content:center;gap:6px;">
+                                <a href="{{ route('invoices.sales.show', $invoice->id) }}" class="tf-action-btn view" title="عرض">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                @if($invoice->status !== 'cancelled')
+                                <a href="{{ route('invoices.sales.edit', $invoice->id) }}" class="tf-action-btn edit" title="تعديل">
+                                    <i class="fas fa-pen"></i>
+                                </a>
+                                @endif
+                                @if($invoice->status !== 'cancelled' && $invoice->payment_status !== 'paid')
+                                <form action="{{ route('invoices.sales.destroy', $invoice->id) }}" method="POST" onsubmit="return confirm('⚠️ هل أنت متأكد من إلغاء الفاتورة؟')">
+                                    @csrf @method('DELETE')
+                                    <button type="submit" class="tf-action-btn del" title="إلغاء">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </form>
+                                @else
+                                <span class="tf-action-btn" style="background:var(--tf-surface2);color:var(--tf-text-m);cursor:not-allowed;" title="لا يمكن">
+                                    <i class="fas fa-times"></i>
+                                </span>
+                                @endif
+                            </div>
+                        </td>
+                    </tr>
+                    @empty
+                    <tr>
+                        <td colspan="11">
+                            <div class="tf-empty">
+                                <div class="tf-empty-icon"><i class="fas fa-file-invoice"></i></div>
+                                <h3 class="tf-empty-title">لا توجد فواتير مبيعات</h3>
+                                <p class="tf-empty-sub">قم بإنشاء فاتورة جديدة للبدء</p>
+                                <a href="{{ route('invoices.sales.create') }}" class="tf-btn tf-btn-primary">
+                                    <i class="fas fa-plus"></i> إنشاء فاتورة جديدة
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    @endforelse
+                </tbody>
+            </table>
         </div>
 
-        <!-- Additional Stats Row -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-            <div class="bg-white rounded-lg shadow p-4 border-r-4 border-indigo-500">
-                <div class="flex justify-between items-center">
-                    <div>
-                        <p class="text-sm text-gray-600">فواتير اليوم</p>
-                        <p class="text-2xl font-bold text-indigo-600">{{ $statistics['today_count'] ?? 0 }}</p>
-                    </div>
-                    <svg class="w-10 h-10 text-indigo-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                    </svg>
-                </div>
+        @if($invoices->hasPages())
+        <div class="tf-pagination">
+            <div class="tf-pagination-info">
+                عرض {{ $invoices->firstItem() }} إلى {{ $invoices->lastItem() }} من {{ $invoices->total() }}
             </div>
-
-            <div class="bg-white rounded-lg shadow p-4 border-r-4 border-teal-500">
-                <div class="flex justify-between items-center">
-                    <div>
-                        <p class="text-sm text-gray-600">فواتير الشهر</p>
-                        <p class="text-2xl font-bold text-teal-600">{{ $statistics['month_count'] ?? 0 }}</p>
-                    </div>
-                    <svg class="w-10 h-10 text-teal-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-                    </svg>
-                </div>
-            </div>
-
-            <div class="bg-white rounded-lg shadow p-4 border-r-4 border-orange-500">
-                <div class="flex justify-between items-center">
-                    <div>
-                        <p class="text-sm text-gray-600">المبلغ المتبقي</p>
-                        <p class="text-2xl font-bold text-orange-600">{{ number_format($statistics['remaining_amount'] ?? 0, 2) }}</p>
-                    </div>
-                    <svg class="w-10 h-10 text-orange-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                    </svg>
-                </div>
-            </div>
+            {{ $invoices->appends(request()->query())->links() }}
         </div>
         @endif
-
-        <!-- Table Section -->
-        <div class="bg-white rounded-lg shadow-lg overflow-hidden">
-            <div class="overflow-x-auto">
-                <table class="w-full">
-                    <thead class="bg-gradient-to-r from-gray-50 to-gray-100 border-b-2 border-gray-200">
-                        <tr>
-                            <th class="p-4 text-right text-sm font-bold text-gray-700">#</th>
-                            <th class="p-4 text-right text-sm font-bold text-gray-700">رقم الفاتورة</th>
-                            <th class="p-4 text-right text-sm font-bold text-gray-700">التاريخ</th>
-                            <th class="p-4 text-right text-sm font-bold text-gray-700">العميل</th>
-                            <th class="p-4 text-right text-sm font-bold text-gray-700">المخزن</th>
-                            <th class="p-4 text-right text-sm font-bold text-gray-700">الإجمالي</th>
-                            <th class="p-4 text-right text-sm font-bold text-gray-700">المدفوع</th>
-                            <th class="p-4 text-right text-sm font-bold text-gray-700">المتبقي</th>
-                            <th class="p-4 text-right text-sm font-bold text-gray-700">💰 الربح</th>
-                            <th class="p-4 text-right text-sm font-bold text-gray-700">الحالة</th>
-                            <th class="p-4 text-center text-sm font-bold text-gray-700">إجراءات</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-200">
-                        @forelse($invoices as $index => $invoice)
-                        <tr class="hover:bg-gray-50 transition-colors duration-150">
-                            <td class="p-4 text-right text-gray-600">{{ $invoices->firstItem() + $index }}</td>
-                            
-                            <td class="p-4 text-right">
-                                <span class="font-semibold text-gray-800">{{ $invoice->invoice_number }}</span>
-                            </td>
-                            
-                            <td class="p-4 text-right text-gray-600">
-                                <div class="flex items-center space-x-2 space-x-reverse">
-                                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                                    </svg>
-                                    <span>{{ $invoice->invoice_date->format('Y-m-d') }}</span>
-                                </div>
-                            </td>
-                            
-                            <td class="p-4 text-right">
-                                <div class="flex items-center space-x-2 space-x-reverse">
-                                    <div class="w-8 h-8 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center text-white font-bold text-xs">
-                                        {{ mb_substr($invoice->customer->name ?? 'غ', 0, 1) }}
-                                    </div>
-                                    <span class="font-medium text-gray-800">{{ $invoice->customer->name ?? 'غير محدد' }}</span>
-                                </div>
-                            </td>
-
-                            <td class="p-4 text-right text-sm text-gray-600">
-                                {{ $invoice->warehouse->name ?? '-' }}
-                            </td>
-                            
-                            <td class="p-4 text-right">
-                                <span class="font-bold text-gray-800">{{ number_format($invoice->calculated_details['net_total'] ?? 0, 2) }}</span>
-                            </td>
-
-                            <td class="p-4 text-right">
-                                <span class="text-green-600 font-semibold">{{ number_format($invoice->calculated_details['paid'] ?? 0, 2) }}</span>
-                            </td>
-
-                            <td class="p-4 text-right">
-                                <span class="text-blue-600 font-semibold">{{ number_format($invoice->calculated_details['remaining'] ?? 0, 2) }}</span>
-                            </td>
-
-                            <td class="p-4 text-right">
-                                <div class="text-xs">
-                                    <div class="font-bold text-purple-600">
-                                        {{ number_format($invoice->calculated_details['total_profit'] ?? 0, 2) }}
-                                    </div>
-                                    <div class="text-gray-500">
-                                        ({{ number_format($invoice->calculated_details['profit_margin'] ?? 0, 1) }}%)
-                                    </div>
-                                </div>
-                            </td>
-                            
-                            <td class="p-4 text-right">
-                                @php
-                                    if ($invoice->status === 'cancelled') {
-                                        $statusText = 'ملغاة';
-                                        $statusClass = 'bg-red-100 text-red-800 border-red-200';
-                                    } elseif ($invoice->payment_status === 'paid') {
-                                        $statusText = 'مكتملة';
-                                        $statusClass = 'bg-green-100 text-green-800 border-green-200';
-                                    } else {
-                                        $statusText = 'معلقة';
-                                        $statusClass = 'bg-yellow-100 text-yellow-800 border-yellow-200';
-                                    }
-                                @endphp
-                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold border {{ $statusClass }}">
-                                    <span class="w-2 h-2 rounded-full bg-current mr-2"></span>
-                                    {{ $statusText }}
-                                </span>
-                            </td>
-                            
-                            <td class="p-4">
-                                <div class="flex items-center justify-center space-x-2 space-x-reverse">
-                                    <!-- View -->
-                                    <a href="{{ route('invoices.sales.show', $invoice->id) }}"
-                                       class="inline-flex items-center px-3 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-all duration-150 text-sm font-semibold"
-                                       title="عرض">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
-                                        </svg>
-                                    </a>
-
-                                    <!-- Edit -->
-                                    @if($invoice->status !== 'cancelled')
-                                    <a href="{{ route('invoices.sales.edit', $invoice->id) }}"
-                                       class="inline-flex items-center px-3 py-2 bg-yellow-100 text-yellow-700 rounded-lg hover:bg-yellow-200 transition-all duration-150 text-sm font-semibold"
-                                       title="تعديل">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-                                        </svg>
-                                    </a>
-                                    @endif
-
-                                    <!-- Delete/Cancel -->
-                                    @if($invoice->status !== 'cancelled' && $invoice->payment_status !== 'paid')
-                                    <form action="{{ route('invoices.sales.destroy', $invoice->id) }}" 
-                                          method="POST" 
-                                          class="inline"
-                                          onsubmit="return confirm('⚠️ هل أنت متأكد من إلغاء الفاتورة رقم {{ $invoice->invoice_number }}؟')">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button 
-                                            type="submit" 
-                                            class="inline-flex items-center px-3 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-all duration-150 text-sm font-semibold"
-                                            title="إلغاء">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                                            </svg>
-                                        </button>
-                                    </form>
-                                    @else
-                                    <span class="inline-flex items-center px-3 py-2 bg-gray-100 text-gray-400 rounded-lg text-sm font-semibold cursor-not-allowed" 
-                                          title="{{ $invoice->status === 'cancelled' ? 'ملغاة' : 'لا يمكن إلغاء فاتورة مكتملة' }}">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                                        </svg>
-                                    </span>
-                                    @endif
-                                </div>
-                            </td>
-                        </tr>
-                        @empty
-                        <tr>
-                            <td colspan="11" class="p-12 text-center">
-                                <div class="flex flex-col items-center justify-center space-y-4">
-                                    <div class="bg-gray-100 rounded-full p-6">
-                                        <svg class="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                                        </svg>
-                                    </div>
-                                    <div>
-                                        <p class="text-gray-600 font-semibold text-lg">لا توجد فواتير مبيعات</p>
-                                        <p class="text-gray-400 text-sm mt-1">قم بإنشاء فاتورة جديدة للبدء</p>
-                                    </div>
-                                    <a href="{{ route('invoices.sales.create') }}" 
-                                       class="flex items-center space-x-2 space-x-reverse bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-all duration-200 shadow-lg hover:shadow-xl font-semibold mt-2">
-                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                                        </svg>
-                                        <span>إنشاء فاتورة جديدة</span>
-                                    </a>
-                                </div>
-                            </td>
-                        </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
-
-            <!-- Pagination -->
-            @if($invoices->hasPages())
-            <div class="bg-gray-50 px-6 py-4 border-t border-gray-200">
-                <div class="flex items-center justify-between">
-                    <div class="text-sm text-gray-600">
-                        عرض 
-                        <span class="font-semibold text-gray-800">{{ $invoices->firstItem() }}</span>
-                        إلى
-                        <span class="font-semibold text-gray-800">{{ $invoices->lastItem() }}</span>
-                        من
-                        <span class="font-semibold text-gray-800">{{ $invoices->total() }}</span>
-                        نتيجة
-                    </div>
-                    <div>
-                        {{ $invoices->appends(request()->query())->links() }}
-                    </div>
-                </div>
-            </div>
-            @endif
-        </div>
-
     </div>
+
 </div>
 
-<!-- Success/Error Messages -->
+{{-- Alerts --}}
 @if(session('success'))
-<div class="fixed bottom-6 left-6 bg-green-500 text-white px-6 py-4 rounded-lg shadow-2xl flex items-center space-x-3 space-x-reverse animate-slide-up z-50">
-    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-    </svg>
-    <span class="font-semibold">{{ session('success') }}</span>
+<div class="tf-alert tf-alert-success">
+    <i class="fas fa-check-circle"></i>
+    <span>{{ session('success') }}</span>
 </div>
 @endif
 
 @if(session('error'))
-<div class="fixed bottom-6 left-6 bg-red-500 text-white px-6 py-4 rounded-lg shadow-2xl flex items-center space-x-3 space-x-reverse animate-slide-up z-50">
-    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-    </svg>
-    <span class="font-semibold">{{ session('error') }}</span>
+<div class="tf-alert tf-alert-error">
+    <i class="fas fa-exclamation-circle"></i>
+    <span>{{ session('error') }}</span>
 </div>
 @endif
 
-@push('styles')
-<style>
-    @keyframes slide-up {
-        from {
-            transform: translateY(100%);
-            opacity: 0;
-        }
-        to {
-            transform: translateY(0);
-            opacity: 1;
-        }
-    }
-    .animate-slide-up {
-        animation: slide-up 0.3s ease-out;
-    }
-</style>
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.tf-alert').forEach(function(alert) {
+        setTimeout(function() {
+            alert.style.transition = 'all 0.4s ease';
+            alert.style.opacity = '0';
+            alert.style.transform = 'translateY(10px)';
+            setTimeout(function() { alert.remove(); }, 400);
+        }, 5000);
+    });
+});
+</script>
 @endpush
 @endsection

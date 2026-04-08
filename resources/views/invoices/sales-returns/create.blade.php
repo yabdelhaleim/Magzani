@@ -3,6 +3,193 @@
 @section('title', 'إضافة مرتجع مبيعات')
 @section('page-title', 'إضافة مرتجع مبيعات')
 
+@push('styles')
+<style>
+    :root {
+        --tf-bg:          #f4f7fe;
+        --tf-surface:     #ffffff;
+        --tf-surface2:    #f8faff;
+        --tf-border:      #e4eaf7;
+        --tf-border-soft: #edf0f9;
+
+        --tf-indigo:      #4f63d2;
+        --tf-indigo-light:#7088e8;
+        --tf-indigo-soft: #eef0fc;
+
+        --tf-blue:        #3a8ef0;
+        --tf-blue-soft:   #e8f2ff;
+        --tf-green:       #0faa7e;
+        --tf-green-soft:  #e6f8f3;
+        --tf-red:         #dc2626;
+        --tf-red-soft:    #fee2e2;
+        --tf-amber:       #e8930a;
+        --tf-amber-soft:  #fff4e0;
+        --tf-violet:      #7c5cec;
+        --tf-violet-soft: #f0ecff;
+
+        --tf-text-h:      #1a2140;
+        --tf-text-b:      #3d4f72;
+        --tf-text-m:      #7e90b0;
+        --tf-text-d:      #94a3b8;
+
+        --tf-shadow-sm:   0 2px 12px rgba(79,99,210,0.07);
+        --tf-shadow-card: 0 2px 0 0 rgba(0,0,0,0.04), 0 4px 20px rgba(79,99,210,0.08);
+        --tf-shadow-lg:   0 8px 30px rgba(79,99,210,0.10);
+    }
+
+    .tf-page {
+        background: var(--tf-bg);
+        background-image:
+            radial-gradient(ellipse 80% 60% at 10% -10%,  rgba(232,75,90,0.12) 0%, transparent 50%),
+            radial-gradient(ellipse 60% 50% at 90% 110%, rgba(124,92,236,0.1) 0%, transparent 50%);
+        min-height: 100vh;
+        padding: 26px 22px;
+    }
+
+    @keyframes tfFadeUp {
+        from { opacity: 0; transform: translateY(18px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes tfShimmer {
+        0%   { background-position: -600px 0; }
+        100% { background-position: 600px 0; }
+    }
+    @keyframes iconBounce {
+        0%,100% { transform: translateY(0) rotate(0deg); }
+        30%     { transform: translateY(-4px) rotate(-8deg); }
+        60%     { transform: translateY(-2px) rotate(4deg); }
+    }
+
+    .tf-section { animation: tfFadeUp 0.55s cubic-bezier(0.22,1,0.36,1) both; }
+    .tf-section:nth-child(1) { animation-delay: 0.04s; }
+
+    .tf-card {
+        background: var(--tf-surface); border-radius: 20px;
+        border: 1px solid var(--tf-border);
+        overflow: hidden; box-shadow: var(--tf-shadow-card);
+        margin-bottom: 20px; position: relative;
+        transition: all .35s cubic-bezier(.22,1,.36,1);
+    }
+    .tf-card:hover { transform: translateY(-3px); box-shadow: var(--tf-shadow-lg); }
+
+    .tf-card-head {
+        display: flex; justify-content: space-between; align-items: center;
+        padding: 20px 24px; border-bottom: 1px solid var(--tf-border-soft);
+        background: linear-gradient(135deg, var(--tf-red-soft), var(--tf-surface2)); flex-wrap: wrap; gap: 12px;
+    }
+    .tf-card-title { display: flex; align-items: center; gap: 12px; }
+    .tf-card-icon {
+        width: 48px; height: 48px; border-radius: 14px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 18px;
+        transition: transform .4s cubic-bezier(.34,1.56,.64,1);
+    }
+    .tf-card:hover .tf-card-icon { animation: iconBounce .6s ease; }
+    .tf-card.red .tf-card-icon { background: var(--tf-red); color: var(--tf-surface); }
+    .tf-card.blue .tf-card-icon { background: var(--tf-blue); color: var(--tf-surface); }
+
+    .tf-title-text { font-size: 18px; font-weight: 800; color: var(--tf-text-h); }
+    .tf-title-sub { font-size: 12px; color: var(--tf-text-m); font-weight: 600; }
+
+    .tf-card-body { padding: 24px; }
+
+    .tf-btn {
+        display: inline-flex; align-items: center; gap: 8px;
+        padding: 12px 20px; border-radius: 14px;
+        font-size: 14px; font-weight: 800; cursor: pointer;
+        font-family: 'Cairo', sans-serif; text-decoration: none;
+        transition: all .25s; border: none;
+    }
+    .tf-btn-primary {
+        background: linear-gradient(135deg, var(--tf-red), #d63c4c);
+        color: var(--tf-surface); border: none;
+        box-shadow: 0 4px 16px rgba(232,75,90,0.35);
+    }
+    .tf-btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(232,75,90,0.45); }
+    .tf-btn-secondary {
+        background: var(--tf-surface); color: var(--tf-text-b);
+        border: 1.5px solid var(--tf-border);
+    }
+    .tf-btn-secondary:hover { background: var(--tf-surface2); }
+    .tf-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .tf-input, .tf-select {
+        width: 100%; padding: 12px 16px;
+        border: 1.5px solid var(--tf-border); border-radius: 14px;
+        font-size: 14px; font-family: 'Cairo', sans-serif;
+        color: var(--tf-text-h); background: var(--tf-surface);
+        transition: all .25s; outline: none;
+    }
+    .tf-input:focus, .tf-select:focus {
+        border-color: var(--tf-red);
+        box-shadow: 0 0 0 3px rgba(232,75,90,0.12);
+    }
+
+    .tf-label {
+        display: block; font-size: 12px; font-weight: 700;
+        color: var(--tf-text-m); margin-bottom: 6px;
+    }
+
+    .tf-grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
+    @media (max-width: 600px) { .tf-grid-2 { grid-template-columns: 1fr; } }
+
+    .tf-table-wrapper { overflow-x: auto; }
+    .tf-table { width: 100%; border-collapse: collapse; }
+    .tf-table thead th {
+        padding: 12px 14px; text-align: right;
+        font-size: 11px; font-weight: 800; color: var(--tf-text-m);
+        text-transform: uppercase; letter-spacing: .5px;
+        border-bottom: 1.5px solid var(--tf-border-soft);
+        background: var(--tf-surface2); white-space: nowrap;
+    }
+    .tf-table tbody tr { transition: background .18s; }
+    .tf-table tbody tr:hover { background: var(--tf-surface2); }
+    .tf-table tbody td { padding: 12px 14px; border-bottom: 1px solid var(--tf-border-soft); vertical-align: middle; }
+
+    .tf-row-item {
+        display: grid; grid-template-columns: 50px 2fr 1fr 1fr 1fr 1fr 50px;
+        gap: 12px; align-items: center;
+        padding: 16px; border-radius: 14px; background: var(--tf-surface2);
+        border: 1px solid var(--tf-border); margin-bottom: 10px;
+    }
+    .tf-row-item.warning { border-color: var(--tf-red); background: var(--tf-red-soft); }
+
+    .tf-total-box {
+        padding: 20px; border-radius: 16px;
+        background: linear-gradient(135deg, var(--tf-red-soft), var(--tf-surface2));
+        border: 1px solid var(--tf-red);
+    }
+    .tf-total-value {
+        font-size: 32px; font-weight: 900; color: var(--tf-red);
+    }
+
+    .tf-alert {
+        padding: 16px; border-radius: 14px; border-right: 4px solid;
+        background: var(--tf-surface);
+    }
+    .tf-alert-warning { border-color: var(--tf-amber); background: var(--tf-amber-soft); }
+
+    .tf-empty {
+        display: flex; flex-direction: column; align-items: center;
+        padding: 40px 24px; text-align: center;
+    }
+    .tf-empty-icon {
+        width: 64px; height: 64px; border-radius: 16px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 24px; margin-bottom: 12px;
+        background: var(--tf-surface2); color: var(--tf-text-m);
+    }
+
+    .tf-action-btn-del {
+        display: inline-flex; align-items: center; justify-content: center;
+        width: 36px; height: 36px; border-radius: 10px;
+        cursor: pointer; transition: all .2s; border: none;
+        background: var(--tf-red-soft); color: var(--tf-red);
+    }
+    .tf-action-btn-del:hover { background: var(--tf-red); color: var(--tf-surface); }
+</style>
+@endpush
+
 @push('scripts')
 <script>
 document.addEventListener('alpine:init', () => {
@@ -114,301 +301,199 @@ document.addEventListener('alpine:init', () => {
 @endpush
 
 @section('content')
-<div x-data="returnForm" class="max-w-6xl mx-auto">
-    <form method="POST" 
-          action="{{ route('invoices.sales-returns.store') }}"
-          enctype="multipart/form-data"
-          @submit="if (!validateForm()) { $event.preventDefault(); }">
+<div x-data="returnForm" class="tf-page">
+    <form method="POST" action="{{ route('invoices.sales-returns.store') }}" enctype="multipart/form-data" @submit="if (!validateForm()) { $event.preventDefault(); }">
         @csrf
 
-        <!-- Header Info -->
-        <div class="bg-white p-6 rounded-xl shadow mb-6">
-            <h2 class="text-xl font-bold text-gray-800 mb-6 flex items-center gap-3">
-                <div class="bg-red-100 p-3 rounded-lg">
-                    <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/>
-                    </svg>
-                </div>
-                إنشاء مرتجع مبيعات جديد
-            </h2>
-
-            <div class="grid md:grid-cols-2 gap-6">
-                <!-- اختيار فاتورة البيع -->
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">
-                        فاتورة البيع *
-                    </label>
-                    <select name="sales_invoice_id" 
-                            x-model="invoiceId"
-                            @change="onInvoiceChange()"
-                            class="w-full border-2 border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-red-500 focus:border-red-500"
-                            required>
-                        <option value="">اختر فاتورة</option>
-                        <template x-for="invoice in invoices" :key="invoice.id">
-                            <option :value="invoice.id" 
-                                    x-text="`${invoice.invoice_number} - ${invoice.customer_name}`">
-                            </option>
-                        </template>
-                    </select>
-                    @error('sales_invoice_id')
-                        <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
-                    @enderror
-                </div>
-
-                <!-- تاريخ المرتجع -->
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">
-                        تاريخ المرتجع
-                    </label>
-                    <input type="date" 
-                           name="return_date" 
-                           value="{{ date('Y-m-d') }}"
-                           class="w-full border-2 border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-red-500 focus:border-red-500">
+        <div class="tf-card tf-section">
+            <div class="tf-card-head">
+                <div class="tf-card-title">
+                    <div class="tf-card-icon red"><i class="fas fa-undo-alt"></i></div>
+                    <div>
+                        <h2 class="tf-title-text">إنشاء مرتجع مبيعات جديد</h2>
+                        <p class="tf-title-sub">إرجاع منتجات من فاتورة مبيعات</p>
+                    </div>
                 </div>
             </div>
+            <div class="tf-card-body">
+                <div class="tf-grid-2">
+                    <div>
+                        <label class="tf-label"><i class="fas fa-file-invoice" style="color: var(--tf-indigo);"></i> فاتورة البيع *</label>
+                        <select name="sales_invoice_id" x-model="invoiceId" @change="onInvoiceChange()" class="tf-select" required>
+                            <option value="">اختر فاتورة</option>
+                            <template x-for="invoice in invoices" :key="invoice.id">
+                                <option :value="invoice.id" x-text="`${invoice.invoice_number} - ${invoice.customer_name}`"></option>
+                            </template>
+                        </select>
+                        @error('sales_invoice_id')
+                            <p style="color: var(--tf-red); font-size: 12px; margin-top: 4px;">{{ $message }}</p>
+                        @enderror
+                    </div>
+                    <div>
+                        <label class="tf-label"><i class="fas fa-calendar" style="color: var(--tf-blue);"></i> تاريخ المرتجع</label>
+                        <input type="date" name="return_date" value="{{ date('Y-m-d') }}" class="tf-input">
+                    </div>
+                </div>
 
-            <!-- تحذير إذا لم يتم اختيار فاتورة -->
-            <div x-show="!invoiceId" 
-                 class="mt-4 bg-yellow-50 border border-yellow-300 rounded-lg p-4 flex items-start gap-3">
-                <svg class="w-6 h-6 text-yellow-600 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
-                </svg>
-                <div>
-                    <p class="font-semibold text-yellow-800">يجب اختيار فاتورة أولاً</p>
-                    <p class="text-sm text-yellow-700 mt-1">لن تتمكن من إضافة أصناف حتى تختار فاتورة البيع</p>
+                <div x-show="!invoiceId" class="tf-alert tf-alert-warning" style="margin-top: 16px;">
+                    <div style="display: flex; align-items: flex-start; gap: 12px;">
+                        <i class="fas fa-exclamation-triangle" style="color: var(--tf-amber); font-size: 20px; margin-top: 2px;"></i>
+                        <div>
+                            <p style="font-weight: 800; color: var(--tf-text-h);">يجب اختيار فاتورة أولاً</p>
+                            <p style="font-size: 13px; color: var(--tf-text-m);">لن تتمكن من إضافة أصناف حتى تختار فاتورة البيع</p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- Invoice Details Display -->
-        <div x-show="invoiceId && selectedInvoice" class="bg-gradient-to-r from-blue-50 to-blue-100 rounded-xl shadow-lg p-6 mb-6 border-2 border-blue-200">
-            <h3 class="text-lg font-bold text-blue-900 mb-4 flex items-center gap-2">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                </svg>
-                تفاصيل فاتورة البيع
-            </h3>
-
-            <div class="grid md:grid-cols-3 gap-4 mb-4">
-                <div class="bg-white rounded-lg p-4 shadow">
-                    <p class="text-xs text-gray-500 mb-1">رقم الفاتورة</p>
-                    <p class="font-bold text-blue-600" x-text="selectedInvoice.invoice_number"></p>
-                </div>
-                <div class="bg-white rounded-lg p-4 shadow">
-                    <p class="text-xs text-gray-500 mb-1">العميل</p>
-                    <p class="font-bold text-gray-800" x-text="selectedInvoice.customer_name"></p>
-                </div>
-                <div class="bg-white rounded-lg p-4 shadow">
-                    <p class="text-xs text-gray-500 mb-1">التاريخ</p>
-                    <p class="font-bold text-gray-800" x-text="selectedInvoice.invoice_date"></p>
+        <div x-show="invoiceId && selectedInvoice" class="tf-card tf-section">
+            <div class="tf-card-head">
+                <div class="tf-card-title">
+                    <div class="tf-card-icon blue"><i class="fas fa-file-invoice"></i></div>
+                    <div>
+                        <h3 class="tf-title-text">تفاصيل فاتورة البيع</h3>
+                        <p class="tf-title-sub">معلومات الفاتورة المختارة</p>
+                    </div>
                 </div>
             </div>
-
-            <!-- Invoice Items Table -->
-            <div class="bg-white rounded-lg shadow overflow-hidden">
-                <div class="bg-gradient-to-r from-blue-500 to-blue-600 px-4 py-2">
-                    <h4 class="font-bold text-white">أصناف الفاتورة الأصلية</h4>
+            <div class="tf-card-body">
+                <div class="tf-grid-2" style="margin-bottom: 20px;">
+                    <div style="padding: 16px; border-radius: 14px; background: var(--tf-surface2);">
+                        <div style="font-size: 11px; color: var(--tf-text-m);">رقم الفاتورة</div>
+                        <div style="font-weight: 800; color: var(--tf-blue);" x-text="selectedInvoice.invoice_number"></div>
+                    </div>
+                    <div style="padding: 16px; border-radius: 14px; background: var(--tf-surface2);">
+                        <div style="font-size: 11px; color: var(--tf-text-m);">العميل</div>
+                        <div style="font-weight: 800; color: var(--tf-text-h);" x-text="selectedInvoice.customer_name"></div>
+                    </div>
                 </div>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-sm">
-                        <thead class="bg-gray-50 border-b">
+
+                <h4 style="font-size: 14px; font-weight: 800; color: var(--tf-text-h); margin-bottom: 12px;">أصناف الفاتورة الأصلية</h4>
+                <div class="tf-table-wrapper">
+                    <table class="tf-table">
+                        <thead>
                             <tr>
-                                <th class="px-3 py-2 text-right text-xs font-semibold text-gray-600">الصنف</th>
-                                <th class="px-3 py-2 text-right text-xs font-semibold text-gray-600">الكمية الأصلية</th>
-                                <th class="px-3 py-2 text-right text-xs font-semibold text-gray-600">الكمية المرتجعة</th>
-                                <th class="px-3 py-2 text-right text-xs font-semibold text-gray-600">المتاح للإرجاع</th>
-                                <th class="px-3 py-2 text-right text-xs font-semibold text-gray-600">السعر</th>
-                                <th class="px-3 py-2 text-right text-xs font-semibold text-gray-600">الإجمالي</th>
+                                <th>الصنف</th>
+                                <th>الكمية الأصلية</th>
+                                <th>المرتجعة</th>
+                                <th>المتاح</th>
+                                <th>السعر</th>
+                                <th>الإجمالي</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y">
+                        <tbody>
                             <template x-for="item in selectedInvoice.items" :key="item.product_id">
-                                <tr class="hover:bg-gray-50">
-                                    <td class="px-3 py-2 font-medium" x-text="item.product_name"></td>
-                                    <td class="px-3 py-2" x-text="item.original_quantity"></td>
-                                    <td class="px-3 py-2 text-red-600 font-semibold" x-text="item.returned_quantity"></td>
-                                    <td class="px-3 py-2">
-                                        <span :class="item.available_quantity > 0 ? 'text-green-600 font-bold' : 'text-gray-400'"
-                                              x-text="item.available_quantity"></span>
+                                <tr>
+                                    <td style="font-weight: 600;" x-text="item.product_name"></td>
+                                    <td x-text="item.original_quantity"></td>
+                                    <td style="color: var(--tf-red); font-weight: 700;" x-text="item.returned_quantity"></td>
+                                    <td>
+                                        <span :style="item.available_quantity > 0 ? 'color: var(--tf-green); font-weight: 700;' : 'color: var(--tf-text-m);'" x-text="item.available_quantity"></span>
                                     </td>
-                                    <td class="px-3 py-2" x-text="item.price.toFixed(2) + ' ج.م'"></td>
-                                    <td class="px-3 py-2 font-bold" x-text="(item.original_quantity * item.price).toFixed(2) + ' ج.م'"></td>
+                                    <td x-text="item.price.toFixed(2) + ' ج.م'"></td>
+                                    <td style="font-weight: 700;" x-text="(item.original_quantity * item.price).toFixed(2) + ' ج.م'"></td>
                                 </tr>
                             </template>
                         </tbody>
-                        <tfoot class="bg-gray-50 border-t-2">
-                            <tr>
-                                <td colspan="5" class="px-3 py-2 text-right font-bold">إجمالي الفاتورة:</td>
-                                <td class="px-3 py-2 font-bold text-blue-600" 
-                                    x-text="selectedInvoice.items.reduce((sum, item) => sum + (item.original_quantity * item.price), 0).toFixed(2) + ' ج.م'">
-                                </td>
-                            </tr>
-                        </tfoot>
                     </table>
                 </div>
             </div>
         </div>
 
-        <!-- Items Table -->
-        <div class="bg-white p-6 rounded-xl shadow mb-6" x-show="invoiceId">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-lg font-bold">الأصناف المرتجعة</h3>
-                <button type="button" 
-                        @click="addItem()"
-                        :disabled="availableItems.length === 0"
-                        class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                    </svg>
-                    إضافة صنف
+        <div class="tf-card tf-section" x-show="invoiceId">
+            <div class="tf-card-head">
+                <div class="tf-card-title">
+                    <div class="tf-card-icon red"><i class="fas fa-boxes"></i></div>
+                    <div>
+                        <h3 class="tf-title-text">الأصناف المرتجعة</h3>
+                        <p class="tf-title-sub">إضافة أصناف للإرجاع</p>
+                    </div>
+                </div>
+                <button type="button" @click="addItem()" :disabled="availableItems.length === 0" class="tf-btn tf-btn-primary">
+                    <i class="fas fa-plus"></i> إضافة صنف
                 </button>
             </div>
+            <div class="tf-card-body">
+                <div x-show="invoiceId && availableItems.length === 0" class="tf-empty">
+                    <div class="tf-empty-icon"><i class="fas fa-boxes"></i></div>
+                    <p style="font-weight: 700; color: var(--tf-text-h);">لا توجد أصناف متاحة للإرجاع</p>
+                    <p style="font-size: 13px; color: var(--tf-text-m);">جميع أصناف هذه الفاتورة تم إرجاعها بالكامل</p>
+                </div>
 
-            <!-- تحذير عدم وجود أصناف متاحة -->
-            <div x-show="invoiceId && availableItems.length === 0"
-                 class="bg-gray-50 border border-gray-200 rounded-lg p-6 text-center">
-                <svg class="w-16 h-16 text-gray-400 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/>
-                </svg>
-                <p class="text-gray-600 font-semibold">لا توجد أصناف متاحة للإرجاع</p>
-                <p class="text-gray-500 text-sm mt-1">جميع أصناف هذه الفاتورة تم إرجاعها بالكامل</p>
-            </div>
-
-            <div class="overflow-x-auto" x-show="availableItems.length > 0">
-                <table class="w-full text-sm">
-                    <thead class="bg-gray-50 border-b">
-                        <tr>
-                            <th class="px-4 py-2 text-right">#</th>
-                            <th class="px-4 py-2 text-right">الصنف</th>
-                            <th class="px-4 py-2 text-right">المتاح للإرجاع</th>
-                            <th class="px-4 py-2 text-right">الكمية</th>
-                            <th class="px-4 py-2 text-right">السعر</th>
-                            <th class="px-4 py-2 text-right">الإجمالي</th>
-                            <th class="px-4 py-2 text-center">حذف</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y">
-                        <template x-for="(item, index) in items" :key="index">
-                            <tr class="hover:bg-gray-50" 
-                                :class="{ 'bg-red-50': item.show_warning }">
-                                <td class="px-4 py-2" x-text="index + 1"></td>
-                                
-                                <td class="px-4 py-2">
-                                    <select :name="'items[' + index + '][product_id]'" 
-                                            x-model="item.product_id"
-                                            @change="loadItemData(index)"
-                                            class="w-full border rounded px-2 py-1 text-sm"
-                                            required>
-                                        <option value="">اختر الصنف</option>
-                                        <template x-for="availItem in availableItems" :key="availItem.product_id">
-                                            <option :value="availItem.product_id" 
-                                                    x-text="availItem.product_name">
-                                            </option>
-                                        </template>
-                                    </select>
-                                </td>
-
-                                <td class="px-4 py-2">
-                                    <div class="flex items-center gap-2">
-                                        <span x-text="item.available_quantity"
-                                              :class="{
-                                                  'text-green-600 font-bold': item.available_quantity > item.quantity,
-                                                  'text-red-600 font-bold': item.available_quantity < item.quantity
-                                              }">
-                                        </span>
-                                        <svg x-show="item.show_warning" 
-                                             class="w-4 h-4 text-red-600" 
-                                             fill="currentColor" viewBox="0 0 20 20">
-                                            <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
-                                        </svg>
-                                    </div>
-                                    <p x-show="item.show_warning" class="text-red-600 text-xs mt-1">
-                                        تجاوز المتاح!
-                                    </p>
-                                </td>
-
-                                <td class="px-4 py-2">
-                                    <input type="number" 
-                                           :name="'items[' + index + '][quantity]'"
-                                           x-model="item.quantity" 
-                                           @input="checkQuantity(index)"
-                                           class="w-20 border rounded px-2 py-1 text-sm"
-                                           :class="{ 'border-red-500 bg-red-50': item.show_warning }"
-                                           min="0.001" step="0.001" required>
-                                </td>
-
-                                <td class="px-4 py-2">
-                                    <input type="number" 
-                                           :name="'items[' + index + '][price]'"
-                                           x-model="item.price" 
-                                           @input="calculateItemTotal(index)"
-                                           class="w-24 border rounded px-2 py-1 text-sm" 
-                                           min="0" step="0.01" required readonly>
-                                </td>
-
-                                <td class="px-4 py-2 font-semibold text-right"
-                                    x-text="item.total.toFixed(2) + ' ج.م'"></td>
-
-                                <td class="px-4 py-2 text-center">
-                                    <button type="button" @click="removeItem(index)"
-                                            class="text-red-600 hover:text-red-800 font-bold text-lg">✖</button>
-                                </td>
-                            </tr>
-                        </template>
-                    </tbody>
-                </table>
+                <div x-show="availableItems.length > 0">
+                    <template x-for="(item, index) in items" :key="index">
+                        <div class="tf-row-item" :class="{ 'warning': item.show_warning }">
+                            <div style="font-weight: 800; color: var(--tf-text-m);" x-text="index + 1"></div>
+                            <div>
+                                <label class="tf-label">الصنف</label>
+                                <select :name="'items[' + index + '][product_id]'" x-model="item.product_id" @change="loadItemData(index)" class="tf-select" required>
+                                    <option value="">اختر الصنف</option>
+                                    <template x-for="availItem in availableItems" :key="availItem.product_id">
+                                        <option :value="availItem.product_id" x-text="availItem.product_name"></option>
+                                    </template>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="tf-label">المتاح</label>
+                                <div style="display: flex; align-items: center; gap: 6px;">
+                                    <span :style="item.available_quantity > item.quantity ? 'color: var(--tf-green); font-weight: 800;' : (item.available_quantity > 0 ? 'color: var(--tf-amber); font-weight: 800;' : 'color: var(--tf-red); font-weight: 800;')" x-text="item.available_quantity"></span>
+                                    <i x-show="item.show_warning" class="fas fa-exclamation-triangle" style="color: var(--tf-red);"></i>
+                                </div>
+                                <p x-show="item.show_warning" style="color: var(--tf-red); font-size: 10px; margin-top: 2px;">تجاوز المتاح!</p>
+                            </div>
+                            <div>
+                                <label class="tf-label">الكمية</label>
+                                <input type="number" :name="'items[' + index + '][quantity]'" x-model="item.quantity" @input="checkQuantity(index)" class="tf-input" :style="item.show_warning ? 'border-color: var(--tf-red); background: var(--tf-red-soft);' : ''" min="0.001" step="0.001" required>
+                            </div>
+                            <div>
+                                <label class="tf-label">السعر</label>
+                                <input type="number" :name="'items[' + index + '][price]'" x-model="item.price" @input="calculateItemTotal(index)" class="tf-input" readonly style="background: var(--tf-surface2);">
+                            </div>
+                            <div style="text-align: center;">
+                                <label class="tf-label">الإجمالي</label>
+                                <div style="font-weight: 800; color: var(--tf-green);" x-text="item.total.toFixed(2) + ' ج.م'"></div>
+                            </div>
+                            <button type="button" @click="removeItem(index)" class="tf-action-btn-del">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </template>
+                </div>
             </div>
         </div>
 
-        <!-- Additional Info -->
-        <div class="grid md:grid-cols-2 gap-6 mb-6" x-show="invoiceId">
-            <!-- الإجمالي -->
-            <div class="bg-white p-6 rounded-xl shadow">
-                <label class="block text-sm font-semibold text-gray-700 mb-2">إجمالي المرتجع</label>
-                <div class="text-3xl font-bold text-red-600" x-text="total.toFixed(2) + ' ج.م'"></div>
+        <div class="tf-grid-2 tf-section" x-show="invoiceId">
+            <div class="tf-total-box">
+                <label class="tf-label">إجمالي المرتجع</label>
+                <div class="tf-total-value" x-text="total.toFixed(2) + ' ج.م'"></div>
             </div>
-
-            <!-- الملاحظات -->
-            <div class="bg-white p-6 rounded-xl shadow">
-                <label class="block text-sm font-semibold text-gray-700 mb-2">سبب المرتجع / ملاحظات</label>
-                <textarea name="notes" 
-                          rows="3"
-                          class="w-full border-2 border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-red-500 focus:border-red-500"
-                          placeholder="مثال: عيب في المنتج / غير مطابق للمواصفات"></textarea>
+            <div>
+                <label class="tf-label"><i class="fas fa-comment-alt" style="color: var(--tf-amber);"></i> سبب المرتجع / ملاحظات</label>
+                <textarea name="notes" rows="3" class="tf-input" placeholder="مثال: عيب في المنتج / غير مطابق للمواصفات"></textarea>
                 @error('notes')
-                    <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
+                    <p style="color: var(--tf-red); font-size: 12px; margin-top: 4px;">{{ $message }}</p>
                 @enderror
             </div>
         </div>
 
-        <!-- صور داعمة -->
-        <div class="bg-white p-6 rounded-xl shadow mb-6" x-show="invoiceId">
-            <label class="block text-sm font-semibold text-gray-700 mb-2">
-                صور داعمة (اختياري)
-            </label>
-            <input type="file" 
-                   name="images[]" 
-                   multiple
-                   accept="image/*"
-                   class="w-full border-2 border-gray-300 rounded-lg px-4 py-2">
-            <p class="text-sm text-gray-500 mt-2">
-                يمكنك رفع صور توضح سبب المرتجع (الحد الأقصى 2MB لكل صورة)
-            </p>
+        <div class="tf-card tf-section" x-show="invoiceId">
+            <div class="tf-card-body">
+                <label class="tf-label"><i class="fas fa-image" style="color: var(--tf-violet);"></i> صور داعمة (اختياري)</label>
+                <input type="file" name="images[]" multiple accept="image/*" class="tf-input" style="padding: 10px;">
+                <p style="font-size: 12px; color: var(--tf-text-m); margin-top: 4px;">يمكنك رفع صور توضيح سبب المرتجع (الحد الأقصى 2MB لكل صورة)</p>
+            </div>
         </div>
 
-        <!-- Submit Buttons -->
-        <div class="flex gap-3">
-            <button type="submit" 
-                    class="flex-1 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg font-semibold flex items-center justify-center gap-2">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                </svg>
-                حفظ المرتجع
-            </button>
-            <a href="{{ route('invoices.sales-returns.index') }}" 
-               class="px-6 py-3 rounded-lg font-semibold border border-gray-300 hover:bg-gray-50">
-                إلغاء
-            </a>
+        <div class="tf-card tf-section" x-show="invoiceId">
+            <div class="tf-card-body" style="display: flex; gap: 12px;">
+                <button type="submit" class="tf-btn tf-btn-primary" style="flex: 1;">
+                    <i class="fas fa-save"></i> حفظ المرتجع
+                </button>
+                <a href="{{ route('invoices.sales-returns.index') }}" class="tf-btn tf-btn-secondary">
+                    <i class="fas fa-times"></i> إلغاء
+                </a>
+            </div>
         </div>
     </form>
 </div>

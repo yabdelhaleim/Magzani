@@ -189,6 +189,9 @@ class PriceUpdateController extends Controller
             // ✅ فك تشفير المنتجات
             $selectedProductIds = json_decode($validated['selected_products'], true);
             
+            // ✅ استخرج IDs فقط من المصفوفة
+            $productIdsOnly = array_column($selectedProductIds, 'id');
+            
             // ✅ التحقق من صحة JSON
             if (json_last_error() !== JSON_ERROR_NONE) {
                 return response()->json([
@@ -205,7 +208,7 @@ class PriceUpdateController extends Controller
             }
 
             // ✅ حد أقصى 5000 منتج
-            if (count($selectedProductIds) > 5000) {
+            if (count($productIdsOnly) > 5000) {
                 return response()->json([
                     'success' => false,
                     'message' => 'لا يمكن تحديث أكثر من 5000 منتج دفعة واحدة',
@@ -215,7 +218,7 @@ class PriceUpdateController extends Controller
             Log::info('💾 Starting bulk price update:', [
                 'base_unit' => $validated['base_unit'],
                 'category' => $validated['category'],
-                'products_count' => count($selectedProductIds)
+                'products_count' => count($productIdsOnly)
             ]);
 
             // ✅ تنفيذ التحديث
@@ -225,7 +228,7 @@ class PriceUpdateController extends Controller
                 purchasePrice: $validated['base_purchase_price'],
                 profitValue: $validated['profit_value'],
                 profitType: $validated['profit_type'],
-                selectedProductIds: $selectedProductIds,
+                selectedProductIds: $productIdsOnly,
                 changeReason: $validated['change_reason'] ?? 'تحديث جماعي ذكي'
             );
             

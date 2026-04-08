@@ -131,7 +131,8 @@ class PurchaseInvoiceService
             'notes' => $data['notes'] ?? null,
             'discount' => $data['discount'] ?? 0,
             'tax' => $data['tax'] ?? 0,
-            'status' => 'pending', // معلقة - مدفوعة - ملغاة
+            // status في الجدول Enum: draft | confirmed | cancelled
+            'status' => 'draft',
             'total' => 0, // سيتم حسابه لاحقاً
         ]);
     }
@@ -266,7 +267,7 @@ class PurchaseInvoiceService
         return [
             'total_invoices' => PurchaseInvoice::count(),
             'total_amount' => PurchaseInvoice::sum('total'),
-            'pending_invoices' => PurchaseInvoice::where('status', 'pending')->count(),
+            'draft_invoices' => PurchaseInvoice::where('status', 'draft')->count(),
             'today_amount' => PurchaseInvoice::whereDate('invoice_date', today())->sum('total'),
         ];
     }

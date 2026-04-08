@@ -224,9 +224,11 @@ class SalesController extends Controller
         $customers = Customer::where('is_active', 1)->get();
         $warehouses = Warehouse::where('is_active', 1)->get();
         
-        // ✅ جلب المنتجات مع الوحدات والمخزون - متوافق مع Product Model
+        // ✅ جلب المنتجات مع الوحدات والمخزون والوحدة الأساسية - متوافق مع Product Model
         $products = Product::active()
             ->with([
+                'baseunit',
+                'basePricing', // جلب السعر الحالي
                 'activeSellingUnits' => function($q) {
                     $q->ordered(); // مرتبة حسب display_order
                 },
@@ -257,10 +259,10 @@ class SalesController extends Controller
                 'notes' => 'nullable|string',
                 'items' => 'required|array|min:1',
                 'items.*.product_id' => 'required|exists:products,id',
-                'items.*.selling_unit_id' => 'required|exists:product_selling_units,id',
+                'items.*.selling_unit_id' => 'nullable|exists:product_selling_units,id',
                 'items.*.quantity' => 'required|numeric|min:0.001',
                 'items.*.price' => 'required|numeric|min:0',
-                'items.*.discount' => 'nullable|numeric|min:0|max:100',
+                'discount' => 'nullable|numeric|min:0|max:100',
                 'items.*.tax_rate' => 'nullable|numeric|min:0|max:100',
             ]);
 
@@ -330,6 +332,8 @@ class SalesController extends Controller
         // ✅ جلب المنتجات - نفس طريقة create
         $products = Product::active()
             ->with([
+                'baseunit',
+                'basePricing',
                 'activeSellingUnits' => function($q) {
                     $q->ordered();
                 },
@@ -360,7 +364,7 @@ class SalesController extends Controller
                 'notes' => 'nullable|string',
                 'items' => 'required|array|min:1',
                 'items.*.product_id' => 'required|exists:products,id',
-                'items.*.selling_unit_id' => 'required|exists:product_selling_units,id',
+                'items.*.selling_unit_id' => 'nullable|exists:product_selling_units,id',
                 'items.*.quantity' => 'required|numeric|min:0.001',
                 'items.*.price' => 'required|numeric|min:0',
                 'items.*.discount' => 'nullable|numeric|min:0|max:100',
@@ -412,7 +416,7 @@ class SalesController extends Controller
         $warehouseId = $request->get('warehouse_id');
 
         $products = Product::active()
-            ->with(['activeSellingUnits', 'warehouses'])
+            ->with(['activeSellingUnits', 'warehouses', 'basePricing'])
             ->where(function ($query) use ($search) {
                 $query->where('name', 'like', '%' . $search . '%')
                       ->orWhere('code', 'like', '%' . $search . '%')
@@ -432,7 +436,7 @@ class SalesController extends Controller
                     'id' => $product->id,
                     'name' => $product->name,
                     'code' => $product->code ?? $product->sku,
-                    'base_price' => $product->selling_price,
+                    'base_price' => $product->base_selling_price,
                     'stock' => $stock,
                     'base_unit' => $product->base_unit_label ?? 'قطعة',
                     'selling_units' => $product->activeSellingUnits->map(function($unit) use ($product) {
@@ -440,8 +444,8 @@ class SalesController extends Controller
                             'id' => $unit->id,
                             'unit_name' => $unit->unit_name,
                             'conversion_factor' => $unit->quantity_in_base_unit,
-                            'selling_price' => round($product->selling_price * $unit->quantity_in_base_unit, 2),
-                            'purchase_price' => round($product->purchase_price * $unit->quantity_in_base_unit, 2),
+                            'selling_price' => round($product->base_selling_price * $unit->quantity_in_base_unit, 2),
+                            'purchase_price' => round($product->base_purchase_price * $unit->quantity_in_base_unit, 2),
                         ];
                     }),
                 ];

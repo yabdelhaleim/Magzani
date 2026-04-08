@@ -3,403 +3,493 @@
 @section('title', 'قائمة الأصناف')
 @section('page-title', 'الأصناف')
 
-@section('content')
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-    
-    {{-- ====== Header Section ====== --}}
-    <div class="mb-8">
-        <div class="flex items-center justify-between">
-            <div>
-                <h1 class="text-3xl font-bold text-gray-900 flex items-center gap-3">
-                    <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
-                        <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
-                        </svg>
-                    </div>
-                    جميع الأصناف
-                </h1>
-                <p class="mt-2 text-gray-600">إدارة شاملة للمنتجات والمخزون</p>
-            </div>
-            <div class="flex gap-3">
-                <a href="{{ route('products.create') }}" 
-                   class="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl font-semibold flex items-center gap-2 shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                    </svg>
-                    إضافة صنف جديد
-                </a>
-            </div>
-        </div>
-    </div>
-
-    {{-- ====== Alert Messages ====== --}}
-    @if(session('success'))
-        <div class="mb-6 bg-gradient-to-r from-green-50 to-emerald-50 border-l-4 border-green-500 p-5 rounded-xl shadow-sm animate-slideInDown">
-            <div class="flex items-start gap-3">
-                <div class="flex-shrink-0">
-                    <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                    </svg>
-                </div>
-                <div class="flex-1">
-                    <p class="font-semibold text-green-800">{{ session('success') }}</p>
-                </div>
-                <button type="button" class="text-green-400 hover:text-green-600" onclick="this.parentElement.parentElement.remove()">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                    </svg>
-                </button>
-            </div>
-        </div>
-    @endif
-
-    @if(session('error'))
-        <div class="mb-6 bg-gradient-to-r from-red-50 to-rose-50 border-l-4 border-red-500 p-5 rounded-xl shadow-sm animate-slideInDown">
-            <div class="flex items-start gap-3">
-                <div class="flex-shrink-0">
-                    <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                    </svg>
-                </div>
-                <div class="flex-1">
-                    <p class="font-semibold text-red-800">{{ session('error') }}</p>
-                </div>
-                <button type="button" class="text-red-400 hover:text-red-600" onclick="this.parentElement.parentElement.remove()">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                    </svg>
-                </button>
-            </div>
-        </div>
-    @endif
-
-    {{-- ====== Products Table ====== --}}
-    <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden hover:shadow-xl transition-shadow duration-300">
-        
-        {{-- Table Header --}}
-        <div class="bg-gradient-to-r from-gray-50 to-gray-100 px-6 py-4 border-b border-gray-200">
-            <div class="flex items-center justify-between">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-md">
-                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
-                        </svg>
-                    </div>
-                    <div>
-                        <h3 class="text-lg font-bold text-gray-900">قائمة المنتجات</h3>
-                        <p class="text-sm text-gray-600">إجمالي: <span class="font-semibold text-blue-600">{{ $products->total() }}</span> منتج</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        {{-- Table Content --}}
-        <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gradient-to-r from-gray-100 to-gray-50">
-                    <tr>
-                        <th scope="col" class="px-6 py-4 text-right text-xs font-bold text-gray-700 uppercase tracking-wider w-24">
-                            الكود
-                        </th>
-                        <th scope="col" class="px-6 py-4 text-right text-xs font-bold text-gray-700 uppercase tracking-wider">
-                            الاسم
-                        </th>
-                        <th scope="col" class="px-6 py-4 text-right text-xs font-bold text-gray-700 uppercase tracking-wider w-32">
-                            التصنيف
-                        </th>
-                        <th scope="col" class="px-6 py-4 text-right text-xs font-bold text-gray-700 uppercase tracking-wider w-32">
-                            سعر الشراء
-                        </th>
-                        <th scope="col" class="px-6 py-4 text-right text-xs font-bold text-gray-700 uppercase tracking-wider w-32">
-                            سعر البيع
-                        </th>
-                        <th scope="col" class="px-6 py-4 text-right text-xs font-bold text-gray-700 uppercase tracking-wider w-32">
-                            المخزون
-                        </th>
-                        <th scope="col" class="px-6 py-4 text-right text-xs font-bold text-gray-700 uppercase tracking-wider w-24">
-                            الحالة
-                        </th>
-                        <th scope="col" class="px-6 py-4 text-center text-xs font-bold text-gray-700 uppercase tracking-wider w-40">
-                            الإجراءات
-                        </th>
-                    </tr>
-                </thead>
-                <tbody class="bg-white divide-y divide-gray-100">
-                    @forelse($products as $product)
-                    <tr class="hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 transition-all duration-200">
-                        {{-- الكود --}}
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="flex items-center gap-2">
-                                <div class="w-8 h-8 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-lg flex items-center justify-center">
-                                    <span class="text-xs font-bold text-blue-600">#</span>
-                                </div>
-                                <span class="text-sm font-semibold text-gray-900">{{ $product->code }}</span>
-                            </div>
-                        </td>
-                        
-                        {{-- الاسم --}}
-                        <td class="px-6 py-4">
-                            <div class="flex items-center gap-3">
-                                <div class="flex-shrink-0">
-                                    @if($product->image)
-                                        <img src="{{ asset('storage/' . $product->image) }}" 
-                                             alt="{{ $product->name }}" 
-                                             class="w-10 h-10 rounded-lg object-cover border-2 border-gray-200">
-                                    @else
-                                        <div class="w-10 h-10 bg-gradient-to-br from-gray-200 to-gray-300 rounded-lg flex items-center justify-center">
-                                            <svg class="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
-                                            </svg>
-                                        </div>
-                                    @endif
-                                </div>
-                                <div class="min-w-0 flex-1">
-                                    <p class="text-sm font-bold text-gray-900 truncate">{{ $product->name }}</p>
-                                    @if($product->sku)
-                                        <p class="text-xs text-gray-500">SKU: {{ $product->sku }}</p>
-                                    @endif
-                                </div>
-                            </div>
-                        </td>
-                        
-                        {{-- التصنيف --}}
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <span class="px-3 py-1 bg-gradient-to-r from-purple-100 to-pink-100 text-purple-700 rounded-full text-xs font-semibold border border-purple-200">
-                                {{ $product->category }}
-                            </span>
-                        </td>
-                        
-                        {{-- سعر الشراء --}}
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="flex items-center gap-2">
-                                <svg class="w-4 h-4 text-green-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path>
-                                </svg>
-                                <div class="flex flex-col">
-                                    <span class="text-sm font-bold text-gray-900">{{ number_format($product->purchase_price, 2) }}</span>
-                                    <span class="text-xs text-gray-500">ج.م</span>
-                                </div>
-                            </div>
-                        </td>
-                        
-                        {{-- سعر البيع --}}
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="flex items-center gap-2">
-                                <svg class="w-4 h-4 text-blue-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                </svg>
-                                <div class="flex flex-col">
-                                    <span class="text-sm font-bold text-blue-600">{{ number_format($product->selling_price, 2) }}</span>
-                                    <span class="text-xs text-gray-500">ج.م</span>
-                                </div>
-                            </div>
-                        </td>
-                        
-                        {{-- المخزون - ✅ محدث للعمل مع Trait --}}
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            @php
-                                // ✅ استخدام الـ Trait Methods
-                                $totalStock = $product->total_stock;
-                                $status = $product->getStockStatus();
-                                $statusLabel = $product->getStockStatusLabel();
-                                $statusColor = $product->getStockStatusColor();
-                            @endphp
-                            
-                            <div class="flex items-center justify-center">
-                                @if($status === 'out_of_stock')
-                                    <span class="px-3 py-1.5 bg-gradient-to-r from-red-100 to-rose-100 text-red-700 rounded-full text-xs font-bold border border-red-200 flex items-center gap-1.5">
-                                        <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
-                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
-                                        </svg>
-                                        {{ $statusLabel }}
-                                    </span>
-                                @elseif($status === 'low_stock')
-                                    <span class="px-3 py-1.5 bg-gradient-to-r from-orange-100 to-amber-100 text-orange-700 rounded-full text-xs font-bold border border-orange-200 flex items-center gap-1.5">
-                                        <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
-                                            <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
-                                        </svg>
-                                        {{ number_format($totalStock, 0) }}
-                                    </span>
-                                @else
-                                    <span class="px-3 py-1.5 bg-gradient-to-r from-green-100 to-emerald-100 text-green-700 rounded-full text-xs font-bold border border-green-200 flex items-center gap-1.5">
-                                        <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
-                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
-                                        </svg>
-                                        {{ number_format($totalStock, 0) }}
-                                    </span>
-                                @endif
-                            </div>
-                        </td>
-                        
-                        {{-- الحالة --}}
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            @if($product->is_active)
-                                <span class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-green-100 to-emerald-100 text-green-700 rounded-full text-xs font-bold border border-green-200">
-                                    <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
-                                    </svg>
-                                    نشط
-                                </span>
-                            @else
-                                <span class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-gray-100 to-slate-100 text-gray-700 rounded-full text-xs font-bold border border-gray-200">
-                                    <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
-                                    </svg>
-                                    غير نشط
-                                </span>
-                            @endif
-                        </td>
-                        
-                        {{-- الإجراءات --}}
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="flex items-center justify-center gap-2">
-                                {{-- عرض --}}
-                                <a href="{{ route('products.show', $product) }}" 
-                                   class="p-2 bg-gradient-to-br from-blue-500 to-indigo-600 text-white rounded-lg hover:from-blue-600 hover:to-indigo-700 transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-110"
-                                   title="عرض التفاصيل">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-                                    </svg>
-                                </a>
-                                
-                                {{-- تعديل --}}
-                                <a href="{{ route('products.edit', $product) }}" 
-                                   class="p-2 bg-gradient-to-br from-amber-500 to-orange-600 text-white rounded-lg hover:from-amber-600 hover:to-orange-700 transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-110"
-                                   title="تعديل">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                                    </svg>
-                                </a>
-                                
-                                {{-- حذف --}}
-                                <button type="button"
-                                        onclick="confirmDelete({{ $product->id }}, '{{ $product->name }}')"
-                                        class="p-2 bg-gradient-to-br from-red-500 to-rose-600 text-white rounded-lg hover:from-red-600 hover:to-rose-700 transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-110"
-                                        title="حذف">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                                    </svg>
-                                </button>
-                                
-                                {{-- فورم الحذف المخفي --}}
-                                <form id="delete-form-{{ $product->id }}" 
-                                      action="{{ route('products.destroy', $product) }}" 
-                                      method="POST" 
-                                      class="hidden">
-                                    @csrf
-                                    @method('DELETE')
-                                </form>
-                            </div>
-                        </td>
-                    </tr>
-                    @empty
-                    <tr>
-                        <td colspan="8" class="px-6 py-12 text-center">
-                            <div class="flex flex-col items-center justify-center gap-4">
-                                <div class="w-20 h-20 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center">
-                                    <svg class="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path>
-                                    </svg>
-                                </div>
-                                <div>
-                                    <p class="text-gray-600 font-semibold text-lg mb-2">لا توجد منتجات حالياً</p>
-                                    <p class="text-gray-500 text-sm">ابدأ بإضافة منتج جديد لإدارة مخزونك</p>
-                                </div>
-                                <a href="{{ route('products.create') }}" 
-                                   class="mt-4 px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl font-semibold flex items-center gap-2 shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                                    </svg>
-                                    إضافة منتج جديد
-                                </a>
-                            </div>
-                        </td>
-                    </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
-
-        {{-- Pagination --}}
-        @if($products->hasPages())
-            <div class="bg-gradient-to-r from-gray-50 to-gray-100 border-t border-gray-200 px-6 py-4">
-                <div class="flex items-center justify-between">
-                    <div class="text-sm text-gray-600">
-                        عرض <span class="font-semibold text-gray-900">{{ $products->firstItem() }}</span>
-                        إلى <span class="font-semibold text-gray-900">{{ $products->lastItem() }}</span>
-                        من إجمالي <span class="font-semibold text-gray-900">{{ $products->total() }}</span> منتج
-                    </div>
-                    <div>
-                        {{ $products->links() }}
-                    </div>
-                </div>
-            </div>
-        @endif
-    </div>
-</div>
-
 @push('styles')
 <style>
-    @keyframes slideInDown {
-        from {
-            opacity: 0;
-            transform: translateY(-20px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
+    :root {
+        --tf-bg:          #f4f7fe;
+        --tf-surface:     #ffffff;
+        --tf-surface2:    #f8faff;
+        --tf-border:      #e4eaf7;
+        --tf-border-soft: #edf0f9;
+
+        --tf-indigo:      #4f63d2;
+        --tf-indigo-light:#7088e8;
+        --tf-indigo-soft: #eef0fc;
+
+        --tf-blue:        #3a8ef0;
+        --tf-blue-soft:   #e8f2ff;
+        --tf-green:       #0faa7e;
+        --tf-green-soft:  #e6f8f3;
+        --tf-red:         #dc2626;
+        --tf-red-soft:    #fee2e2;
+        --tf-amber:       #e8930a;
+        --tf-amber-soft:  #fff4e0;
+        --tf-violet:      #7c5cec;
+        --tf-violet-soft: #f0ecff;
+
+        --tf-text-h:      #1a2140;
+        --tf-text-b:      #3d4f72;
+        --tf-text-m:      #7e90b0;
+        --tf-text-d:      #94a3b8;
+        --tf-text-s:      #64748b;
+
+        --tf-shadow-sm:   0 2px 12px rgba(79,99,210,0.07);
+        --tf-shadow-card: 0 2px 0 0 rgba(0,0,0,0.04), 0 4px 20px rgba(79,99,210,0.08);
+        --tf-shadow-lg:   0 8px 30px rgba(79,99,210,0.10);
     }
-    
-    .animate-slideInDown {
-        animation: slideInDown 0.5s ease-out;
+
+    .tf-page {
+        background: var(--tf-bg);
+        background-image:
+            radial-gradient(ellipse 80% 60% at 10% -10%,  rgba(79,99,210,0.12) 0%, transparent 50%),
+            radial-gradient(ellipse 60% 50% at 90% 110%, rgba(58,142,240,0.1) 0%, transparent 50%);
+        min-height: 100vh;
+        padding: 26px 22px;
     }
-    
-    /* تحسين عرض الجدول */
-    table {
+
+    @keyframes fadeUp {
+        from { opacity: 0; transform: translateY(20px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes tfShimmer {
+        0%   { background-position: -600px 0; }
+        100% { background-position: 600px 0; }
+    }
+    @keyframes iconBounce {
+        0%,100% { transform: translateY(0) rotate(0deg); }
+        30%     { transform: translateY(-4px) rotate(-8deg); }
+        60%     { transform: translateY(-2px) rotate(4deg); }
+    }
+
+    .prod-section {
+        animation: fadeUp 0.55s cubic-bezier(0.22,1,0.36,1) both;
+    }
+    .prod-section:nth-child(1) { animation-delay: 0.05s; }
+    .prod-section:nth-child(2) { animation-delay: 0.12s; }
+    .prod-section:nth-child(3) { animation-delay: 0.19s; }
+
+    /* Stat Cards */
+    .stat-card {
+        background: var(--tf-surface);
+        border-radius: 18px;
+        border: 1px solid var(--tf-border);
+        padding: 20px;
+        position: relative;
+        overflow: hidden;
+        transition: all .35s cubic-bezier(.22,1,.36,1);
+    }
+    .stat-card:hover {
+        transform: translateY(-3px);
+        box-shadow: var(--tf-shadow-lg);
+    }
+    .stat-card::after {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0;
+        height: 3px;
+    }
+    .stat-card.blue::after   { background: linear-gradient(90deg, var(--tf-indigo), var(--tf-blue)); }
+    .stat-card.green::after  { background: linear-gradient(90deg, var(--tf-green), var(--tf-indigo-light)); }
+    .stat-card.amber::after  { background: linear-gradient(90deg, var(--tf-amber), var(--tf-blue)); }
+    .stat-card.red::after    { background: linear-gradient(90deg, var(--tf-red), var(--tf-amber)); }
+
+    .stat-icon {
+        width: 44px; height: 44px;
+        border-radius: 12px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 17px;
+        transition: transform .4s cubic-bezier(.34,1.56,.64,1);
+    }
+    .stat-card:hover .stat-icon { animation: iconBounce .6s ease; }
+    .stat-card.blue  .stat-icon { background: var(--tf-blue-soft); color: var(--tf-blue); }
+    .stat-card.green .stat-icon { background: var(--tf-green-soft); color: var(--tf-green); }
+    .stat-card.amber .stat-icon { background: var(--tf-amber-soft); color: var(--tf-amber); }
+    .stat-card.red   .stat-icon { background: var(--tf-red-soft); color: var(--tf-red); }
+
+    .stat-val { font-size: 22px; font-weight: 900; color: var(--tf-text-h); line-height: 1.1; margin-top: 10px; }
+    .stat-lbl { font-size: 11px; font-weight: 600; color: var(--tf-text-d); margin-top: 3px; }
+
+    /* Section Card */
+    .section-card {
+        background: var(--tf-surface);
+        border-radius: 18px;
+        border: 1px solid var(--tf-border);
+        overflow: hidden;
+        transition: all .35s;
+    }
+    .section-card:hover { box-shadow: var(--tf-shadow-lg); }
+
+    .section-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 18px 22px;
+        border-bottom: 1px solid var(--tf-border-soft);
+        background: var(--tf-surface2);
+    }
+    .section-head-left {
+        display: flex; align-items: center; gap: 12px;
+    }
+    .section-icon {
+        width: 40px; height: 40px;
+        border-radius: 12px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 15px; flex-shrink: 0;
+        transition: transform .4s cubic-bezier(.34,1.56,.64,1);
+    }
+    .section-card:hover .section-icon { animation: iconBounce .6s ease; }
+    .section-icon.blue { background: var(--tf-blue-soft); color: var(--tf-blue); }
+
+    .section-title { font-size: 15px; font-weight: 800; color: var(--tf-text-h); margin: 0; }
+    .section-sub { font-size: 11px; color: var(--tf-text-d); margin: 2px 0 0; font-weight: 600; }
+
+    /* Table */
+    .prod-table {
+        width: 100%;
+        border-collapse: collapse;
         table-layout: fixed;
+    }
+    .prod-table thead th {
+        padding: 12px 16px;
+        text-align: right;
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--tf-text-d);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        border-bottom: 1px solid var(--tf-border-soft);
+        background: var(--tf-surface2);
+    }
+    .prod-table tbody td {
+        padding: 14px 16px;
+        font-size: 13px;
+        color: var(--tf-text-b);
+        border-bottom: 1px solid var(--tf-border-soft);
+        vertical-align: middle;
+    }
+    .prod-table tbody tr { transition: background 0.15s; }
+    .prod-table tbody tr:hover { background: var(--tf-surface2); }
+    .prod-table tbody tr:last-child td { border-bottom: none; }
+
+    /* Badges */
+    .badge {
+        display: inline-flex; align-items: center; gap: 4px;
+        padding: 4px 10px; border-radius: 50px;
+        font-size: 11px; font-weight: 700; white-space: nowrap;
+    }
+    .badge-green  { background: var(--tf-green-soft); color: var(--tf-green); }
+    .badge-yellow { background: var(--tf-amber-soft); color: var(--tf-amber); }
+    .badge-red    { background: var(--tf-red-soft); color: var(--tf-red); }
+    .badge-gray   { background: var(--tf-surface2); color: var(--tf-text-s); }
+    .badge-purple { background: var(--tf-violet-soft); color: var(--tf-violet); }
+    .badge-blue   { background: var(--tf-blue-soft); color: var(--tf-blue); }
+
+    /* Action Buttons */
+    .act-btn {
+        display: inline-flex; align-items: center; justify-content: center;
+        width: 34px; height: 34px;
+        border-radius: 10px; border: none;
+        cursor: pointer; transition: all .2s;
+    }
+    .act-btn.view  { background: var(--tf-blue-soft); color: var(--tf-blue); }
+    .act-btn.view:hover { background: var(--tf-blue); color: var(--tf-surface); }
+    .act-btn.edit  { background: var(--tf-amber-soft); color: var(--tf-amber); }
+    .act-btn.edit:hover { background: var(--tf-amber); color: var(--tf-surface); }
+    .act-btn.del   { background: var(--tf-red-soft); color: var(--tf-red); }
+    .act-btn.del:hover { background: var(--tf-red); color: var(--tf-surface); }
+
+    /* Btn Primary */
+    .btn-primary {
+        display: inline-flex; align-items: center; gap: 8px;
+        padding: 11px 22px;
+        background: linear-gradient(135deg, var(--tf-indigo), var(--tf-blue));
+        color: var(--tf-surface); border-radius: 14px; font-size: 13px; font-weight: 800;
+        text-decoration: none; border: none; cursor: pointer;
+        box-shadow: 0 4px 18px rgba(58,142,240,0.35);
+        transition: all .25s; white-space: nowrap;
+    }
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 28px rgba(58,142,240,0.45);
+        color: var(--tf-surface);
+    }
+
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+    }
+    .empty-icon {
+        width: 70px; height: 70px;
+        background: var(--tf-surface2); border-radius: 20px;
+        display: flex; align-items: center; justify-content: center;
+        margin: 0 auto 18px; font-size: 28px; color: var(--tf-text-d);
+    }
+
+    /* Pagination */
+    .pagination-bar {
+        padding: 16px 22px;
+        border-top: 1px solid var(--tf-border-soft);
+        background: var(--tf-surface2);
+        display: flex; align-items: center; justify-content: space-between;
+    }
+
+    /* Alert */
+    .alert-toast {
+        display: flex; align-items: center; gap: 12px;
+        padding: 14px 18px; border-radius: 14px; margin-bottom: 20px;
+        animation: fadeUp 0.4s ease;
+    }
+    .alert-toast.success { background: var(--tf-green-soft); border: 1px solid rgba(15,170,126,0.2); }
+    .alert-toast.error   { background: var(--tf-red-soft); border: 1px solid rgba(232,75,90,0.2); }
+
+    @media (max-width: 768px) {
+        .prod-table { display: block; overflow-x: auto; }
     }
 </style>
 @endpush
 
+@section('content')
+
+<!-- ══ Stats Bar ══ -->
+<div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6 prod-section">
+
+    <div class="stat-card blue">
+        <div class="flex items-center gap-3">
+            <div class="stat-icon"><i class="fas fa-boxes"></i></div>
+            <div>
+                <div class="stat-val">{{ number_format($products->total()) }}</div>
+                <div class="stat-lbl">إجمالي الأصناف</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="stat-card green">
+        <div class="flex items-center gap-3">
+            <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
+            <div>
+                <div class="stat-val">{{ $products->where('is_active', true)->count() }}</div>
+                <div class="stat-lbl">نشط</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="stat-card amber">
+        <div class="flex items-center gap-3">
+            <div class="stat-icon"><i class="fas fa-exclamation-triangle"></i></div>
+            <div>
+                <div class="stat-val">{{ $products->where('stock_status', 'منخفض')->count() + $products->where('stock_status', 'نفذ')->count() }}</div>
+                <div class="stat-lbl">مخزون منخفض</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="stat-card red">
+        <div class="flex items-center gap-3">
+            <div class="stat-icon"><i class="fas fa-layer-group"></i></div>
+            <div>
+                <div class="stat-val">{{ $products->pluck('category')->unique()->filter()->count() }}</div>
+                <div class="stat-lbl">تصنيف</div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- ══ Alerts ══ -->
+@if(session('success'))
+    <div class="alert-toast success prod-section">
+        <div class="w-9 h-9 bg-emerald-100 rounded-xl flex items-center justify-center flex-shrink-0">
+            <i class="fas fa-check text-emerald-600 text-sm"></i>
+        </div>
+        <p class="font-bold text-emerald-800 text-sm flex-1">{{ session('success') }}</p>
+        <button type="button" class="text-emerald-400 hover:text-emerald-600" onclick="this.parentElement.remove()">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+@endif
+
+@if(session('error'))
+    <div class="alert-toast error prod-section">
+        <div class="w-9 h-9 bg-red-100 rounded-xl flex items-center justify-center flex-shrink-0">
+            <i class="fas fa-exclamation-circle text-red-600 text-sm"></i>
+        </div>
+        <p class="font-bold text-red-800 text-sm flex-1">{{ session('error') }}</p>
+        <button type="button" class="text-red-400 hover:text-red-600" onclick="this.parentElement.remove()">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+@endif
+
+<!-- ══ Products Table ══ -->
+<div class="section-card prod-section">
+
+    <div class="section-head">
+        <div class="section-head-left">
+            <div class="section-icon blue"><i class="fas fa-box-open"></i></div>
+            <div>
+                <h3 class="section-title">قائمة المنتجات</h3>
+                <p class="section-sub">إجمالي: {{ $products->total() }} منتج</p>
+            </div>
+        </div>
+        <a href="{{ route('products.create') }}" class="btn-primary">
+            <i class="fas fa-plus"></i>
+            إضافة صنف جديد
+        </a>
+    </div>
+
+    <div class="overflow-x-auto">
+        <table class="prod-table">
+            <thead>
+                <tr>
+                    <th style="width:100px;">الكود</th>
+                    <th>الاسم</th>
+                    <th style="width:120px;">التصنيف</th>
+                    <th style="width:110px;">سعر الشراء</th>
+                    <th style="width:110px;">سعر البيع</th>
+                    <th style="width:110px;">المخزون</th>
+                    <th style="width:90px;">الحالة</th>
+                    <th style="width:130px;" class="text-center">إجراءات</th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse($products as $product)
+                @php
+                    $totalStock = $product->total_stock;
+                    $status = $product->stock_status;
+                @endphp
+                <tr>
+                    {{-- الكود --}}
+                    <td>
+                        <span class="font-bold text-blue-600 text-xs" style="letter-spacing:0.5px;">#{{ $product->code }}</span>
+                    </td>
+
+                    {{-- الاسم --}}
+                    <td>
+                        <div class="flex items-center gap-3">
+                            @if($product->image)
+                                <img src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->name }}"
+                                     class="w-9 h-9 rounded-lg object-cover border border-slate-200">
+                            @else
+                                <div class="w-9 h-9 bg-slate-100 rounded-lg flex items-center justify-center">
+                                    <i class="fas fa-box text-slate-400 text-sm"></i>
+                                </div>
+                            @endif
+                            <div class="min-w-0">
+                                <p class="font-bold text-slate-800 text-sm truncate">{{ $product->name }}</p>
+                                @if($product->sku)
+                                    <p class="text-[10px] text-slate-400 font-semibold">SKU: {{ $product->sku }}</p>
+                                @endif
+                            </div>
+                        </div>
+                    </td>
+
+                    {{-- التصنيف --}}
+                    <td>
+                        <span class="badge badge-purple">{{ $product->category }}</span>
+                    </td>
+
+                    {{-- سعر الشراء --}}
+                    <td>
+                        <span class="font-bold text-slate-700 text-sm">{{ number_format($product->purchase_price, 2) }}</span>
+                        <span class="text-slate-400 text-xs">ج.م</span>
+                    </td>
+
+                    {{-- سعر البيع --}}
+                    <td>
+                        <span class="font-bold text-blue-600 text-sm">{{ number_format($product->selling_price, 2) }}</span>
+                        <span class="text-slate-400 text-xs">ج.م</span>
+                    </td>
+
+                    {{-- المخزون --}}
+                    <td>
+                        @if($status === 'نفذ')
+                            <span class="badge badge-red"><i class="fas fa-times-circle text-[9px]"></i> نفذ</span>
+                        @elseif($status === 'منخفض')
+                            <span class="badge badge-yellow"><i class="fas fa-exclamation-triangle text-[9px]"></i> {{ number_format($totalStock) }}</span>
+                        @else
+                            <span class="badge badge-green"><i class="fas fa-check text-[9px]"></i> {{ number_format($totalStock) }}</span>
+                        @endif
+                    </td>
+
+                    {{-- الحالة --}}
+                    <td>
+                        @if($product->is_active)
+                            <span class="badge badge-green"><i class="fas fa-circle text-[7px]"></i> نشط</span>
+                        @else
+                            <span class="badge badge-gray"><i class="fas fa-circle text-[7px]"></i> غير نشط</span>
+                        @endif
+                    </td>
+
+                    {{-- الإجراءات --}}
+                    <td>
+                        <div class="flex items-center justify-center gap-2">
+                            <a href="{{ route('products.show', $product) }}" class="act-btn view" title="عرض">
+                                <i class="fas fa-eye text-xs"></i>
+                            </a>
+                            <a href="{{ route('products.edit', $product) }}" class="act-btn edit" title="تعديل">
+                                <i class="fas fa-pen text-xs"></i>
+                            </a>
+                            <button type="button" onclick="confirmDelete({{ $product->id }}, '{{ $product->name }}')" class="act-btn del" title="حذف">
+                                <i class="fas fa-trash-alt text-xs"></i>
+                            </button>
+                            <form id="delete-form-{{ $product->id }}" action="{{ route('products.destroy', $product) }}" method="POST" class="hidden">
+                                @csrf @method('DELETE')
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                @empty
+                <tr>
+                    <td colspan="8">
+                        <div class="empty-state">
+                            <div class="empty-icon"><i class="fas fa-box-open"></i></div>
+                            <h3 class="text-lg font-bold text-slate-700 mb-1">لا توجد منتجات حالياً</h3>
+                            <p class="text-slate-400 text-sm font-semibold mb-5">ابدأ بإضافة منتج جديد لإدارة مخزونك</p>
+                            <a href="{{ route('products.create') }}" class="btn-primary" style="display:inline-flex;">
+                                <i class="fas fa-plus"></i>
+                                إضافة منتج جديد
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
+
+    {{-- Pagination --}}
+    @if($products->hasPages())
+    <div class="pagination-bar">
+        <div class="text-xs text-slate-400 font-semibold">
+            عرض {{ $products->firstItem() }} إلى {{ $products->lastItem() }} من {{ $products->total() }}
+        </div>
+        <div>{{ $products->links() }}</div>
+    </div>
+    @endif
+
+</div>
+
+@endsection
+
 @push('scripts')
 <script>
-/**
- * ✅ تأكيد الحذف مع معلومات المنتج
- */
-function confirmDelete(productId, productName) {
-    const confirmed = confirm(
-        `⚠️ هل أنت متأكد من حذف المنتج؟\n\n` +
-        `📦 اسم المنتج: ${productName}\n` +
-        `🔢 الرقم: ${productId}\n\n` +
-        `⚡ تحذير: هذا الإجراء لا يمكن التراجع عنه!`
-    );
-    
-    if (confirmed) {
-        document.getElementById(`delete-form-${productId}`).submit();
+function confirmDelete(id, name) {
+    if (confirm(`هل أنت متأكد من حذف: ${name}؟\nلا يمكن التراجع!`)) {
+        document.getElementById(`delete-form-${id}`).submit();
     }
 }
 
-/**
- * ✅ إخفاء الرسائل تلقائياً بعد 5 ثوان
- */
+// Auto-hide alerts
 document.addEventListener('DOMContentLoaded', function() {
-    const alerts = document.querySelectorAll('.animate-slideInDown');
-    
-    alerts.forEach(alert => {
+    document.querySelectorAll('.alert-toast').forEach(alert => {
         setTimeout(() => {
-            alert.style.transition = 'all 0.5s ease-out';
+            alert.style.transition = 'all 0.4s ease';
             alert.style.opacity = '0';
-            alert.style.transform = 'translateY(-20px)';
-            
-            setTimeout(() => {
-                alert.remove();
-            }, 500);
+            alert.style.transform = 'translateY(-10px)';
+            setTimeout(() => alert.remove(), 400);
         }, 5000);
     });
 });
 </script>
 @endpush
-
-@endsection

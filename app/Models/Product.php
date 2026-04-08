@@ -85,7 +85,7 @@ class Product extends Model
         return $this->hasOne(ProductBasePricing::class, 'product_id')
             ->where('is_active', true)
             ->where('is_current', true)
-            ->latest();
+            ->latest('updated_at');
     }
 
     public function allBasePricing(): HasMany
@@ -268,6 +268,42 @@ class Product extends Model
     public function getIsOutOfStockAttribute(): bool
     {
         return $this->total_stock == 0;
+    }
+
+    /* ===========================
+     * 💰 PRICING ACCESSORS (جلب السعر الحالي من product_base_pricing)
+     * =========================== */
+
+    /**
+     * ✅ سعر البيع للوحدة الأساسية
+     */
+    public function getBaseSellingPriceAttribute(): float
+    {
+        if ($this->relationLoaded('basePricing') && $this->basePricing) {
+            return (float) $this->basePricing->base_selling_price;
+        }
+        
+        if ($this->relationLoaded('baseunit') && $this->baseunit) {
+            return (float) $this->baseunit->base_selling_price;
+        }
+
+        return (float) ($this->selling_price ?? 0);
+    }
+
+    /**
+     * ✅ سعر الشراء للوحدة الأساسية
+     */
+    public function getBasePurchasePriceAttribute(): float
+    {
+        if ($this->relationLoaded('basePricing') && $this->basePricing) {
+            return (float) $this->basePricing->base_purchase_price;
+        }
+        
+        if ($this->relationLoaded('baseunit') && $this->baseunit) {
+            return (float) $this->baseunit->base_purchase_price;
+        }
+
+        return (float) ($this->purchase_price ?? 0);
     }
 
     /* ===========================

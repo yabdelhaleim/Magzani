@@ -1,408 +1,446 @@
 @extends('layouts.app')
 
 @section('title', 'تعديل فاتورة بيع')
+@section('page-title', 'تعديل فاتورة بيع')
+
+@push('styles')
+<style>
+    :root {
+        --tf-bg:          #f4f7fe;
+        --tf-surface:     #ffffff;
+        --tf-surface2:    #f8faff;
+        --tf-border:      #e4eaf7;
+        --tf-border-soft: #edf0f9;
+
+        --tf-indigo:      #4f63d2;
+        --tf-indigo-light:#7088e8;
+        --tf-indigo-soft: #eef0fc;
+
+        --tf-blue:        #3a8ef0;
+        --tf-blue-soft:   #e8f2ff;
+        --tf-green:       #0faa7e;
+        --tf-green-soft:  #e6f8f3;
+        --tf-red:         #dc2626;
+        --tf-red-soft:    #fee2e2;
+        --tf-amber:       #e8930a;
+        --tf-amber-soft:  #fff4e0;
+        --tf-violet:      #7c5cec;
+        --tf-violet-soft: #f0ecff;
+
+        --tf-text-h:      #1a2140;
+        --tf-text-b:      #3d4f72;
+        --tf-text-m:      #7e90b0;
+        --tf-text-d:      #94a3b8;
+
+        --tf-shadow-sm:   0 2px 12px rgba(79,99,210,0.07);
+        --tf-shadow-card: 0 2px 0 0 rgba(0,0,0,0.04), 0 4px 20px rgba(79,99,210,0.08);
+        --tf-shadow-lg:   0 8px 30px rgba(79,99,210,0.10);
+    }
+
+    .tf-page {
+        background: var(--tf-bg);
+        background-image:
+            radial-gradient(ellipse 80% 60% at 10% -10%,  rgba(79,99,210,0.12) 0%, transparent 50%),
+            radial-gradient(ellipse 60% 50% at 90% 110%, rgba(58,142,240,0.1) 0%, transparent 50%);
+        min-height: 100vh;
+        padding: 26px 22px;
+    }
+
+    @keyframes tfFadeUp {
+        from { opacity: 0; transform: translateY(18px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes tfShimmer {
+        0%   { background-position: -600px 0; }
+        100% { background-position: 600px 0; }
+    }
+    @keyframes iconBounce {
+        0%,100% { transform: translateY(0) rotate(0deg); }
+        30%     { transform: translateY(-4px) rotate(-8deg); }
+        60%     { transform: translateY(-2px) rotate(4deg); }
+    }
+
+    .tf-section { animation: tfFadeUp 0.55s cubic-bezier(0.22,1,0.36,1) both; }
+    .tf-section:nth-child(1) { animation-delay: 0.04s; }
+
+    .tf-card {
+        background: var(--tf-surface); border-radius: 20px;
+        border: 1px solid var(--tf-border);
+        overflow: hidden; box-shadow: var(--tf-shadow-card);
+        margin-bottom: 20px; position: relative;
+        transition: all .35s cubic-bezier(.22,1,.36,1);
+    }
+    .tf-card:hover { transform: translateY(-3px); box-shadow: var(--tf-shadow-lg); }
+
+    .tf-card-head {
+        display: flex; justify-content: space-between; align-items: center;
+        padding: 20px 24px; border-bottom: 1px solid var(--tf-border-soft);
+        background: var(--tf-surface2); flex-wrap: wrap; gap: 12px;
+    }
+    .tf-card-title { display: flex; align-items: center; gap: 12px; }
+    .tf-card-icon {
+        width: 48px; height: 48px; border-radius: 14px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 18px;
+        transition: transform .4s cubic-bezier(.34,1.56,.64,1);
+    }
+    .tf-card:hover .tf-card-icon { animation: iconBounce .6s ease; }
+    .tf-card.amber .tf-card-icon { background: var(--tf-amber-soft); color: var(--tf-amber); }
+
+    .tf-title-text { font-size: 18px; font-weight: 800; color: var(--tf-text-h); }
+    .tf-title-sub { font-size: 12px; color: var(--tf-text-m); font-weight: 600; }
+
+    .tf-card-body { padding: 20px; }
+
+    .tf-btn {
+        display: inline-flex; align-items: center; gap: 8px;
+        padding: 12px 20px; border-radius: 14px;
+        font-size: 14px; font-weight: 800; cursor: pointer;
+        font-family: 'Cairo', sans-serif; text-decoration: none;
+        transition: all .25s; border: none;
+    }
+    .tf-btn-primary {
+        background: linear-gradient(135deg, var(--tf-amber), #d48009);
+        color: var(--tf-surface); border: none;
+        box-shadow: 0 4px 16px rgba(232,147,10,0.35);
+    }
+    .tf-btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(232,147,10,0.45); }
+    .tf-btn-secondary {
+        background: var(--tf-surface); color: var(--tf-text-b);
+        border: 1.5px solid var(--tf-border);
+    }
+    .tf-btn-secondary:hover { background: var(--tf-surface2); }
+
+    .tf-input, .tf-select {
+        width: 100%; padding: 12px 16px;
+        border: 1.5px solid var(--tf-border); border-radius: 14px;
+        font-size: 14px; font-family: 'Cairo', sans-serif;
+        color: var(--tf-text-h); background: var(--tf-surface);
+        transition: all .25s; outline: none;
+    }
+    .tf-input:focus, .tf-select:focus {
+        border-color: var(--tf-amber);
+        box-shadow: 0 0 0 3px rgba(232,147,10,0.12);
+    }
+
+    .tf-label {
+        display: block; font-size: 12px; font-weight: 700;
+        color: var(--tf-text-m); margin-bottom: 6px;
+    }
+
+    .tf-grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+    @media (max-width: 600px) { .tf-grid-2 { grid-template-columns: 1fr; } }
+
+    .tf-table-wrapper { overflow-x: auto; }
+    .tf-table { width: 100%; border-collapse: collapse; }
+    .tf-table thead th {
+        padding: 14px 16px; text-align: right;
+        font-size: 11px; font-weight: 800; color: var(--tf-text-m);
+        text-transform: uppercase; letter-spacing: .5px;
+        border-bottom: 1.5px solid var(--tf-border-soft);
+        background: var(--tf-surface2); white-space: nowrap;
+    }
+    .tf-table tbody tr { transition: background .18s; }
+    .tf-table tbody tr:hover { background: var(--tf-surface2); }
+    .tf-table tbody td { padding: 14px 16px; border-bottom: 1px solid var(--tf-border-soft); vertical-align: middle; }
+
+    .tf-row-item {
+        display: grid; grid-template-columns: 2fr 1.5fr repeat(5, 1fr);
+        gap: 12px; align-items: center;
+        padding: 16px; border-radius: 14px; background: var(--tf-surface);
+        border: 1px solid var(--tf-border); margin-bottom: 10px;
+        transition: all .2s;
+    }
+    .tf-row-item:hover { border-color: var(--tf-amber); }
+
+    .tf-badge {
+        display: inline-flex; align-items: center; gap: 6px;
+        padding: 6px 14px; border-radius: 50px;
+        font-size: 11px; font-weight: 800;
+    }
+    .tf-badge.green  { background: var(--tf-green-soft); color: var(--tf-green); }
+    .tf-badge.amber  { background: var(--tf-amber-soft); color: var(--tf-amber); }
+    .tf-badge.red    { background: var(--tf-red-soft); color: var(--tf-red); }
+
+    .tf-total-box {
+        padding: 20px; border-radius: 16px;
+        background: var(--tf-surface); border: 1px solid var(--tf-border);
+    }
+    .tf-total-row {
+        display: flex; justify-content: space-between; align-items: center;
+        padding: 10px 0; border-bottom: 1px solid var(--tf-border-soft);
+    }
+    .tf-total-row:last-child { border-bottom: none; }
+    .tf-total-label { font-size: 14px; color: var(--tf-text-m); font-weight: 600; }
+    .tf-total-value { font-size: 14px; font-weight: 800; color: var(--tf-text-h); }
+    .tf-total-value.green { color: var(--tf-green); }
+    .tf-total-value.red { color: var(--tf-red); }
+    .tf-total-value.blue { color: var(--tf-blue); }
+    .tf-total-value.amber { color: var(--tf-amber); }
+
+    .tf-alert {
+        padding: 16px; border-radius: 14px; border-right: 4px solid;
+        background: var(--tf-surface);
+    }
+    .tf-alert-info { border-color: var(--tf-blue); background: var(--tf-blue-soft); }
+    .tf-alert-warning { border-color: var(--tf-amber); background: var(--tf-amber-soft); }
+
+    .tf-invoice-num {
+        display: inline-block; padding: 6px 14px;
+        border-radius: 50px; font-size: 12px; font-weight: 800;
+        background: var(--tf-amber-soft); color: var(--tf-amber);
+    }
+</style>
+@endpush
 
 @section('content')
-<div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-8 px-4">
-    <div class="max-w-5xl mx-auto">
-        <!-- Header Section -->
-        <div class="bg-white rounded-lg shadow-lg overflow-hidden">
-            <div class="bg-gradient-to-r from-yellow-500 to-yellow-600 px-6 py-4">
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center space-x-3 space-x-reverse">
-                        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-                        </svg>
-                        <h2 class="text-2xl font-bold text-white">تعديل فاتورة بيع</h2>
-                    </div>
-                    <span class="bg-white/20 backdrop-blur-sm text-white px-4 py-2 rounded-full text-sm font-semibold">
-                        {{ $invoice->invoice_number }}
-                    </span>
+<div class="tf-page">
+    <div class="tf-card tf-section">
+        <div class="tf-card-head">
+            <div class="tf-card-title">
+                <div class="tf-card-icon amber"><i class="fas fa-edit"></i></div>
+                <div>
+                    <h2 class="tf-title-text">تعديل فاتورة بيع</h2>
+                    <p class="tf-title-sub">تحديث بيانات الفاتورة</p>
+                </div>
+            </div>
+            <span class="tf-invoice-num">{{ $invoice->invoice_number }}</span>
+        </div>
+
+        <form method="POST" action="{{ route('invoices.sales.update', $invoice->id) }}" class="tf-card-body">
+            @csrf
+            @method('PUT')
+
+            <div class="tf-grid-2" style="margin-bottom: 20px;">
+                <div>
+                    <label class="tf-label"><i class="fas fa-user" style="color: var(--tf-green);"></i> العميل</label>
+                    <select name="customer_id" class="tf-select" required>
+                        <option value="">اختر العميل</option>
+                        @foreach($customers as $customer)
+                            <option value="{{ $customer->id }}" @selected($customer->id == $invoice->customer_id)>
+                                {{ $customer->name }}
+                            </option>
+                        @endforeach
+                    </select>
+                    @error('customer_id')
+                        <p style="color: var(--tf-red); font-size: 12px; margin-top: 4px;">{{ $message }}</p>
+                    @enderror
+                </div>
+                <div>
+                    <label class="tf-label"><i class="fas fa-warehouse" style="color: var(--tf-indigo);"></i> المخزن</label>
+                    <select name="warehouse_id" class="tf-select" required>
+                        <option value="">اختر المخزن</option>
+                        @foreach($warehouses as $warehouse)
+                            <option value="{{ $warehouse->id }}" @selected($warehouse->id == $invoice->warehouse_id)>
+                                {{ $warehouse->name }}
+                            </option>
+                        @endforeach
+                    </select>
+                    @error('warehouse_id')
+                        <p style="color: var(--tf-red); font-size: 12px; margin-top: 4px;">{{ $message }}</p>
+                    @enderror
                 </div>
             </div>
 
-            <!-- Form Section -->
-            <form method="POST" action="{{ route('invoices.sales.update', $invoice->id) }}" class="p-6 space-y-6">
-                @csrf
-                @method('PUT')
+            <div style="margin-bottom: 20px;">
+                <label class="tf-label"><i class="fas fa-calendar" style="color: var(--tf-blue);"></i> تاريخ الفاتورة</label>
+                <input type="date" name="invoice_date" value="{{ $invoice->invoice_date ? $invoice->invoice_date->format('Y-m-d') : now()->format('Y-m-d') }}" class="tf-input">
+            </div>
 
-                <!-- Customer & Warehouse Selection -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <!-- Customer -->
-                    <div class="space-y-2">
-                        <label for="customer_id" class="block text-sm font-semibold text-gray-700 mb-2">
-                            <span class="flex items-center space-x-2 space-x-reverse">
-                                <svg class="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-                                </svg>
-                                <span>العميل</span>
-                            </span>
-                        </label>
-                        <select 
-                            name="customer_id" 
-                            id="customer_id"
-                            class="w-full border-2 border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 transition-all duration-200 bg-white hover:border-yellow-400 text-gray-700"
-                            required
-                        >
-                            <option value="" disabled>-- اختر العميل --</option>
-                            @foreach($customers as $customer)
-                                <option value="{{ $customer->id }}" @selected($customer->id == $invoice->customer_id)>
-                                    {{ $customer->name }}
-                                </option>
-                            @endforeach
-                        </select>
-                        @error('customer_id')
-                            <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <!-- Warehouse -->
-                    <div class="space-y-2">
-                        <label for="warehouse_id" class="block text-sm font-semibold text-gray-700 mb-2">
-                            <span class="flex items-center space-x-2 space-x-reverse">
-                                <svg class="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
-                                </svg>
-                                <span>المستودع</span>
-                            </span>
-                        </label>
-                        <select 
-                            name="warehouse_id" 
-                            id="warehouse_id"
-                            class="w-full border-2 border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 transition-all duration-200 bg-white hover:border-yellow-400 text-gray-700"
-                            required
-                        >
-                            <option value="" disabled>-- اختر المستودع --</option>
-                            @foreach($warehouses as $warehouse)
-                                <option value="{{ $warehouse->id }}" @selected($warehouse->id == $invoice->warehouse_id)>
-                                    {{ $warehouse->name }}
-                                </option>
-                            @endforeach
-                        </select>
-                        @error('warehouse_id')
-                            <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
-                        @enderror
+            <div class="tf-card" style="margin-bottom: 20px;">
+                <div class="tf-card-head">
+                    <div class="tf-card-title">
+                        <div class="tf-card-icon indigo"><i class="fas fa-boxes"></i></div>
+                        <div>
+                            <h3 class="tf-title-text">الأصناف</h3>
+                            <p class="tf-title-sub">تعديل أصناف الفاتورة</p>
+                        </div>
                     </div>
                 </div>
-
-                <!-- Invoice Date -->
-                <div class="space-y-2">
-                    <label for="invoice_date" class="block text-sm font-semibold text-gray-700 mb-2">
-                        <span class="flex items-center space-x-2 space-x-reverse">
-                            <svg class="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                            </svg>
-                            <span>تاريخ الفاتورة</span>
-                        </span>
-                    </label>
-                    <input 
-                        type="date" 
-                        name="invoice_date" 
-                        id="invoice_date"
-                        value="{{ $invoice->invoice_date ? $invoice->invoice_date->format('Y-m-d') : now()->format('Y-m-d') }}"
-                        class="w-full border-2 border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 transition-all duration-200"
-                    >
-                </div>
-
-                <!-- Items Section -->
-                <div class="bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg p-5 border-2 border-gray-200">
-                    <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center space-x-2 space-x-reverse">
-                        <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
-                        </svg>
-                        <span>الأصناف</span>
-                    </h3>
-                    
-                    <div id="items-container" class="space-y-3">
+                <div class="tf-card-body">
+                    <div id="items-container">
                         @foreach($invoice->items as $index => $item)
-                        <div class="item-row bg-white p-4 rounded-lg shadow-sm border border-gray-200">
-                            <div class="grid grid-cols-1 md:grid-cols-6 gap-3">
-                                <!-- Product -->
-                                <div class="md:col-span-2">
-                                    <label class="text-xs font-semibold text-gray-600 mb-1 block">المنتج</label>
-                                    <select 
-                                        name="items[{{ $index }}][product_id]" 
-                                        class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-yellow-500"
-                                        required
-                                    >
-                                        @foreach($products as $product)
-                                            <option value="{{ $product->id }}" @selected($product->id == $item->product_id)>
-                                                {{ $product->name }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                </div>
-
-                                <!-- Quantity -->
-                                <div>
-                                    <label class="text-xs font-semibold text-gray-600 mb-1 block">الكمية</label>
-                                    <input 
-                                        type="number" 
-                                        name="items[{{ $index }}][quantity]" 
-                                        value="{{ $item->quantity }}"
-                                        step="0.001"
-                                        class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-yellow-500"
-                                        required
-                                    >
-                                </div>
-
-                                <!-- Price -->
-                                <div>
-                                    <label class="text-xs font-semibold text-gray-600 mb-1 block">السعر</label>
-                                    <input 
-                                        type="number" 
-                                        name="items[{{ $index }}][price]" 
-                                        value="{{ $item->price }}"
-                                        step="0.01"
-                                        class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-yellow-500"
-                                        required
-                                    >
-                                </div>
-
-                                <!-- Discount % -->
-                                <div>
-                                    <label class="text-xs font-semibold text-gray-600 mb-1 block">خصم %</label>
-                                    <input 
-                                        type="number" 
-                                        name="items[{{ $index }}][discount]" 
-                                        value="{{ ($item->discount / ($item->quantity * $item->price)) * 100 }}"
-                                        step="0.01"
-                                        min="0"
-                                        max="100"
-                                        class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-yellow-500"
-                                    >
-                                </div>
-
-                                <!-- Tax % -->
-                                <div>
-                                    <label class="text-xs font-semibold text-gray-600 mb-1 block">ضريبة %</label>
-                                    <input 
-                                        type="number" 
-                                        name="items[{{ $index }}][tax_rate]" 
-                                        value="{{ ($item->tax / (($item->quantity * $item->price) - $item->discount)) * 100 }}"
-                                        step="0.01"
-                                        min="0"
-                                        max="100"
-                                        class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-yellow-500"
-                                    >
-                                </div>
+                        <div class="tf-row-item">
+                            <div>
+                                <label class="tf-label">المنتج</label>
+                                <select name="items[{{ $index }}][product_id]" class="tf-select" required>
+                                    @foreach($products as $product)
+                                        <option value="{{ $product->id }}" @selected($product->id == $item->product_id)>
+                                            {{ $product->name }}
+                                        </option>
+                                    @endforeach
+                                </select>
                             </div>
+                            <div>
+                                <label class="tf-label">الوحدة</label>
+                                <select name="items[{{ $index }}][selling_unit_id]" class="tf-select">
+                                    <option value="">-- اختر الوحدة --</option>
+                                    @php
+                                        $product = $products->firstWhere('id', $item->product_id);
+                                        $sellingUnits = $product ? $product->activeSellingUnits : collect();
+                                    @endphp
+                                    @forelse($sellingUnits as $unit)
+                                        <option value="{{ $unit->id }}" @selected($unit->id == $item->selling_unit_id)>
+                                            {{ $unit->unit_label }} ({{ $unit->conversion_factor }}x)
+                                        </option>
+                                    @empty
+                                        <option value="">لا توجد وحدات</option>
+                                    @endforelse
+                                </select>
+                            </div>
+                            <div>
+                                <label class="tf-label">الكمية</label>
+                                <input type="number" name="items[{{ $index }}][quantity]" value="{{ $item->quantity }}" step="0.001" class="tf-input" required>
+                                <input type="hidden" name="items[{{ $index }}][conversion_factor]" value="{{ $item->conversion_factor ?? 1 }}">
+                                <input type="hidden" name="items[{{ $index }}][unit_code]" value="{{ $item->unit_code ?? 'piece' }}">
+                            </div>
+                            <div>
+                                <label class="tf-label">السعر</label>
+                                <input type="number" name="items[{{ $index }}][price]" value="{{ $item->unit_price ?? $item->price ?? 0 }}" step="0.01" class="tf-input" required>
+                            </div>
+                             <div>
+                                  <label class="tf-label">خصم %</label>
+                                  <input type="number" name="items[{{ $index }}][discount]" value="{{ $item->discount_value ?? 0 }}" step="0.01" min="0" max="100" class="tf-input">
+                              </div>
+                             <div>
+                                  <label class="tf-label">ضريبة %</label>
+                                  <input type="number" name="items[{{ $index }}][tax_rate]" value="{{ $item->tax_rate ?? 0 }}" step="0.01" min="0" max="100" class="tf-input">
+                             </div>
                         </div>
                         @endforeach
                     </div>
                 </div>
+            </div>
 
-                <!-- Payment Section -->
-                <div class="bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg p-5 border-2 border-green-200">
-                    <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center space-x-2 space-x-reverse">
-                        <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/>
-                        </svg>
-                        <span>معلومات الدفع</span>
-                    </h3>
-
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <!-- Total Amount (Read Only) -->
-                        <div>
-                            <label class="text-sm font-semibold text-gray-700 mb-2 block">إجمالي الفاتورة</label>
-                            <div class="bg-white border-2 border-gray-300 rounded-lg px-4 py-3 text-gray-600 font-bold">
-                                {{ number_format($invoice->calculated_details['net_total'] ?? 0, 2) }} جنيه
-                            </div>
-                        </div>
-
-                        <!-- Paid Amount -->
-                        <div>
-                            <label for="paid" class="text-sm font-semibold text-gray-700 mb-2 block">المبلغ المدفوع</label>
-                            <input 
-                                type="number" 
-                                name="paid" 
-                                id="paid"
-                                value="{{ $invoice->paid ?? 0 }}"
-                                step="0.01"
-                                min="0"
-                                max="{{ $invoice->calculated_details['net_total'] ?? 0 }}"
-                                class="w-full border-2 border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 font-semibold"
-                                placeholder="0.00"
-                            >
-                            @error('paid')
-                                <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
-                            @enderror
-                        </div>
-
-                        <!-- Remaining Amount (Auto Calculate) -->
-                        <div>
-                            <label class="text-sm font-semibold text-gray-700 mb-2 block">المتبقي</label>
-                            <div id="remaining-amount" class="bg-yellow-100 border-2 border-yellow-300 rounded-lg px-4 py-3 text-yellow-800 font-bold">
-                                {{ number_format($invoice->calculated_details['remaining'] ?? 0, 2) }} جنيه
-                            </div>
+            <div class="tf-grid-2" style="margin-bottom: 20px;">
+                <div class="tf-total-box">
+                    <h4 style="font-size: 14px; font-weight: 800; color: var(--tf-text-h); margin-bottom: 16px;">
+                        <i class="fas fa-money-bill-wave" style="color: var(--tf-green);"></i> معلومات الدفع
+                    </h4>
+                    <div class="tf-total-row">
+                        <span class="tf-total-label">إجمالي الفاتورة:</span>
+                        <span class="tf-total-value">{{ number_format($invoice->calculated_details['net_total'] ?? 0, 2) }} ج.م</span>
+                    </div>
+                    <div style="margin-top: 12px;">
+                        <label class="tf-label">المبلغ المدفوع</label>
+                        <input type="number" name="paid" id="paid" value="{{ $invoice->paid ?? 0 }}" step="0.01" min="0" max="{{ $invoice->calculated_details['net_total'] ?? 0 }}" class="tf-input" style="font-weight: 700;">
+                    </div>
+                    <div style="margin-top: 12px;">
+                        <label class="tf-label">المتبقي</label>
+                        <div id="remaining-amount" style="font-size: 24px; font-weight: 900; padding: 12px; border-radius: 14px; background: var(--tf-amber-soft); color: var(--tf-amber);">
+                            {{ number_format($invoice->calculated_details['remaining'] ?? 0, 2) }} ج.م
                         </div>
                     </div>
-
-                    <!-- Payment Status Display -->
-                    <div class="mt-4 p-4 bg-white rounded-lg border border-gray-200">
-                        <div class="flex items-center justify-between">
-                            <span class="text-sm font-semibold text-gray-700">حالة الدفع الحالية:</span>
+                    <div class="tf-alert tf-alert-warning" style="margin-top: 16px;">
+                        <span class="tf-badge" id="payment-status-badge">
                             @php
-                                $statusConfig = [
-                                    'paid' => ['text' => 'مدفوعة بالكامل', 'class' => 'bg-green-100 text-green-800 border-green-300'],
-                                    'partial' => ['text' => 'مدفوعة جزئياً', 'class' => 'bg-yellow-100 text-yellow-800 border-yellow-300'],
-                                    'unpaid' => ['text' => 'غير مدفوعة', 'class' => 'bg-red-100 text-red-800 border-red-300'],
-                                ];
-                                $status = $statusConfig[$invoice->payment_status] ?? ['text' => 'غير محدد', 'class' => 'bg-gray-100 text-gray-800 border-gray-300'];
+                                if ($invoice->payment_status == 'paid') echo 'مدفوعة بالكامل';
+                                elseif ($invoice->payment_status == 'partial') echo 'مدفوعة جزئياً';
+                                else echo 'غير مدفوعة';
                             @endphp
-                            <span id="payment-status-badge" class="inline-flex items-center px-4 py-2 rounded-full text-sm font-bold border-2 {{ $status['class'] }}">
-                                {{ $status['text'] }}
-                            </span>
+                        </span>
+                    </div>
+                </div>
+
+                <div>
+                    <div class="tf-total-box" style="margin-bottom: 16px;">
+                        <h4 style="font-size: 14px; font-weight: 800; color: var(--tf-text-h); margin-bottom: 16px;">
+                            <i class="fas fa-percent" style="color: var(--tf-amber);"></i> إضافات
+                        </h4>
+                        <div style="margin-bottom: 12px;">
+                            <label class="tf-label">خصم عام</label>
+                            <input type="number" name="discount_value" value="{{ $invoice->discount_value ?? 0 }}" step="0.01" min="0" class="tf-input">
+                        </div>
+                        <div style="margin-bottom: 12px;">
+                            <label class="tf-label">ضريبة عامة</label>
+                            <input type="number" name="tax_amount" value="{{ $invoice->tax_amount ?? 0 }}" step="0.01" min="0" class="tf-input">
+                        </div>
+                        <div style="margin-bottom: 12px;">
+                            <label class="tf-label">تكلفة الشحن</label>
+                            <input type="number" name="shipping_cost" value="{{ $invoice->shipping_cost ?? 0 }}" step="0.01" min="0" class="tf-input">
+                        </div>
+                        <div>
+                            <label class="tf-label">مصاريف أخرى</label>
+                            <input type="number" name="other_charges" value="{{ $invoice->other_charges ?? 0 }}" step="0.01" min="0" class="tf-input">
                         </div>
                     </div>
                 </div>
+            </div>
 
-                <!-- Additional Charges -->
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div style="margin-bottom: 20px;">
+                <label class="tf-label"><i class="fas fa-sticky-note" style="color: var(--tf-violet);"></i> ملاحظات</label>
+                <textarea name="notes" rows="3" class="tf-input" placeholder="أضف أي ملاحظات هنا...">{{ $invoice->notes }}</textarea>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 20px; border-top: 1px solid var(--tf-border-soft);">
+                <a href="{{ route('invoices.sales.index') }}" class="tf-btn tf-btn-secondary">
+                    <i class="fas fa-arrow-right"></i> إلغاء
+                </a>
+                <button type="submit" class="tf-btn tf-btn-primary">
+                    <i class="fas fa-save"></i> حفظ التعديلات
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <div class="tf-card tf-section">
+        <div class="tf-card-body">
+            <div class="tf-alert tf-alert-info">
+                <div style="display: flex; align-items: flex-start; gap: 12px;">
+                    <i class="fas fa-info-circle" style="color: var(--tf-blue); font-size: 20px; margin-top: 2px;"></i>
                     <div>
-                        <label for="discount_value" class="text-sm font-semibold text-gray-700 mb-2 block">خصم عام</label>
-                        <input 
-                            type="number" 
-                            name="discount_value" 
-                            id="discount_value"
-                            value="{{ $invoice->discount_value ?? 0 }}"
-                            step="0.01"
-                            min="0"
-                            class="w-full border-2 border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500"
-                            placeholder="0.00"
-                        >
+                        <h4 style="font-weight: 800; color: var(--tf-text-h); margin-bottom: 8px;">تعليمات التعديل</h4>
+                        <ul style="font-size: 13px; color: var(--tf-text-m); line-height: 1.8; padding-right: 16px;">
+                            <li>يمكنك تعديل المبلغ المدفوع لتحديث حالة الدفع تلقائياً</li>
+                            <li>إذا كان المبلغ المدفوع = الإجمالي، ستصبح الفاتورة "مدفوعة بالكامل"</li>
+                            <li>إذا كان المبلغ المدفوع أقل من الإجمالي، ستصبح "مدفوعة جزئياً"</li>
+                            <li>إذا كان المبلغ المدفوع = 0، ستصبح "غير مدفوعة"</li>
+                        </ul>
                     </div>
-
-                    <div>
-                        <label for="tax_amount" class="text-sm font-semibold text-gray-700 mb-2 block">ضريبة عامة</label>
-                        <input 
-                            type="number" 
-                            name="tax_amount" 
-                            id="tax_amount"
-                            value="{{ $invoice->tax_amount ?? 0 }}"
-                            step="0.01"
-                            min="0"
-                            class="w-full border-2 border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500"
-                            placeholder="0.00"
-                        >
-                    </div>
-
-                    <div>
-                        <label for="shipping_cost" class="text-sm font-semibold text-gray-700 mb-2 block">تكلفة الشحن</label>
-                        <input 
-                            type="number" 
-                            name="shipping_cost" 
-                            id="shipping_cost"
-                            value="{{ $invoice->shipping_cost ?? 0 }}"
-                            step="0.01"
-                            min="0"
-                            class="w-full border-2 border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500"
-                            placeholder="0.00"
-                        >
-                    </div>
-
-                    <div>
-                        <label for="other_charges" class="text-sm font-semibold text-gray-700 mb-2 block">مصاريف أخرى</label>
-                        <input 
-                            type="number" 
-                            name="other_charges" 
-                            id="other_charges"
-                            value="{{ $invoice->other_charges ?? 0 }}"
-                            step="0.01"
-                            min="0"
-                            class="w-full border-2 border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500"
-                            placeholder="0.00"
-                        >
-                    </div>
-                </div>
-
-                <!-- Notes -->
-                <div>
-                    <label for="notes" class="text-sm font-semibold text-gray-700 mb-2 block">ملاحظات</label>
-                    <textarea 
-                        name="notes" 
-                        id="notes"
-                        rows="3"
-                        class="w-full border-2 border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 transition-all duration-200"
-                        placeholder="أضف أي ملاحظات هنا..."
-                    >{{ $invoice->notes }}</textarea>
-                </div>
-
-                <!-- Action Buttons -->
-                <div class="flex items-center justify-between pt-4 border-t-2 border-gray-200">
-                    <a href="{{ route('invoices.sales.index') }}" 
-                       class="flex items-center space-x-2 space-x-reverse px-6 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-all duration-200 font-semibold shadow-sm hover:shadow">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
-                        </svg>
-                        <span>إلغاء</span>
-                    </a>
-
-                    <button 
-                        type="submit" 
-                        class="flex items-center space-x-2 space-x-reverse px-8 py-3 bg-gradient-to-r from-yellow-500 to-yellow-600 text-white rounded-lg hover:from-yellow-600 hover:to-yellow-700 transition-all duration-200 font-bold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
-                    >
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                        </svg>
-                        <span>حفظ التعديلات</span>
-                    </button>
-                </div>
-            </form>
-        </div>
-
-        <!-- Help Section -->
-        <div class="mt-6 bg-blue-50 border-r-4 border-blue-400 p-4 rounded-lg">
-            <div class="flex items-start space-x-3 space-x-reverse">
-                <svg class="w-6 h-6 text-blue-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                </svg>
-                <div>
-                    <h4 class="text-sm font-semibold text-blue-800 mb-1">تعليمات التعديل</h4>
-                    <ul class="text-sm text-blue-700 space-y-1 list-disc list-inside">
-                        <li>يمكنك تعديل المبلغ المدفوع لتحديث حالة الدفع تلقائياً</li>
-                        <li>إذا كان المبلغ المدفوع = الإجمالي، ستصبح الفاتورة "مدفوعة بالكامل"</li>
-                        <li>إذا كان المبلغ المدفوع أقل من الإجمالي، ستصبح "مدفوعة جزئياً"</li>
-                        <li>إذا كان المبلغ المدفوع = 0، ستصبح "غير مدفوعة"</li>
-                    </ul>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
+@push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const paidInput = document.getElementById('paid');
     const remainingDisplay = document.getElementById('remaining-amount');
     const statusBadge = document.getElementById('payment-status-badge');
-    const totalAmount = {{ $invoice->calculated_details['net_total'] ?? 0 }};
+    const totalAmount = {{ ($invoice->calculated_details['net_total'] ?? 0) }};
 
-    // Update remaining amount when paid amount changes
     paidInput.addEventListener('input', function() {
         const paid = parseFloat(this.value) || 0;
         const remaining = totalAmount - paid;
         
-        remainingDisplay.textContent = remaining.toFixed(2) + ' جنيه';
+        remainingDisplay.textContent = remaining.toFixed(2) + ' ج.م';
         
-        // Update status badge
         let statusText = '';
         let statusClass = '';
         
         if (remaining <= 0) {
             statusText = 'مدفوعة بالكامل';
-            statusClass = 'bg-green-100 text-green-800 border-green-300';
+            statusClass = 'tf-badge green';
+            remainingDisplay.style.background = 'var(--tf-green-soft)';
+            remainingDisplay.style.color = 'var(--tf-green)';
         } else if (paid > 0) {
             statusText = 'مدفوعة جزئياً';
-            statusClass = 'bg-yellow-100 text-yellow-800 border-yellow-300';
+            statusClass = 'tf-badge amber';
+            remainingDisplay.style.background = 'var(--tf-amber-soft)';
+            remainingDisplay.style.color = 'var(--tf-amber)';
         } else {
             statusText = 'غير مدفوعة';
-            statusClass = 'bg-red-100 text-red-800 border-red-300';
+            statusClass = 'tf-badge red';
+            remainingDisplay.style.background = 'var(--tf-red-soft)';
+            remainingDisplay.style.color = 'var(--tf-red)';
         }
         
         statusBadge.textContent = statusText;
-        statusBadge.className = 'inline-flex items-center px-4 py-2 rounded-full text-sm font-bold border-2 ' + statusClass;
+        statusBadge.className = statusClass;
     });
 });
 </script>
+@endpush
 @endsection

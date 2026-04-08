@@ -136,7 +136,7 @@ public function profitLossReport($startDate, $endDate)
                     DB::raw('SUM(sales_invoice_items.quantity * products.purchase_price) as total_cost'),
                     DB::raw('SUM(sales_invoice_items.total - (sales_invoice_items.quantity * products.purchase_price)) as total_profit'),
                     DB::raw('COUNT(DISTINCT sales_invoice_items.sales_invoice_id) as number_of_orders'),
-                    DB::raw('AVG(sales_invoice_items.price) as average_price')
+                    DB::raw('AVG(sales_invoice_items.unit_price) as average_price')
                 )
                 ->groupBy('products.id', 'products.name', 'products.code', 'products.barcode');
 
@@ -192,6 +192,8 @@ public function profitLossReport($startDate, $endDate)
                 DB::raw('DATE(invoice_date) as date'),
                 DB::raw('COUNT(*) as total_invoices'),
                 DB::raw('SUM(total) as total_sales'),
+                DB::raw('SUM(paid) as total_paid'),
+                DB::raw('SUM(total - paid) as total_remaining'),
                 DB::raw('AVG(total) as average_invoice')
             )
             ->whereBetween('invoice_date', [$startDate, $endDate])

@@ -380,7 +380,13 @@ class InvoiceService
             
             // ==================== 1️⃣ جلب البيانات مرة واحدة ====================
             $productIds = array_column($data['items'], 'product_id');
-            $unitIds = array_column($data['items'], 'selling_unit_id');
+            // بعض العناصر قد لا تحتوي selling_unit_id (أو تكون قيمة فارغة)
+            $unitIds = [];
+            foreach ($data['items'] as $it) {
+                if (!empty($it['selling_unit_id'])) {
+                    $unitIds[] = $it['selling_unit_id'];
+                }
+            }
             
             // 🔒 جلب المنتجات مع المخزون بقفل
             $products = Product::with(['warehouses' => function($query) use ($data) {
@@ -392,11 +398,14 @@ class InvoiceService
                 ->get()
                 ->keyBy('id');
             
-            // جلب وحدات البيع
-            $sellingUnits = ProductSellingUnit::whereIn('id', $unitIds)
-                ->where('is_active', true)
-                ->get()
-                ->keyBy('id');
+            // جلب وحدات البيع (إذا وجدت)
+            $sellingUnits = collect();
+            if (!empty($unitIds)) {
+                $sellingUnits = ProductSellingUnit::whereIn('id', $unitIds)
+                    ->where('is_active', true)
+                    ->get()
+                    ->keyBy('id');
+            }
             
             // ==================== 2️⃣ التحقق من البيانات ====================
             $this->validateSalesInvoiceData($data, $products, $sellingUnits);
@@ -462,10 +471,25 @@ class InvoiceService
             
             foreach ($data['items'] as $item) {
                 $product = $products[$item['product_id']];
-                $sellingUnit = $sellingUnits[$item['selling_unit_id']];
                 
-                // حساب الكمية بالوحدة الأساسية
-                $baseQuantity = round($item['quantity'] * $sellingUnit->conversion_factor, 3);
+                // معالجة الوحدة والكمية - نفس المنطق لكل المنتجات
+                $sellingUnitIdInput = $item['selling_unit_id'] ?? null;
+                $sellingUnit = (!empty($sellingUnitIdInput) && isset($sellingUnits[$sellingUnitIdInput]))
+                    ? $sellingUnits[$sellingUnitIdInput]
+                    : null;
+                $quantity = round($item['quantity'] ?? 0, 6);
+                $factor = $sellingUnit ? $sellingUnit->conversion_factor : 1;
+                $factor = max($factor, 0.000001);
+                $baseQuantity = round($quantity * $factor, 6);
+                $sellingUnitId = $item['selling_unit_id'] ?? null;
+                $unitCode = $sellingUnit?->unit_code ?? ($product->base_unit ?? 'piece');
+                $conversionFactor = $factor;
+                
+                // السعر: من وحدة البيع أو من المنتج
+                $price = $sellingUnit ? $sellingUnit->unit_selling_price : ($product->base_selling_price ?? 0);
+                if (isset($item['price']) && $item['price'] > 0) {
+                    $price = $item['price'];
+                }
                 
                 // التحقق من المخزون
                 $warehouse = $product->warehouses->first();
@@ -487,20 +511,16 @@ class InvoiceService
                 // تجهيز بيانات الصنف للإدراج الجماعي
                 $invoiceItems[] = [
                     'sales_invoice_id' => $invoice->id,
-                    'invoice_id'       => $invoice->id,
                     'product_id'       => $item['product_id'],
-                    'selling_unit_id'  => $item['selling_unit_id'],
-                    'quantity'         => round($item['quantity'], 3),
+                    'selling_unit_id'  => $sellingUnitId,
+                    'quantity'         => $quantity,
                     'base_quantity'    => $baseQuantity,
-                    'quantity_in_base_unit' => $baseQuantity,
-                    'unit_code'        => $sellingUnit->unit_code ?? 'piece',
-                    'conversion_factor'=> $sellingUnit->conversion_factor,
-                    'price'            => round($item['price'], 2),
-                    'unit_price'       => round($item['price'], 2),
-                    'discount'         => $itemCalc['discount'],
-                    'discount_percent' => $item['discount'] ?? 0,
+                    'unit_code'        => $unitCode,
+                    'conversion_factor'=> $conversionFactor,
+                    'unit_price'       => round($price, 2),
+                    'discount_type'    => 'percentage',
+                    'discount_value'   => $item['discount'] ?? 0,
                     'discount_amount'  => $itemCalc['discount'],
-                    'tax'              => $itemCalc['tax'],
                     'tax_rate'         => $item['tax_rate'] ?? 0,
                     'tax_amount'       => $itemCalc['tax'],
                     'subtotal'         => $itemCalc['subtotal'],
@@ -525,15 +545,6 @@ class InvoiceService
                     ->where('product_id', $update['product_id'])
                     ->where('warehouse_id', $data['warehouse_id'])
                     ->decrement('quantity', $update['quantity']);
-                
-                // تحديث الكمية المتاحة
-                DB::table('product_warehouse')
-                    ->where('product_id', $update['product_id'])
-                    ->where('warehouse_id', $data['warehouse_id'])
-                    ->update([
-                        'available_quantity' => DB::raw('quantity - COALESCE(reserved_quantity, 0)'),
-                        'updated_at' => now()
-                    ]);
             }
             
             // ==================== 1️⃣1️⃣ تحديث رصيد العميل ====================
@@ -573,24 +584,22 @@ class InvoiceService
                 throw new RuntimeException("المنتج غير موجود: ID {$item['product_id']}");
             }
             
-            // التحقق من وجود الوحدة
-            if (!isset($sellingUnits[$item['selling_unit_id']])) {
-                throw new RuntimeException("وحدة البيع غير موجودة أو غير نشطة في الصنف رقم " . ($index + 1));
-            }
-            
-            // التحقق من أن الوحدة تنتمي للمنتج
-            $unit = $sellingUnits[$item['selling_unit_id']];
-            if ($unit->product_id != $item['product_id']) {
-                throw new RuntimeException("وحدة البيع لا تنتمي للمنتج المحدد في الصنف رقم " . ($index + 1));
+            // إذا كانت هناك وحدة بيع، تحقق من ملكيتها للمنتج
+            if (!empty($item['selling_unit_id']) && isset($sellingUnits[$item['selling_unit_id']])) {
+                $unit = $sellingUnits[$item['selling_unit_id']];
+                if ($unit->product_id != $item['product_id']) {
+                    throw new RuntimeException("وحدة البيع لا تنتمي للمنتج المحدد في الصنف رقم " . ($index + 1));
+                }
             }
             
             // التحقق من الكمية
-            if ($item['quantity'] <= 0) {
+            $quantity = $item['quantity'] ?? 0;
+            if ($quantity <= 0) {
                 throw new RuntimeException("الكمية يجب أن تكون أكبر من صفر في الصنف رقم " . ($index + 1));
             }
             
             // التحقق من السعر
-            if ($item['price'] < 0) {
+            if (($item['price'] ?? 0) < 0) {
                 throw new RuntimeException("السعر لا يمكن أن يكون سالباً في الصنف رقم " . ($index + 1));
             }
         }
@@ -642,14 +651,14 @@ class InvoiceService
      */
     private function calculateItemTotals(array $item): array
     {
-        $quantity = $item['quantity'];
-        $price = $item['price'];
+        $quantity = $item['quantity'] ?? 0;
+        $price = $item['price'] ?? 0;
         $discountPercent = $item['discount'] ?? 0;
         $taxRate = $item['tax_rate'] ?? 0;
         
-        $subtotal = $quantity * $price;
+        $subtotal = max(0.001, $quantity * $price);
         $discount = $subtotal * ($discountPercent / 100);
-        $afterDiscount = $subtotal - $discount;
+        $afterDiscount = max(0.001, $subtotal - $discount);
         $tax = $afterDiscount * ($taxRate / 100);
         $total = $afterDiscount + $tax;
         
@@ -714,14 +723,6 @@ class InvoiceService
                     ->where('product_id', $update['product_id'])
                     ->where('warehouse_id', $invoice->warehouse_id)
                     ->increment('quantity', $update['quantity']);
-                
-                DB::table('product_warehouse')
-                    ->where('product_id', $update['product_id'])
-                    ->where('warehouse_id', $invoice->warehouse_id)
-                    ->update([
-                        'available_quantity' => DB::raw('quantity - COALESCE(reserved_quantity, 0)'),
-                        'updated_at' => now()
-                    ]);
             }
             
             // ==================== معالجة رصيد العميل ====================
@@ -1053,12 +1054,10 @@ class InvoiceService
                     'base_quantity'    => $baseQuantity,
                     'unit_code'        => $purchaseUnit->unit_code ?? 'piece',
                     'conversion_factor'=> $purchaseUnit->conversion_factor,
-                    'cost'             => round($item['cost'], 2),
                     'unit_cost'        => round($item['cost'], 2),
-                    'discount'         => $itemCalc['discount'],
-                    'discount_percent' => $item['discount'] ?? 0,
+                    'discount_type'    => 'percentage',
+                    'discount_value'   => $item['discount'] ?? 0,
                     'discount_amount'  => $itemCalc['discount'],
-                    'tax'              => $itemCalc['tax'],
                     'tax_rate'         => $item['tax_rate'] ?? 0,
                     'tax_amount'       => $itemCalc['tax'],
                     'subtotal'         => $itemCalc['subtotal'],
@@ -1093,20 +1092,11 @@ class InvoiceService
                         'product_id' => $update['product_id'],
                         'warehouse_id' => $data['warehouse_id'],
                         'quantity' => $update['quantity'],
-                        'available_quantity' => $update['quantity'],
                         'reserved_quantity' => 0,
                         'created_at' => now(),
                         'updated_at' => now(),
                     ]);
                 }
-                
-                DB::table('product_warehouse')
-                    ->where('product_id', $update['product_id'])
-                    ->where('warehouse_id', $data['warehouse_id'])
-                    ->update([
-                        'available_quantity' => DB::raw('quantity - COALESCE(reserved_quantity, 0)'),
-                        'updated_at' => now()
-                    ]);
             }
             
             // تحديث رصيد المورد
@@ -1179,14 +1169,6 @@ class InvoiceService
                     ->where('product_id', $item->product_id)
                     ->where('warehouse_id', $invoice->warehouse_id)
                     ->decrement('quantity', $baseQuantity);
-                
-                DB::table('product_warehouse')
-                    ->where('product_id', $item->product_id)
-                    ->where('warehouse_id', $invoice->warehouse_id)
-                    ->update([
-                        'available_quantity' => DB::raw('quantity - COALESCE(reserved_quantity, 0)'),
-                        'updated_at' => now()
-                    ]);
             }
             
             // تحديث رصيد المورد
@@ -1308,5 +1290,235 @@ class InvoiceService
         } catch (\Exception $e) {
             \Log::warning('Failed to clear cache', ['error' => $e->getMessage()]);
         }
+    }
+
+    /**
+     * ✅ تحديث فاتورة مبيعات
+     */
+    public function updateSalesInvoice(int $invoiceId, array $data): SalesInvoice
+    {
+        return DB::transaction(function () use ($invoiceId, $data) {
+            
+            $invoice = SalesInvoice::with('items')->lockForUpdate()->findOrFail($invoiceId);
+
+            // منع التعديل للفواتير الملغاة
+            if ($invoice->status === 'cancelled') {
+                throw new RuntimeException('لا يمكن تعديل فاتورة ملغاة');
+            }
+
+            // ==================== حفظ قيم قبل التعديل (لرصيد العميل) ====================
+            $oldCustomerId = (int) $invoice->customer_id;
+            $oldRemaining = round(max(0, (float) $invoice->total - (float) ($invoice->paid ?? 0)), 2);
+
+            // إرجاع المخزون القديم أولاً
+            foreach ($invoice->items as $oldItem) {
+                DB::table('product_warehouse')
+                    ->where('product_id', $oldItem->product_id)
+                    ->where('warehouse_id', $invoice->warehouse_id)
+                    ->increment('quantity', $oldItem->base_quantity);
+            }
+
+            // حذف الأصناف القديمة
+            $invoice->items()->delete();
+
+            // ==================== جلب البيانات ====================
+            $productIds = array_column($data['items'], 'product_id');
+            // بعض العناصر قد لا تحتوي selling_unit_id (عند اختيار "-- اختر الوحدة --")
+            $unitIds = [];
+            foreach ($data['items'] as $it) {
+                if (!empty($it['selling_unit_id'])) {
+                    $unitIds[] = $it['selling_unit_id'];
+                }
+            }
+            
+            $products = Product::with(['warehouses' => function($query) use ($data) {
+                    $query->where('warehouse_id', $data['warehouse_id'])
+                          ->select('product_id', 'warehouse_id', 'quantity');
+                }])
+                ->whereIn('id', $productIds)
+                ->lockForUpdate()
+                ->get()
+                ->keyBy('id');
+            
+            $sellingUnits = collect();
+            if (!empty($unitIds)) {
+                $sellingUnits = ProductSellingUnit::whereIn('id', $unitIds)
+                    ->where('is_active', true)
+                    ->get()
+                    ->keyBy('id');
+            }
+
+            // التحقق من البيانات
+            $this->validateSalesInvoiceData($data, $products, $sellingUnits);
+            
+            // حساب الإجماليات
+            $totals = $this->calculateInvoiceTotals($data);
+            
+            $paid = round($data['paid'] ?? 0, 2);
+            $remaining = round($totals['grand_total'] - $paid, 2);
+            
+            if ($remaining < 0) {
+                $paid = $totals['grand_total'];
+                $remaining = 0;
+            }
+            
+            // ==================== تحديث رصيد العميل + التحقق من حد الائتمان ====================
+            // المنطق الصحيح: رصيد العميل يتغير بمقدار (متبقي جديد - متبقي قديم) حتى لو المتبقي الجديد = 0
+            $newCustomerId = (int) $data['customer_id'];
+            $newRemaining = round(max(0, (float) $totals['grand_total'] - (float) $paid), 2);
+
+            // ملاحظة محاسبية: في النظام ده "المديونية" مخزنة كرصيد سالب (balance < 0)
+            // لذلك المتبقي (remaining) يخصم من الرصيد (يجعله أكثر سلبية)، والسداد يزيد الرصيد نحو الصفر.
+            if ($newCustomerId === $oldCustomerId) {
+                $customer = Customer::lockForUpdate()->findOrFail($newCustomerId);
+                $newBalance = round((float) $customer->balance + $oldRemaining - $newRemaining, 2);
+
+                if ($customer->credit_limit > 0 && $newBalance < 0 && abs($newBalance) > (float) $customer->credit_limit) {
+                    throw new RuntimeException(
+                        "تجاوز حد الائتمان المسموح. الحد: {$customer->credit_limit}، الرصيد الجديد: {$newBalance}"
+                    );
+                }
+
+                $customer->update(['balance' => $newBalance]);
+            } else {
+                // لو تم تغيير العميل: نرجع المتبقي القديم للعميل القديم، ونخصم المتبقي الجديد من العميل الجديد
+                $oldCustomer = Customer::lockForUpdate()->findOrFail($oldCustomerId);
+                $oldCustomerNewBalance = round((float) $oldCustomer->balance + $oldRemaining, 2);
+                $oldCustomer->update(['balance' => $oldCustomerNewBalance]);
+
+                $newCustomer = Customer::lockForUpdate()->findOrFail($newCustomerId);
+                $newCustomerNewBalance = round((float) $newCustomer->balance - $newRemaining, 2);
+
+                if ($newCustomer->credit_limit > 0 && $newCustomerNewBalance < 0 && abs($newCustomerNewBalance) > (float) $newCustomer->credit_limit) {
+                    throw new RuntimeException(
+                        "تجاوز حد الائتمان المسموح. الحد: {$newCustomer->credit_limit}، الرصيد الجديد: {$newCustomerNewBalance}"
+                    );
+                }
+
+                $newCustomer->update(['balance' => $newCustomerNewBalance]);
+            }
+
+            // تحديد حالة الدفع
+            $paymentStatus = $this->determinePaymentStatus($paid, $totals['grand_total']);
+
+            // تحديث الفاتورة
+            $invoice->update([
+                'customer_id'     => $data['customer_id'],
+                'warehouse_id'    => $data['warehouse_id'],
+                'invoice_date'    => $data['invoice_date'] ?? $invoice->invoice_date,
+                'due_date'        => $data['due_date'] ?? $invoice->due_date,
+                'subtotal'        => $totals['subtotal'],
+                'discount_value'  => $totals['general_discount'],
+                'discount_amount' => $totals['total_discount'],
+                'tax_rate'        => $data['tax_rate'] ?? 0,
+                'tax_amount'      => $totals['total_tax'],
+                'shipping_cost'   => $totals['shipping_cost'],
+                'other_charges'   => $totals['other_charges'],
+                'total'           => $totals['grand_total'],
+                'paid'            => $paid,
+                'payment_status'  => $paymentStatus,
+                'notes'           => $data['notes'] ?? $invoice->notes,
+                'updated_by'      => auth()->id(),
+            ]);
+
+            // ==================== إضافة الأصناف الجديدة وتحديث المخزون ====================
+            $invoiceItems = [];
+            $stockUpdates = [];
+            
+            foreach ($data['items'] as $item) {
+                $product = $products[$item['product_id']];
+                $sellByWeight = isset($item['sell_by_weight']) && $item['sell_by_weight'] == 1;
+                
+                if ($sellByWeight) {
+                    $baseUnit = $item['base_unit'] ?? 'kg';
+                    $weightInput = $item['weight'] ?? $item['quantity'] ?? 0;
+                    
+                    // تحويل الوزن إلى الوحدة الأساسية بشكل صحيح
+                    switch ($baseUnit) {
+                        case 'ton':
+                            // الوزن المدخل بالطن مباشرة، لا تحتاج تحويل
+                            $quantity = round($weightInput, 6);
+                            break;
+                        case 'quintal':
+                            // الوزن المدخل بالقنطار مباشرة
+                            $quantity = round($weightInput, 6);
+                            break;
+                        case 'gram':
+                            // الوزن المدخل بالجرام، نحول لكيلو
+                            $quantity = round($weightInput / 1000, 6);
+                            break;
+                        case 'kg':
+                        default:
+                            // الوزن المدخل بالكيلو مباشرة
+                            $quantity = round($weightInput, 6);
+                            break;
+                    }
+                    
+                    $baseQuantity = $quantity;
+                    $sellingUnitId = null;
+                    $unitCode = $baseUnit;
+                    $conversionFactor = 1;
+                } else {
+                    $sellingUnitIdInput = $item['selling_unit_id'] ?? null;
+                    $sellingUnit = (!empty($sellingUnitIdInput) && isset($sellingUnits[$sellingUnitIdInput]))
+                        ? $sellingUnits[$sellingUnitIdInput]
+                        : null;
+                    $quantity = round($item['quantity'], 6);
+                    $factor = $sellingUnit ? $sellingUnit->conversion_factor : 1;
+                    // التأكد من ان معامل التحويل صالح
+                    $factor = max($factor, 0.000001);
+                    $baseQuantity = round($quantity * $factor, 6);
+                    $sellingUnitId = $sellingUnit?->id;
+                    $unitCode = $sellingUnit?->unit_code ?? 'piece';
+                    $conversionFactor = $factor;
+                }
+                
+                $itemCalc = $this->calculateItemTotals($item);
+                
+                $invoiceItems[] = [
+                    'sales_invoice_id' => $invoice->id,
+                    'product_id'       => $item['product_id'],
+                    'selling_unit_id'  => $sellingUnitId,
+                    'quantity'         => $quantity,
+                    'base_quantity'    => $baseQuantity,
+                    'unit_code'        => $unitCode,
+                    'conversion_factor'=> $conversionFactor,
+                    'unit_price'       => round($item['price'], 2),
+                    'discount_type'    => 'percentage',
+                    'discount_value'   => $item['discount'] ?? 0,
+                    'discount_amount' => $itemCalc['discount'],
+                    'tax_rate'         => $item['tax_rate'] ?? 0,
+                    'tax_amount'       => $itemCalc['tax'],
+                    'subtotal'         => $itemCalc['subtotal'],
+                    'total'            => $itemCalc['total'],
+                    'created_at'       => now(),
+                    'updated_at'       => now(),
+                ];
+
+                $stockUpdates[] = [
+                    'product_id' => $item['product_id'],
+                    'quantity' => $baseQuantity
+                ];
+            }
+
+            // إدراج الأصناف الجديدة
+            DB::table('sales_invoice_items')->insert($invoiceItems);
+
+            // خصم المخزون الجديد
+            foreach ($stockUpdates as $update) {
+                DB::table('product_warehouse')
+                    ->where('product_id', $update['product_id'])
+                    ->where('warehouse_id', $data['warehouse_id'])
+                    ->decrement('quantity', $update['quantity']);
+            }
+
+            // مسح الـ Cache
+            $this->clearSalesInvoiceCache($invoice->customer_id);
+            
+            // تسجيل النشاط
+            $this->logInvoiceActivity($invoice->id, 'sales', 'updated', []);
+
+            return $invoice->fresh(['items.product', 'items.sellingUnit']);
+        });
     }
 }

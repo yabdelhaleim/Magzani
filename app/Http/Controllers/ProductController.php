@@ -130,7 +130,7 @@ class ProductController extends Controller
         $product->load([
             'sellingUnits' => fn($q) => $q->ordered(),
             'warehouses' => fn($q) => $q->select('warehouses.id', 'warehouses.name'),
-            'priceHistory' => fn($q) => $q->latest()->limit(10),
+            'priceHistory' => fn($q) => $q->orderBy('changed_at', 'desc')->limit(10),
         ]);
 
         // ✅ إحصائيات المخزون

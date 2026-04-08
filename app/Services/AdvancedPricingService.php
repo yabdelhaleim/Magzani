@@ -467,6 +467,12 @@ class AdvancedPricingService
             ])
             ->get();
 
+        // ✅ Set all existing pricing records for these products to not current
+        $productIdsArray = $products->pluck('id')->toArray();
+        DB::table('product_base_pricing')
+            ->whereIn('product_id', $productIdsArray)
+            ->update(['is_current' => false]);
+
         // ✅ Arrays للـ Bulk Operations
         $priceHistoryData = [];
         $pricingUpdates = [];
@@ -517,7 +523,9 @@ class AdvancedPricingService
 
         // ✅ Bulk Insert - Price History
         if (!empty($priceHistoryData)) {
-            DB::table('product_price_history')->insert($priceHistoryData);
+            foreach ($priceHistoryData as $record) {
+                DB::table('product_price_history')->insert($record);
+            }
         }
 
         // ✅ Bulk Update - Existing Pricing
@@ -529,6 +537,7 @@ class AdvancedPricingService
                     'base_selling_price' => $sellingPrice,
                     'profit_type' => $profitType,
                     'profit_value' => $profitValue,
+                    'is_current' => true,
                     'updated_by' => $userId,
                     'updated_at' => $now,
                 ]);
