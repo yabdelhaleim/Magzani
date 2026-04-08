@@ -190,7 +190,7 @@ class PurchaseInvoiceService
                         'warehouse_id' => $invoice->warehouse_id,
                     ],
                     [
-                        'qty' => DB::raw('qty + ' . $item->quantity),
+                        'quantity' => DB::raw('quantity + ' . $item->quantity),
                         'updated_at' => now(),
                     ]
                 );
@@ -207,7 +207,7 @@ class PurchaseInvoiceService
             DB::table('product_warehouse')
                 ->where('product_id', $item->product_id)
                 ->where('warehouse_id', $invoice->warehouse_id)
-                ->decrement('qty', $item->quantity);
+                ->decrement('quantity', $item->quantity);
         }
     }
 
