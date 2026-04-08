@@ -150,6 +150,7 @@ class PurchaseInvoiceService
                 'purchase_invoice_id' => $invoice->id,
                 'product_id' => $item['product_id'],
                 'quantity' => $quantity,
+                'base_quantity' => $quantity,
                 'unit_price' => $cost,
                 'unit_cost' => $cost,
                 'subtotal' => round($quantity * $cost, 2),
