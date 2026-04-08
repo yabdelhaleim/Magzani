@@ -13,21 +13,23 @@ class PurchaseInvoiceItem extends Model
     protected $fillable = [
         'purchase_invoice_id',
         'product_id',
-        'purchase_unit_id', // ✅ إضافة دعم وحدات الشراء
+        'purchase_unit_id',
         'quantity',
-        'base_quantity', // ✅ الكمية بالوحدة الأساسية
+        'base_quantity',
         'unit_code',
         'conversion_factor',
-        'cost',
-        'unit_cost', // للتوافق
-        'discount',
+        'unit_price',
+        'unit_cost',
+        'discount_type',
+        'discount_value',
         'discount_percent',
         'discount_amount',
-        'tax',
         'tax_rate',
         'tax_amount',
         'subtotal',
         'total',
+        'expiry_date',
+        'batch_number',
         'notes',
     ];
 
@@ -35,12 +37,11 @@ class PurchaseInvoiceItem extends Model
         'quantity' => 'decimal:3',
         'base_quantity' => 'decimal:3',
         'conversion_factor' => 'decimal:4',
-        'cost' => 'decimal:2',
+        'unit_price' => 'decimal:2',
         'unit_cost' => 'decimal:2',
-        'discount' => 'decimal:2',
+        'discount_value' => 'decimal:2',
         'discount_percent' => 'decimal:2',
         'discount_amount' => 'decimal:2',
-        'tax' => 'decimal:2',
         'tax_rate' => 'decimal:2',
         'tax_amount' => 'decimal:2',
         'subtotal' => 'decimal:2',
@@ -72,7 +73,7 @@ class PurchaseInvoiceItem extends Model
             return (float) $this->attributes['subtotal'];
         }
         
-        return round($this->quantity * $this->cost, 2);
+        return round($this->quantity * $this->unit_price, 2);
     }
     
     // ==================== Methods ====================
@@ -96,14 +97,14 @@ class PurchaseInvoiceItem extends Model
             if (!$item->base_quantity && $item->purchase_unit_id) {
                 $item->base_quantity = $item->calculateBaseQuantity();
             }
-            
+
             if (!$item->subtotal) {
-                $item->subtotal = round($item->quantity * $item->cost, 2);
+                $item->subtotal = round($item->quantity * $item->unit_price, 2);
             }
-            
+
             if (!isset($item->total)) {
-                $discount = $item->discount ?? 0;
-                $tax = $item->tax ?? 0;
+                $discount = $item->discount_amount ?? 0;
+                $tax = $item->tax_amount ?? 0;
                 $item->total = round($item->subtotal - $discount + $tax, 2);
             }
         });
