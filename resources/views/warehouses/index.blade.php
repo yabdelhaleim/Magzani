@@ -379,28 +379,28 @@
     <div class="stat-card blue">
         <div class="stat-icon"><i class="fas fa-warehouse"></i></div>
         <div class="stat-info">
-            <div class="val">{{ $warehouses->total() }}</div>
+            <div class="val">{{ $totalWarehouses }}</div>
             <div class="lbl">إجمالي المخازن</div>
         </div>
     </div>
     <div class="stat-card green">
         <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
         <div class="stat-info">
-            <div class="val">{{ $warehouses->where('is_active', true)->count() }}</div>
+            <div class="val">{{ $activeWarehouses }}</div>
             <div class="lbl">المخازن النشطة</div>
         </div>
     </div>
     <div class="stat-card amber">
         <div class="stat-icon"><i class="fas fa-boxes"></i></div>
         <div class="stat-info">
-            <div class="val">{{ number_format($warehouses->sum('total_products')) }}</div>
+            <div class="val">{{ number_format($totalProducts) }}</div>
             <div class="lbl">إجمالي الأصناف</div>
         </div>
     </div>
     <div class="stat-card rose">
         <div class="stat-icon"><i class="fas fa-dollar-sign"></i></div>
         <div class="stat-info">
-            <div class="val">{{ number_format($warehouses->sum('total_value')) }}</div>
+            <div class="val">{{ number_format($totalValue) }}</div>
             <div class="lbl">إجمالي القيمة</div>
         </div>
     </div>
@@ -446,7 +446,7 @@
                     <p class="s-label">
                         <i class="fas fa-cube"></i> إجمالي الأصناف
                     </p>
-                    <p class="s-val">{{ number_format($warehouse->total_products ?? 0) }}</p>
+                    <p class="s-val">{{ number_format($warehouse->products_count ?? 0) }}</p>
                 </div>
                 <div class="wh-stat value">
                     <p class="s-label">

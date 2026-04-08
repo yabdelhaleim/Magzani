@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Warehouse;
 use App\Models\Product;
+use App\Models\ProductWarehouse;
 use App\Services\WarehouseService;
 use App\Services\InventoryMovementService;
 use App\Http\Requests\StoreWarehouseRequest;  // ✅ للـ Create
@@ -24,7 +25,13 @@ class WarehouseController extends Controller
     public function index()
     {
         $warehouses = Warehouse::forDashboard()->paginate(20);
-        return view('warehouses.index', compact('warehouses'));
+
+        $totalWarehouses = Warehouse::count();
+        $activeWarehouses = Warehouse::where('is_active', true)->count();
+        $totalProducts = Product::count();
+        $totalValue = ProductWarehouse::selectRaw('COALESCE(SUM(quantity * average_cost), 0) as total')->value('total') ?? 0;
+
+        return view('warehouses.index', compact('warehouses', 'totalWarehouses', 'activeWarehouses', 'totalProducts', 'totalValue'));
     }
 
     /**
