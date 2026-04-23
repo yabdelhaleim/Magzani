@@ -911,6 +911,19 @@
             </div>
         </div>
 
+        <div x-data="{ open: {{ request()->routeIs('manufacturing.*') ? 'true' : 'false' }} }">
+            <button class="nav-item {{ request()->routeIs('manufacturing.*') ? 'active' : '' }}"
+                    @click="open = !open" data-tip="التصنيع">
+                <div class="icon"><i class="fas fa-industry"></i></div>
+                <span class="label">التصنيع</span>
+                <i class="fas fa-chevron-down chevron" :class="open ? 'open' : ''"></i>
+            </button>
+            <div class="sub-menu" :class="open ? 'open' : ''">
+                <a href="{{ route('manufacturing.index') }}"  class="sub-item {{ request()->routeIs('manufacturing.index')  ? 'active' : '' }}"><span class="dot"></span>حسابات التكلفة</a>
+                <a href="{{ route('manufacturing.create') }}" class="sub-item {{ request()->routeIs('manufacturing.create') ? 'active' : '' }}"><span class="dot"></span>حساب جديد</a>
+            </div>
+        </div>
+
         <div class="nav-divider"></div>
         <div class="nav-section-label">المعاملات التجارية</div>
 

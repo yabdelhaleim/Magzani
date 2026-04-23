@@ -92,6 +92,15 @@ class RoleMiddleware
             'stock-counts.items.count',
             'stock-counts.warehouse-products',
             'stock-counts.print',
+            'manufacturing.index',
+            'manufacturing.create',
+            'manufacturing.store',
+            'manufacturing.calculate',
+            'manufacturing.show',
+            'manufacturing.edit',
+            'manufacturing.update',
+            'manufacturing.destroy',
+            'manufacturing.confirm',
         ];
 
         // Check if current route is admin-only

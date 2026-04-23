@@ -54,6 +54,7 @@ class Product extends Model
         'category',
         'notes',
         'status',
+        'product_type',
     ];
 
     protected $casts = [
@@ -178,6 +179,11 @@ class Product extends Model
     public function baseunit(): HasOne
     {
         return $this->hasOne(ProductBaseUnit::class, 'product_id');
+    }
+
+    public function manufacturingCost(): HasOne
+    {
+        return $this->hasOne(ManufacturingCost::class);
     }
 
     /* ===========================
@@ -364,6 +370,11 @@ class Product extends Model
     public function scopeByCategory(Builder $query, string $category): Builder
     {
         return $query->where('category', $category);
+    }
+
+    public function scopeManufactured(Builder $query): Builder
+    {
+        return $query->where('product_type', 'manufactured');
     }
 
     /**

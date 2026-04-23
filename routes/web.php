@@ -25,6 +25,7 @@ use App\Http\Controllers\ReportController;
 use App\Http\Controllers\StockCountController;
 use App\Http\Controllers\InventoryMovementController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\ManufacturingCostController;
 
 
 /*
@@ -140,6 +141,23 @@ Route::prefix('products')->name('products.')->middleware('auth')->group(function
     Route::get('/{product}/edit', [ProductController::class, 'edit'])->name('edit');
     Route::put('/{product}', [ProductController::class, 'update'])->name('update');
     Route::delete('/{product}', [ProductController::class, 'destroy'])->name('destroy');
+});
+
+/*
+|--------------------------------------------------------------------------
+| Manufacturing Cost Calculator (Admin Only)
+|--------------------------------------------------------------------------
+*/
+Route::prefix('manufacturing')->name('manufacturing.')->middleware('auth', 'role')->group(function () {
+    Route::get('/', [ManufacturingCostController::class, 'index'])->name('index');
+    Route::get('/create', [ManufacturingCostController::class, 'create'])->name('create');
+    Route::post('/', [ManufacturingCostController::class, 'store'])->name('store');
+    Route::post('/calculate', [ManufacturingCostController::class, 'calculateAjax'])->name('calculate');
+    Route::get('/{manufacturingCost}', [ManufacturingCostController::class, 'show'])->name('show');
+    Route::get('/{manufacturingCost}/edit', [ManufacturingCostController::class, 'edit'])->name('edit');
+    Route::put('/{manufacturingCost}', [ManufacturingCostController::class, 'update'])->name('update');
+    Route::delete('/{manufacturingCost}', [ManufacturingCostController::class, 'destroy'])->name('destroy');
+    Route::post('/{manufacturingCost}/confirm', [ManufacturingCostController::class, 'confirm'])->name('confirm');
 });
 
 /*
