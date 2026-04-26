@@ -151,8 +151,9 @@ class CustomerController extends Controller
         
         // Replace the relation with filtered results
         $customer->setRelation('salesInvoices', $filteredInvoices);
+        $company = \App\Models\Company::first();
 
-        return view('customers.statement', compact('customer'));
+        return view('customers.statement', compact('customer', 'company'));
     }
 
     /**

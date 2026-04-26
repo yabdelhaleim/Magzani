@@ -132,8 +132,9 @@ class SupplierController extends Controller
     {
         $statement = $this->supplierService->getStatement($supplier, $request->all());
         $summary = $this->supplierService->getFinancialSummary($supplier);
+        $company = \App\Models\Company::first();
 
-        return view('suppliers.statement', compact('supplier', 'statement', 'summary'));
+        return view('suppliers.statement', compact('supplier', 'statement', 'summary', 'company'));
     }
 
     /**
