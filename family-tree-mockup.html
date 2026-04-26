@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Family Tree Visualization</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Naskh+Arabic:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --male-primary: #3b82f6;
+            --male-light: #dbeafe;
+            --male-dark: #1d4ed8;
+            --female-primary: #ec4899;
+            --female-light: #fce7f3;
+            --female-dark: #be185d;
+            --line-color: #94a3b8;
+            --bg-gradient-start: #f8fafc;
+            --bg-gradient-end: #e2e8f0;
+            --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+            --card-shadow-hover: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Naskh Arabic', serif;
+            background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+            overflow-x: auto;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.5rem;
+            color: #1e293b;
+            margin-bottom: 10px;
+            letter-spacing: -0.02em;
+        }
+
+        .header p {
+            color: #64748b;
+            font-size: 1.1rem;
+        }
+
+        /* Tree using CSS Grid for precise alignment */
+        .family-tree {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            grid-template-rows: auto auto auto;
+            gap: 0;
+            position: relative;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        /* SVG Layer for connection lines */
+        .connections-svg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .connections-svg line {
+            stroke: var(--line-color);
+            stroke-width: 2;
+            fill: none;
+        }
+
+        .connections-svg line.marriage {
+            stroke: var(--female-primary);
+            stroke-dasharray: 6, 4;
+        }
+
+        /* Person Card */
+        .person {
+            width: 140px;
+            padding: 20px 16px;
+            border-radius: 16px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            box-shadow: var(--card-shadow);
+            z-index: 2;
+            justify-self: center;
+        }
+
+        .person:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--card-shadow-hover);
+        }
+
+        .person.male {
+            background: linear-gradient(145deg, var(--male-light) 0%, white 100%);
+            border: 2px solid var(--male-primary);
+        }
+
+        .person.female {
+            background: linear-gradient(145deg, var(--female-light) 0%, white 100%);
+            border: 2px solid var(--female-primary);
+        }
+
+        .person-avatar {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            margin: 0 auto 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: white;
+        }
+
+        .male .person-avatar {
+            background: linear-gradient(135deg, var(--male-primary) 0%, var(--male-dark) 100%);
+            box-shadow: 0 4px 14px rgba(59, 130, 246, 0.4);
+        }
+
+        .female .person-avatar {
+            background: linear-gradient(135deg, var(--female-primary) 0%, var(--female-dark) 100%);
+            box-shadow: 0 4px 14px rgba(236, 72, 153, 0.4);
+        }
+
+        .person-name {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 4px;
+            color: #1e293b;
+        }
+
+        .person-role {
+            font-size: 0.75rem;
+            color: #64748b;
+            font-weight: 500;
+        }
+
+        /* Grid positioning */
+        .gen1-left {
+            grid-column: 2;
+            grid-row: 1;
+            justify-self: end;
+            margin-left: 20px;
+        }
+
+        .gen1-right {
+            grid-column: 2;
+            grid-row: 1;
+            justify-self: start;
+            margin-right: 20px;
+        }
+
+        .gen2-left {
+            grid-column: 1;
+            grid-row: 2;
+        }
+
+        .gen2-center-left {
+            grid-column: 2;
+            grid-row: 2;
+            justify-self: end;
+            margin-left: 20px;
+        }
+
+        .gen2-center-right {
+            grid-column: 2;
+            grid-row: 2;
+            justify-self: start;
+            margin-right: 20px;
+        }
+
+        .gen2-right {
+            grid-column: 3;
+            grid-row: 2;
+        }
+
+        .gen3 {
+            grid-column: 2;
+            grid-row: 3;
+        }
+
+        /* Legend */
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 60px;
+            padding: 20px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: var(--card-shadow);
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+            color: #475569;
+        }
+
+        .legend-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 4px;
+        }
+
+        .legend-color.male {
+            background: var(--male-primary);
+        }
+
+        .legend-color.female {
+            background: var(--female-primary);
+        }
+
+        .legend-line {
+            width: 24px;
+            height: 2px;
+            background: var(--line-color);
+        }
+
+        .legend-line.dashed {
+            border-top: 2px dashed var(--female-primary);
+            background: none;
+            height: 0;
+        }
+
+        /* Animation */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .person {
+            animation: fadeInUp 0.6s ease-out forwards;
+        }
+
+        .person:nth-child(1) { animation-delay: 0.1s; }
+        .person:nth-child(2) { animation-delay: 0.2s; }
+        .person:nth-child(3) { animation-delay: 0.3s; }
+        .person:nth-child(4) { animation-delay: 0.4s; }
+        .person:nth-child(5) { animation-delay: 0.5s; }
+        .person:nth-child(6) { animation-delay: 0.6s; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>شجرة العائلة</h1>
+            <p>Family Tree Visualization with Clean Connections</p>
+        </div>
+
+        <div class="family-tree" id="familyTree">
+            <!-- SVG Connections Layer -->
+            <svg class="connections-svg" id="connectionsSvg">
+                <!-- Lines will be drawn by JavaScript -->
+            </svg>
+
+            <!-- Generation 1: Grandparents -->
+            <div class="person male gen1-left" id="grandfather">
+                <div class="person-avatar">ع</div>
+                <div class="person-name">عبدالكافي</div>
+                <div class="person-role">الجد</div>
+            </div>
+            <div class="person female gen1-right" id="grandmother">
+                <div class="person-avatar">م</div>
+                <div class="person-name">محاسن</div>
+                <div class="person-role">الجدة</div>
+            </div>
+
+            <!-- Generation 2: Parents -->
+            <div class="person male gen2-left" id="salah">
+                <div class="person-avatar">ص</div>
+                <div class="person-name">صلاح</div>
+                <div class="person-role">الابن</div>
+            </div>
+            <div class="person male gen2-center-left" id="hisham">
+                <div class="person-avatar">ه</div>
+                <div class="person-name">هشام</div>
+                <div class="person-role">الابن</div>
+            </div>
+            <div class="person female gen2-center-right" id="salma">
+                <div class="person-avatar">س</div>
+                <div class="person-name">سلمى</div>
+                <div class="person-role">زوجة الابن</div>
+            </div>
+
+            <!-- Generation 3: Grandchildren -->
+            <div class="person male gen3" id="abdullah">
+                <div class="person-avatar">ع</div>
+                <div class="person-name">عبدالله</div>
+                <div class="person-role">الحفيد</div>
+            </div>
+        </div>
+
+        <!-- Legend -->
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-color male"></div>
+                <span>ذكر</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color female"></div>
+                <span>أنثى</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-line"></div>
+                <span>صلة قرابة</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-line dashed"></div>
+                <span>علاقة زواج</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Draw connection lines
+        function drawLines() {
+            const svg = document.getElementById('connectionsSvg');
+            const tree = document.getElementById('familyTree');
+            svg.innerHTML = '';
+
+            const people = {
+                grandfather: document.getElementById('grandfather'),
+                grandmother: document.getElementById('grandmother'),
+                hisham: document.getElementById('hisham'),
+                salma: document.getElementById('salma'),
+                salah: document.getElementById('salah'),
+                abdullah: document.getElementById('abdullah')
+            };
+
+            function getCenter(element) {
+                const rect = element.getBoundingClientRect();
+                const treeRect = tree.getBoundingClientRect();
+                return {
+                    x: rect.left + rect.width / 2 - treeRect.left,
+                    y: rect.top + rect.height / 2 - treeRect.top
+                };
+            }
+
+            function getBottomCenter(element) {
+                const rect = element.getBoundingClientRect();
+                const treeRect = tree.getBoundingClientRect();
+                return {
+                    x: rect.left + rect.width / 2 - treeRect.left,
+                    y: rect.bottom - treeRect.top
+                };
+            }
+
+            function getTopCenter(element) {
+                const rect = element.getBoundingClientRect();
+                const treeRect = tree.getBoundingClientRect();
+                return {
+                    x: rect.left + rect.width / 2 - treeRect.left,
+                    y: rect.top - treeRect.top
+                };
+            }
+
+            // Marriage line: Grandfather <-> Grandmother
+            const gf = getCenter(people.grandfather);
+            const gm = getCenter(people.grandmother);
+            const marriageLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            marriageLine.setAttribute('x1', gf.x);
+            marriageLine.setAttribute('y1', gf.y);
+            marriageLine.setAttribute('x2', gm.x);
+            marriageLine.setAttribute('y2', gm.y);
+            marriageLine.setAttribute('class', 'marriage');
+            svg.appendChild(marriageLine);
+
+            // Vertical line from grandparents couple down
+            const coupleCenterX = (gf.x + gm.x) / 2;
+            const coupleBottomY = getBottomCenter(people.grandfather).y;
+            const vLine1 = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            vLine1.setAttribute('x1', coupleCenterX);
+            vLine1.setAttribute('y1', coupleBottomY);
+            vLine1.setAttribute('x2', coupleCenterX);
+            vLine1.setAttribute('y2', coupleBottomY + 40);
+            svg.appendChild(vLine1);
+
+            // Horizontal line connecting all children
+            const hishamTop = getTopCenter(people.hisham);
+            const salahTop = getTopCenter(people.salah);
+            const hLine1 = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            hLine1.setAttribute('x1', salahTop.x);
+            hLine1.setAttribute('y1', coupleBottomY + 40);
+            hLine1.setAttribute('x2', hishamTop.x);
+            hLine1.setAttribute('y2', coupleBottomY + 40);
+            svg.appendChild(hLine1);
+
+            // Vertical lines down to each child
+            [people.salah, people.hisham].forEach(person => {
+                const top = getTopCenter(person);
+                const vLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                vLine.setAttribute('x1', top.x);
+                vLine.setAttribute('y1', coupleBottomY + 40);
+                vLine.setAttribute('x2', top.x);
+                vLine.setAttribute('y2', top.y);
+                svg.appendChild(vLine);
+            });
+
+            // Marriage line: Hisham <-> Salma
+            const hCenter = getCenter(people.hisham);
+            const sCenter = getCenter(people.salma);
+            const marriageLine2 = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            marriageLine2.setAttribute('x1', hCenter.x);
+            marriageLine2.setAttribute('y1', hCenter.y);
+            marriageLine2.setAttribute('x2', sCenter.x);
+            marriageLine2.setAttribute('y2', sCenter.y);
+            marriageLine2.setAttribute('class', 'marriage');
+            svg.appendChild(marriageLine2);
+
+            // Vertical line from Hisham/Salma couple down to Abdullah
+            const hishamSalmaCenterX = (hCenter.x + sCenter.x) / 2;
+            const hishamBottomY = getBottomCenter(people.hisham).y;
+            const abdullahTop = getTopCenter(people.abdullah);
+
+            const vLine2 = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            vLine2.setAttribute('x1', hishamSalmaCenterX);
+            vLine2.setAttribute('y1', hishamBottomY);
+            vLine2.setAttribute('x2', hishamSalmaCenterX);
+            vLine2.setAttribute('y2', abdullahTop.y);
+            svg.appendChild(vLine2);
+
+            // Horizontal line from center to Abdullah
+            const hLine2 = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            hLine2.setAttribute('x1', hishamSalmaCenterX);
+            hLine2.setAttribute('y1', abdullahTop.y - 30);
+            hLine2.setAttribute('x2', abdullahTop.x);
+            hLine2.setAttribute('y2', abdullahTop.y - 30);
+            svg.appendChild(hLine2);
+
+            // Vertical line down to Abdullah
+            const vLine3 = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            vLine3.setAttribute('x1', abdullahTop.x);
+            vLine3.setAttribute('y1', abdullahTop.y - 30);
+            vLine3.setAttribute('x2', abdullahTop.x);
+            vLine3.setAttribute('y2', abdullahTop.y);
+            svg.appendChild(vLine3);
+        }
+
+        // Draw lines on load and resize
+        window.addEventListener('load', drawLines);
+        window.addEventListener('resize', drawLines);
+
+        // Add interactivity
+        document.querySelectorAll('.person').forEach(person => {
+            person.addEventListener('click', function() {
+                const name = this.querySelector('.person-name').textContent;
+                const role = this.querySelector('.person-role').textContent;
+                console.log(`Clicked: ${name} (${role})`);
+            });
+        });
+    </script>
+</body>
+</html>
