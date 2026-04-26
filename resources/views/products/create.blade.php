@@ -201,6 +201,7 @@
     }
     .tf-input-price {
         padding-right: 40px !important;
+        padding-left: 40px !important;
     }
 
     /* ── Suggestion Box ── */

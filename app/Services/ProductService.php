@@ -1212,4 +1212,13 @@ private function clearProductCache(): void
                 ->first();
         });
     }
+
+    public function updateStock(int $productId, int $warehouseId, float $quantity, string $operation): bool
+    {
+        $product = Product::findOrFail($productId);
+
+        return $operation === 'add'
+            ? $product->addStock($quantity, $warehouseId)
+            : $product->deductStock($quantity, $warehouseId);
+    }
 }

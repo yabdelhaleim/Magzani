@@ -581,13 +581,13 @@
                 <p style="margin: 6px 0; color: #666; font-size: 13px;">{{ $company->address ?? 'العنوان غير مسجل' }}</p>
                 <p style="margin: 6px 0; color: #666; font-size: 13px;">
                     هاتف: {{ $company->phone ?? '---' }}
-                    @if($company->email) | {{ $company->email }} @endif
+                    @if($company->email ?? null) | {{ $company->email }} @endif
                 </p>
-                @if($company->tax_number || $company->commercial_register)
+                @if(($company->tax_number ?? null) || ($company->commercial_register ?? null))
                 <p style="margin: 6px 0; color: #666; font-size: 12px;">
-                    @if($company->tax_number) الرقم الضريبي: {{ $company->tax_number }} @endif
-                    @if($company->tax_number && $company->commercial_register) | @endif
-                    @if($company->commercial_register) السجل التجاري: {{ $company->commercial_register }} @endif
+                    @if($company->tax_number ?? null) الرقم الضريبي: {{ $company->tax_number }} @endif
+                    @if(($company->tax_number ?? null) && ($company->commercial_register ?? null)) | @endif
+                    @if($company->commercial_register ?? null) السجل التجاري: {{ $company->commercial_register }} @endif
                 </p>
                 @endif
             </div>
