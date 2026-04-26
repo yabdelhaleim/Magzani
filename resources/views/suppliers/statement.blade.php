@@ -280,8 +280,8 @@
                 </div>
             </div>
             <div class="flex gap-2">
-                <button onclick="window.print()" class="px-4 py-2 bg-white bg-opacity-20 hover:bg-opacity-30 rounded-lg">
-                    <i class="fas fa-print ml-2"></i>طباعة
+                <button onclick="window.print()" class="px-4 py-2 bg-white text-purple-700 hover:bg-gray-100 rounded-lg font-semibold">
+                    <i class="fas fa-print ml-2"></i> طباعة
                 </button>
             </div>
         </div>
