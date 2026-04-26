@@ -158,6 +158,8 @@
         border-radius: 8px;
         font-size: 13px;
         text-align: center;
+        color: var(--tf-text-b);
+        background: #fff;
     }
 
     /* Grid layouts */
@@ -746,7 +748,7 @@ function removeAdditional(index, btn) {
 
 function recalculateAll() {
     let woodCost = 0;
-    let additionalCost = 0;
+    let additionalTableCost = 0;
 
     // Calculate wood components
     document.querySelectorAll('#components-body tr').forEach(row => {
@@ -761,29 +763,60 @@ function recalculateAll() {
         if (display) display.textContent = cost.toFixed(2);
     });
 
-    // Calculate additional components
+    // Calculate additional components (glue, nails, etc.)
     document.querySelectorAll('#additional-body tr').forEach(row => {
         const inputs = row.querySelectorAll('input');
         const quantity = parseFloat(inputs[0]?.value) || 0;
         const price = parseFloat(inputs[1]?.value) || 0;
         const cost = quantity * price;
-        additionalCost += cost;
+        additionalTableCost += cost;
 
         const display = row.querySelector('.cost-display');
         if (display) display.textContent = cost.toFixed(2);
     });
 
-    const palletCost = woodCost + additionalCost;
+    // Read additional cost inputs from the summary section
+    const wasteCost     = parseFloat(document.getElementById('input-waste')?.value) || 0;
+    const laborCost     = parseFloat(document.getElementById('input-labor')?.value) || 0;
+    const nailsCost     = parseFloat(document.getElementById('input-nails')?.value) || 0;
+    const tipsCost      = parseFloat(document.getElementById('input-tips')?.value) || 0;
+    const transportCost = parseFloat(document.getElementById('input-transport')?.value) || 0;
+    const fumigationCost = parseFloat(document.getElementById('input-fumigation')?.value) || 0;
+    const profitMargin  = parseFloat(document.getElementById('input-profit-margin')?.value) || 0;
+
+    const allAdditionalCosts = wasteCost + laborCost + nailsCost + tipsCost + transportCost + fumigationCost;
+
+    // Base wood cost from table + additional components from table
+    const tableComponentsTotal = woodCost + additionalTableCost;
+
+    // palletCost = wood table cost + additional table cost (per pallet, before extras)
+    const palletCost = tableComponentsTotal;
+
+    // subtotal (before profit) = palletCost + all additional costs
+    const subtotalBeforeProfit = palletCost + allAdditionalCosts;
+
+    // profit amount from margin
+    const profitAmount = subtotalBeforeProfit * (profitMargin / 100);
+
+    // final pallet cost
+    const finalPalletCost = subtotalBeforeProfit + profitAmount;
+
     const quantityProduced = parseFloat(document.getElementById('quantity_produced').value) || 1;
-    const totalCost = palletCost * quantityProduced;
+    const totalCost = finalPalletCost * quantityProduced;
 
+    // Update wood/additional/pallet display
     document.getElementById('wood-cost').textContent = woodCost.toFixed(2) + ' ج.م';
-    document.getElementById('additional-cost').textContent = additionalCost.toFixed(2) + ' ج.م';
+    document.getElementById('additional-cost').textContent = additionalTableCost.toFixed(2) + ' ج.م';
     document.getElementById('pallet-cost').textContent = palletCost.toFixed(2) + ' ج.م';
-    document.getElementById('total-cost').textContent = totalCost.toFixed(2) + ' ج.م';
 
+    // Update subtotal/profit/final display
+    document.getElementById('subtotal-before-profit').textContent = subtotalBeforeProfit.toFixed(2) + ' ج.م';
+    document.getElementById('profit-amount').textContent = profitAmount.toFixed(2) + ' ج.م';
+    document.getElementById('final-pallet-cost').textContent = finalPalletCost.toFixed(2) + ' ج.م';
+
+    // Update green summary box
     document.getElementById('summary-quantity').textContent = quantityProduced;
-    document.getElementById('summary-pallet').textContent = palletCost.toFixed(2) + ' ج.م';
+    document.getElementById('summary-pallet').textContent = finalPalletCost.toFixed(2) + ' ج.م';
     document.getElementById('summary-total').textContent = totalCost.toFixed(2) + ' ج.م';
 }
 
