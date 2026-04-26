@@ -256,8 +256,9 @@ class StockCountController extends Controller
     {
         try {
             $data = $this->stockCountService->getShowData($id);
+            $data['company'] = \App\Models\Company::first();
             return view('stock-counts.print', $data);
-            
+
         } catch (\Exception $e) {
             return redirect()
                 ->route('stock-counts.show', $id)

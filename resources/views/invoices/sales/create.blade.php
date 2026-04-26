@@ -161,14 +161,57 @@
     .tf-table tbody td { padding: 14px 16px; border-bottom: 1px solid var(--tf-border-soft); vertical-align: middle; }
 
     .tf-row-item {
-        display: grid; grid-template-columns: 40px 2fr 1.5fr 1fr 1fr 1fr 1fr 1fr 1fr 50px;
-        gap: 10px; align-items: center;
-        padding: 12px; border-radius: 14px; background: var(--tf-surface);
-        border: 1px solid var(--tf-border); margin-bottom: 10px;
-        transition: all .2s;
+        display: grid; 
+        grid-template-columns: 40px 2fr 1.5fr 1fr 1fr 1fr 1.2fr 1fr 1.2fr 50px;
+        gap: 12px; align-items: center;
+        padding: 16px; border-radius: 18px; background: var(--tf-surface);
+        border: 1px solid var(--tf-border); margin-bottom: 15px;
+        transition: all .3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: var(--tf-shadow-sm);
     }
-    .tf-row-item:hover { border-color: var(--tf-indigo-light); }
+    .tf-row-item:hover { 
+        border-color: var(--tf-indigo-light); 
+        transform: scale(1.01);
+        box-shadow: var(--tf-shadow-card);
+    }
     .tf-row-item.warning { border-color: var(--tf-red); background: var(--tf-red-soft); }
+
+    /* تحسين شكل حقول الإدخال في الجدول */
+    .tf-table-input {
+        width: 100%;
+        padding: 8px 12px;
+        border: 1.5px solid var(--tf-border-soft);
+        border-radius: 10px;
+        font-size: 13px;
+        font-weight: 700;
+        transition: all 0.2s;
+        background: #fafbff;
+    }
+    .tf-table-input:focus {
+        border-color: var(--tf-indigo);
+        background: white;
+        box-shadow: 0 0 0 3px rgba(79, 99, 210, 0.1);
+        outline: none;
+    }
+
+    @media (max-width: 1200px) {
+        .tf-row-item {
+            grid-template-columns: 40px 1.5fr 1.2fr 1fr 1fr 1fr 1fr;
+            grid-template-rows: auto auto;
+        }
+        .tf-row-item > *:nth-child(n+8) { grid-row: 2; }
+    }
+
+    @media (max-width: 768px) {
+        .tf-row-item {
+            display: flex; flex-direction: column; align-items: stretch;
+            gap: 15px; padding: 20px;
+        }
+        .tf-row-item > div { display: flex; justify-content: space-between; align-items: center; }
+        .tf-row-item > div::before { content: attr(data-label); font-weight: 800; font-size: 12px; color: var(--tf-text-m); }
+        .tf-row-item .tf-table-input { width: 60%; }
+        .tf-table thead { display: none; }
+    }
 
     .tf-badge {
         display: inline-flex; align-items: center; gap: 6px;
@@ -204,8 +247,82 @@
     .tf-total-value.blue { color: var(--tf-blue); }
 
     .tf-grand-total {
-        font-size: 22px; font-weight: 900; color: var(--tf-green);
+        font-size: 28px; font-weight: 900; color: var(--tf-green);
+        text-shadow: 0 2px 4px rgba(15, 170, 126, 0.1);
     }
+
+    /* تحسين شكل جدول الإجماليات */
+    .totals-card {
+        background: linear-gradient(135deg, #ffffff, #fcfdfe);
+        border-radius: 24px;
+        padding: 30px;
+        border: 1px solid var(--tf-border);
+        box-shadow: var(--tf-shadow-card);
+        position: sticky;
+        top: 20px;
+    }
+    .totals-title {
+        font-size: 18px;
+        font-weight: 800;
+        color: var(--tf-text-h);
+        margin-bottom: 25px;
+        padding-bottom: 15px;
+        border-bottom: 2px solid var(--tf-border-soft);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .total-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 18px;
+    }
+    .total-item label {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--tf-text-m);
+    }
+    .total-item .value {
+        font-size: 15px;
+        font-weight: 800;
+        color: var(--tf-text-h);
+    }
+    .grand-total-item {
+        margin-top: 25px;
+        padding-top: 20px;
+        border-top: 2px dashed var(--tf-border-soft);
+    }
+
+    /* Footer Styles */
+    .invoice-footer {
+        margin-top: 50px;
+        padding: 40px;
+        text-align: center;
+        border-top: 1px solid var(--tf-border-soft);
+        color: var(--tf-text-m);
+    }
+    .footer-links {
+        display: flex;
+        justify-content: center;
+        gap: 30px;
+        margin-bottom: 20px;
+    }
+    .footer-links a {
+        color: var(--tf-text-m);
+        text-decoration: none;
+        font-weight: 700;
+        font-size: 13px;
+        transition: color 0.2s;
+    }
+    .footer-links a:hover { color: var(--tf-indigo); }
+    
+    .powered-by {
+        font-size: 12px;
+        font-weight: 600;
+        opacity: 0.8;
+    }
+    .powered-by span { color: var(--tf-indigo); font-weight: 800; }
 
     .tf-empty {
         display: flex; flex-direction: column; align-items: center;
@@ -219,6 +336,226 @@
     }
     .tf-empty-title { font-size: 16px; font-weight: 800; color: var(--tf-text-h); margin-bottom: 6px; }
     .tf-empty-sub { font-size: 13px; color: var(--tf-text-m); margin-bottom: 20px; }
+
+    /* هيدر الشركة الاحترافي */
+    .company-invoice-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: linear-gradient(to left, #ffffff, #f8faff);
+        padding: 30px 40px;
+        border-radius: 24px;
+        margin-bottom: 30px;
+        border: 1px solid var(--tf-border);
+        box-shadow: var(--tf-shadow-sm);
+        position: relative;
+        overflow: hidden;
+    }
+    .company-invoice-header::before {
+        content: '';
+        position: absolute;
+        top: 0; right: 0; width: 8px; height: 100%;
+        background: linear-gradient(to bottom, var(--tf-indigo), var(--tf-blue));
+    }
+    .company-invoice-header::after {
+        content: '\f571';
+        font-family: 'Font Awesome 5 Free';
+        font-weight: 900;
+        position: absolute;
+        left: -20px;
+        bottom: -20px;
+        font-size: 120px;
+        color: rgba(79, 99, 210, 0.03);
+        transform: rotate(-15deg);
+        pointer-events: none;
+    }
+    .header-info h1 {
+        font-size: 28px;
+        font-weight: 900;
+        color: var(--tf-text-h);
+        margin: 0 0 8px 0;
+        letter-spacing: -0.5px;
+    }
+    .header-info p {
+        font-size: 14px;
+        color: var(--tf-text-m);
+        margin: 4px 0;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .header-logo img {
+        max-height: 85px;
+        filter: drop-shadow(0 10px 15px rgba(0,0,0,0.08));
+        transition: transform 0.3s ease;
+    }
+    .header-logo img:hover {
+        transform: scale(1.05);
+    }
+    .header-badge {
+        background: white;
+        color: var(--tf-indigo);
+        padding: 8px 18px;
+        border-radius: 50px;
+        font-size: 12px;
+        font-weight: 800;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 15px;
+        box-shadow: 0 4px 12px rgba(79, 99, 210, 0.1);
+        border: 1px solid var(--tf-indigo-soft);
+    }
+
+    .quick-setup-btn {
+        position: absolute;
+        top: 20px;
+        left: 20px;
+        width: 35px;
+        height: 35px;
+        background: white;
+        border: 1px solid var(--tf-border);
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--tf-text-m);
+        cursor: pointer;
+        transition: all 0.2s;
+        z-index: 10;
+    }
+    .quick-setup-btn:hover {
+        background: var(--tf-indigo);
+        color: white;
+        border-color: var(--tf-indigo);
+        transform: rotate(45deg);
+    }
+
+    /* Modal Styles */
+    .tf-modal-backdrop {
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.6);
+        backdrop-filter: blur(4px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+        padding: 20px;
+    }
+    .tf-modal {
+        background: white;
+        border-radius: 24px;
+        width: 100%;
+        max-width: 500px;
+        box-shadow: var(--tf-shadow-lg);
+        overflow: hidden;
+        animation: tfFadeUp 0.3s ease-out;
+    }
+    .tf-modal-head {
+        padding: 25px;
+        background: var(--tf-surface2);
+        border-bottom: 1px solid var(--tf-border-soft);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .tf-modal-body { padding: 25px; }
+    .tf-modal-foot {
+        padding: 20px 25px;
+        background: var(--tf-surface2);
+        border-top: 1px solid var(--tf-border-soft);
+        display: flex;
+        justify-content: flex-end;
+        gap: 12px;
+    }
+
+    /* تحسين شكل المربعات في الجدول */
+    .tf-table-input {
+        width: 100%;
+        padding: 10px 14px;
+        border: 1.5px solid var(--tf-border-soft);
+        border-radius: 12px;
+        font-size: 14px;
+        font-weight: 700;
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        background: #fcfdfe;
+        text-align: center;
+    }
+    .tf-table-input:focus {
+        border-color: var(--tf-indigo);
+        background: white;
+        box-shadow: 0 0 0 4px rgba(79, 99, 210, 0.1);
+        outline: none;
+        transform: translateY(-1px);
+    }
+    
+    .square-input {
+        background: white;
+        border: 2px solid var(--tf-border-soft);
+        border-radius: 12px;
+        height: 48px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s;
+    }
+    .square-input:focus-within {
+        border-color: var(--tf-indigo);
+        box-shadow: 0 0 0 4px rgba(79, 99, 210, 0.1);
+    }
+
+    .tf-table thead th {
+        background: var(--tf-surface2);
+        padding: 18px 15px;
+        color: var(--tf-text-h);
+        font-size: 13px;
+        font-weight: 800;
+        border-bottom: 2px solid var(--tf-border);
+    }
+
+    .tf-table tbody td {
+        padding: 12px 8px;
+        vertical-align: middle;
+    }
+
+    /* تحسين التجاوب للموبايل */
+    @media (max-width: 992px) {
+        .tf-table-wrapper { border: none; }
+        .tf-table thead { display: none; }
+        .tf-table tbody tr {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            padding: 20px;
+            background: white;
+            border-radius: 20px;
+            margin-bottom: 20px;
+            border: 1px solid var(--tf-border);
+            box-shadow: var(--tf-shadow-sm);
+        }
+        .tf-table tbody td {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            padding: 0 !important;
+            border: none !important;
+        }
+        .tf-table tbody td::before {
+            content: attr(data-label);
+            font-size: 11px;
+            font-weight: 800;
+            color: var(--tf-text-m);
+            text-transform: uppercase;
+        }
+        .tf-table tbody td:first-child, 
+        .tf-table tbody td:nth-child(2),
+        .tf-table tbody td:last-child {
+            grid-column: span 2;
+        }
+        .tf-table-input { text-align: right; }
+    }
 </style>
 @endpush
 
@@ -286,6 +623,7 @@ document.addEventListener('alpine:init', () => {
         grandTotal: 0,
         paid: 0,
         remaining: 0,
+        showConfigModal: false,
 
         // جلب المخزون المتاح للمنتج في المخزن المحدد
         getAvailableStock(productId) {
@@ -526,6 +864,81 @@ document.addEventListener('alpine:init', () => {
 
 @section('content')
 <div x-data="invoiceForm" class="tf-page">
+    <!-- هيدر الشركة الاحترافي -->
+    <div class="company-invoice-header tf-section">
+        <button type="button" @click="showConfigModal = true" class="quick-setup-btn" title="تعديل بيانات الفاتورة">
+            <i class="fas fa-cog"></i>
+        </button>
+        
+        <div class="header-info">
+            <h1>{{ $company->name ?? 'نظام ماجزني لإدارة المخازن' }}</h1>
+            <p><i class="fas fa-map-marker-alt" style="color: var(--tf-indigo);"></i> {{ $company->address ?? 'العنوان غير مسجل' }}</p>
+            <p><i class="fas fa-phone" style="color: var(--tf-indigo);"></i> {{ $company->phone ?? '01XXXXXXXXX' }}</p>
+            <div class="header-badge">
+                <i class="fas fa-shield-alt"></i>
+                نظام الفواتير المعتمد
+            </div>
+        </div>
+        <div class="header-logo">
+            @if(isset($company->logo) && $company->logo)
+                <img src="{{ asset('storage/' . $company->logo) }}" alt="Logo">
+            @else
+                <div style="width: 80px; height: 80px; background: linear-gradient(135deg, var(--tf-indigo-soft), #e0e7ff); border-radius: 20px; display: flex; align-items: center; justify-content: center; font-weight: 900; color: var(--tf-indigo); font-size: 32px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);">
+                    {{ substr($company->name ?? 'M', 0, 1) }}
+                </div>
+            @endif
+        </div>
+    </div>
+
+    <!-- Modal Quick Setup -->
+    <div x-show="showConfigModal" 
+         class="tf-modal-backdrop" 
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         style="display: none;">
+        
+        <div class="tf-modal" @click.away="showConfigModal = false">
+            <div class="tf-modal-head">
+                <h3 class="tf-title-text">تعديل بيانات الهوية</h3>
+                <button type="button" @click="showConfigModal = false" class="tf-text-m hover:text-red-500">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form action="{{ route('settings.company.update') }}" method="POST" enctype="multipart/form-data">
+                @csrf
+                <div class="tf-modal-body">
+                    <div style="margin-bottom: 20px;">
+                        <label class="tf-label">اسم الشركة / النشاط</label>
+                        <input type="text" name="name" value="{{ $company->name ?? '' }}" class="tf-input" required>
+                    </div>
+                    <div style="margin-bottom: 20px;">
+                        <label class="tf-label">شعار الفاتورة (Logo)</label>
+                        <input type="file" name="logo" class="tf-input" accept="image/*">
+                        <p style="font-size: 11px; color: var(--tf-text-m); margin-top: 5px;">يفضل استخدام صورة شفافة PNG</p>
+                    </div>
+                    <div class="tf-grid-2">
+                        <div>
+                            <label class="tf-label">رقم الهاتف</label>
+                            <input type="text" name="phone" value="{{ $company->phone ?? '' }}" class="tf-input">
+                        </div>
+                        <div>
+                            <label class="tf-label">العنوان</label>
+                            <input type="text" name="address" value="{{ $company->address ?? '' }}" class="tf-input">
+                        </div>
+                    </div>
+                </div>
+                <div class="tf-modal-foot">
+                    <button type="button" @click="showConfigModal = false" class="tf-btn tf-btn-secondary">إلغاء</button>
+                    <button type="submit" class="tf-btn tf-btn-primary">حفظ التغييرات</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <form method="POST" action="{{ route('invoices.sales.store') }}" 
           @submit="if (!validateForm()) { $event.preventDefault(); }">
         @csrf
@@ -597,22 +1010,23 @@ document.addEventListener('alpine:init', () => {
                                 <th style="width: 160px;">الوحدة</th>
                                 <th style="text-align: center; background: var(--tf-green-soft); width: 100px;">المتاح</th>
                                 <th style="width: 120px;">الكمية</th>
-                                <th style="width: 110px;">السعر</th>
-                                <th style="width: 80px;">خصم %</th>
-                                <th style="width: 80px;">ضريبة %</th>
-                                <th style="text-align: center; background: var(--tf-blue-soft); width: 120px;">الإجمالي</th>
+                                <th style="width: 140px;">السعر</th>
+                                <th style="width: 100px;">خصم %</th>
+                                <th style="width: 100px;">ضريبة %</th>
+                                <th style="text-align: center; background: var(--tf-blue-soft); width: 140px;">الإجمالي</th>
                                 <th style="width: 50px;"></th>
                             </tr>
                         </thead>
                         <tbody>
                             <template x-for="(item, index) in items" :key="index">
                                 <tr :class="{ 'warning-row': item.show_stock_warning }">
-                                    <td><span style="font-weight: 800; color: var(--tf-text-m);" x-text="index + 1"></span></td>
-                                    <td>
+                                    <td data-label="#"><span style="font-weight: 800; color: var(--tf-text-m);" x-text="index + 1"></span></td>
+                                    <td data-label="الصنف">
                                         <select :name="'items[' + index + '][product_id]'" 
                                                 x-model="item.product_id"
                                                 @change="loadProductData(index)"
-                                                class="tf-select"
+                                                class="tf-table-input"
+                                                style="text-align: right;"
                                                 :style="!warehouseId && item.product_id ? 'border-color: var(--tf-red); background: var(--tf-red-soft);' : ''">
                                             <option value="">اختر الصنف</option>
                                             @foreach($products as $product)
@@ -623,12 +1037,12 @@ document.addEventListener('alpine:init', () => {
                                             ⚠️ اختر المخزن أولاً
                                         </p>
                                     </td>
-                                    <td>
+                                    <td data-label="الوحدة">
                                         <select x-show="item.product_id && getSellingUnits(item.product_id).length > 0"
                                                 :name="'items[' + index + '][selling_unit_id]'"
                                                 x-model="item.selling_unit_id"
                                                 @change="selectUnit(index, item.selling_unit_id)"
-                                                class="tf-select" style="background: var(--tf-violet-soft); border-color: var(--tf-violet);">
+                                                class="tf-table-input" style="background: var(--tf-violet-soft); border-color: var(--tf-violet);">
                                             <template x-for="unit in getSellingUnits(item.product_id)" :key="unit.id">
                                                 <option :value="unit.id" x-text="unit.unit_label + ' (' + unit.conversion_factor + 'x)'"></option>
                                             </template>
@@ -638,7 +1052,7 @@ document.addEventListener('alpine:init', () => {
                                               x-text="item.unit_label"></span>
                                         <span x-show="!item.product_id" style="color: var(--tf-text-d); font-size: 11px;">-</span>
                                     </td>
-                                    <td style="text-align: center; background: var(--tf-green-soft);">
+                                    <td data-label="المتاح" style="text-align: center; background: var(--tf-green-soft);">
                                         <div style="display: flex; flex-direction: column; align-items: center; gap: 2px;">
                                             <span x-show="item.product_id && warehouseId"
                                                   style="font-weight: 900; font-size: 18px;"
@@ -651,37 +1065,40 @@ document.addEventListener('alpine:init', () => {
                                             <i x-show="item.show_stock_warning" class="fas fa-exclamation-triangle" style="color: var(--tf-red);"></i>
                                         </div>
                                     </td>
-                                    <td>
+                                    <td data-label="الكمية">
                                         <input type="number" x-show="item.product_id" 
                                                :name="'items[' + index + '][quantity]'" 
                                                x-model="item.quantity" 
                                                @input="calculateItemTotal(index)"
-                                               class="tf-input" style="text-align: center; font-weight: 700;"
+                                               class="tf-table-input" style="font-weight: 700;"
                                                :style="item.show_stock_warning ? 'border-color: var(--tf-red); background: var(--tf-red-soft);' : ''"
                                                min="0.001" step="0.001" required>
                                         <span x-show="!item.product_id" style="color: var(--tf-text-d); font-size: 11px;">-</span>
                                     </td>
-                                    <td>
-                                        <input type="number" x-show="item.product_id"
-                                               :name="'items[' + index + '][price]'" 
-                                               x-model="item.price" 
-                                               @input="calculateItemTotal(index)"
-                                               class="tf-input" style="text-align: center; font-weight: 700;" 
-                                               min="0" step="0.01" required>
+                                    <td data-label="السعر">
+                                        <div style="display: flex; align-items: center; gap: 4px;">
+                                            <input type="number" x-show="item.product_id"
+                                                   :name="'items[' + index + '][price]'" 
+                                                   x-model="item.price" 
+                                                   @input="calculateItemTotal(index)"
+                                                   class="tf-table-input" style="font-weight: 700;" 
+                                                   min="0" step="0.01" required>
+                                            <span x-show="item.product_id" style="font-size: 10px; color: var(--tf-text-m);">ج.م</span>
+                                        </div>
                                         <span x-show="!item.product_id" style="color: var(--tf-text-d); font-size: 11px;">-</span>
                                     </td>
-                                    <td>
+                                    <td data-label="خصم %">
                                         <input type="number" :name="'items[' + index + '][discount]'" x-model="item.discount" @input="calculateItemTotal(index)"
-                                               class="tf-input" style="text-align: center;" min="0" max="100" placeholder="%">
+                                               class="tf-table-input" min="0" max="100" placeholder="%">
                                     </td>
-                                    <td>
+                                    <td data-label="ضريبة %">
                                         <input type="number" :name="'items[' + index + '][tax_rate]'" x-model="item.tax_rate" @input="calculateItemTotal(index)"
-                                               class="tf-input" style="text-align: center;" min="0" max="100" placeholder="%">
+                                               class="tf-table-input" min="0" max="100" placeholder="%">
                                     </td>
-                                    <td style="text-align: center; background: var(--tf-blue-soft);">
+                                    <td data-label="الإجمالي" style="text-align: center; background: var(--tf-blue-soft);">
                                         <span style="font-weight: 900; font-size: 16px; color: var(--tf-blue);" x-text="item.total.toFixed(2) + ' ج.م'"></span>
                                     </td>
-                                    <td>
+                                    <td data-label="حذف">
                                         <button type="button" @click="removeItem(index)" class="tf-action-btn del">
                                             <i class="fas fa-trash"></i>
                                         </button>
@@ -704,62 +1121,77 @@ document.addEventListener('alpine:init', () => {
         </div>
 
         <div class="tf-grid-3 tf-section">
-            <div class="tf-total-box">
-                <h4 style="font-size: 14px; font-weight: 800; color: var(--tf-text-h); margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
+            <div class="totals-card">
+                <h4 class="totals-title">
                     <i class="fas fa-calculator" style="color: var(--tf-green);"></i> الحسابات
                 </h4>
-                <div class="tf-total-row">
-                    <span class="tf-total-label">الإجمالي الجزئي:</span>
-                    <span class="tf-total-value" x-text="subtotal.toFixed(2) + ' ج.م'"></span>
+                <div class="total-item">
+                    <label>الإجمالي الجزئي:</label>
+                    <span class="value" x-text="subtotal.toFixed(2) + ' ج.م'"></span>
                 </div>
-                <div class="tf-total-row">
-                    <span class="tf-total-label" style="color: var(--tf-red);">الخصم:</span>
-                    <span class="tf-total-value red" x-text="'-' + totalDiscount.toFixed(2) + ' ج.م'"></span>
+                <div class="total-item">
+                    <label style="color: var(--tf-red);">الخصم:</label>
+                    <span class="value red" x-text="'-' + totalDiscount.toFixed(2) + ' ج.م'"></span>
                 </div>
-                <div class="tf-total-row">
-                    <span class="tf-total-label" style="color: var(--tf-blue);">الضريبة:</span>
-                    <span class="tf-total-value blue" x-text="'+' + totalTax.toFixed(2) + ' ج.م'"></span>
+                <div class="total-item">
+                    <label style="color: var(--tf-blue);">الضريبة:</label>
+                    <span class="value blue" x-text="'+' + totalTax.toFixed(2) + ' ج.م'"></span>
                 </div>
-                <div class="tf-total-row" style="border-top: 2px solid var(--tf-border-soft); margin-top: 8px; padding-top: 12px;">
-                    <span class="tf-total-label" style="font-size: 16px;">الإجمالي النهائي:</span>
-                    <span class="tf-total-value tf-grand-total" x-text="grandTotal.toFixed(2) + ' ج.م'"></span>
+                <div class="grand-total-item">
+                    <div class="total-item" style="margin-bottom: 0;">
+                        <label style="font-size: 16px; color: var(--tf-text-h);">الإجمالي النهائي:</label>
+                        <span class="tf-grand-total" x-text="grandTotal.toFixed(2) + ' ج.م'"></span>
+                    </div>
                 </div>
             </div>
 
-            <div class="tf-total-box">
-                <h4 style="font-size: 14px; font-weight: 800; color: var(--tf-text-h); margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
+            <div class="totals-card">
+                <h4 class="totals-title">
                     <i class="fas fa-wallet" style="color: var(--tf-blue);"></i> الدفع
                 </h4>
-                <div style="margin-bottom: 16px;">
+                <div style="margin-bottom: 20px;">
                     <label class="tf-label">المبلغ المدفوع</label>
-                    <input type="number" name="paid" x-model="paid" @input="updatePaid()" class="tf-input" style="font-weight: 700; font-size: 18px;" min="0" step="0.01" placeholder="0.00">
+                    <div class="square-input">
+                        <input type="number" name="paid" x-model="paid" @input="updatePaid()" 
+                               class="tf-table-input" style="border: none; background: transparent; font-size: 20px;" 
+                               min="0" step="0.01" placeholder="0.00">
+                    </div>
                 </div>
                 <div>
                     <label class="tf-label">المتبقي</label>
-                    <div style="font-size: 28px; font-weight: 900; padding: 12px; border-radius: 14px;"
-                         :style="remaining > 0 ? 'background: var(--tf-amber-soft); color: var(--tf-amber);' : 'background: var(--tf-green-soft); color: var(--tf-green);'"
+                    <div style="font-size: 28px; font-weight: 900; padding: 15px; border-radius: 18px; text-align: center; transition: all 0.3s;"
+                         :style="remaining > 0 ? 'background: var(--tf-red-soft); color: var(--tf-red);' : 'background: var(--tf-green-soft); color: var(--tf-green);'"
                          x-text="remaining.toFixed(2) + ' ج.م'"></div>
                 </div>
             </div>
 
-            <div class="tf-total-box">
-                <h4 style="font-size: 14px; font-weight: 800; color: var(--tf-text-h); margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
+            <div class="totals-card">
+                <h4 class="totals-title">
                     <i class="fas fa-sticky-note" style="color: var(--tf-violet);"></i> ملاحظات
                 </h4>
-                <textarea name="notes" class="tf-input" style="height: 120px; resize: none;" placeholder="أضف ملاحظات إضافية هنا..."></textarea>
+                <textarea name="notes" class="tf-input" style="height: 150px; resize: none; border-radius: 18px;" placeholder="أضف ملاحظات إضافية هنا..."></textarea>
             </div>
         </div>
 
-        <div class="tf-card tf-section">
-            <div class="tf-card-body" style="padding: 20px 24px; display: flex; justify-content: flex-end; gap: 12px;">
-                <a href="{{ route('invoices.sales.index') }}" class="tf-btn tf-btn-secondary">
+        <div class="tf-card tf-section" style="margin-top: 30px; background: var(--tf-surface2);">
+            <div class="tf-card-body" style="padding: 24px; display: flex; justify-content: flex-end; gap: 15px;">
+                <a href="{{ route('invoices.sales.index') }}" class="tf-btn tf-btn-secondary" style="padding: 14px 30px;">
                     <i class="fas fa-times"></i> إلغاء
                 </a>
-                <button type="submit" class="tf-btn tf-btn-primary">
-                    <i class="fas fa-save"></i> حفظ الفاتورة
+                <button type="submit" class="tf-btn tf-btn-primary" style="padding: 14px 40px; font-size: 16px;">
+                    <i class="fas fa-save"></i> حفظ الفاتورة والطباعة
                 </button>
             </div>
         </div>
     </form>
+
+    <footer class="invoice-footer tf-section">
+        <div class="footer-links">
+            <a href="#">الدعم الفني</a>
+            <a href="#">سياسة الاستخدام</a>
+            <a href="#">دليل المستخدم</a>
+        </div>
+        <p class="powered-by">تم التطوير بواسطة <span>نظام ماجزني الذكي</span> &copy; {{ date('Y') }}</p>
+    </footer>
 </div>
 @endsection

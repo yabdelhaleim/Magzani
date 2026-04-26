@@ -80,6 +80,7 @@ class WarehouseController extends Controller
     {
         try {
             $data = $this->warehouseService->getWarehouseDetails($id);
+            $data['company'] = \App\Models\Company::first();
             return view('warehouses.show', $data);
 
         } catch (\Exception $e) {

@@ -55,6 +55,7 @@ class Product extends Model
         'notes',
         'status',
         'product_type',
+        'is_manufactured',
     ];
 
     protected $casts = [
@@ -75,6 +76,7 @@ class Product extends Model
         'is_featured' => 'boolean',
         'has_expiry' => 'boolean',
         'track_serial' => 'boolean',
+        'is_manufactured' => 'boolean',
     ];
 
     /* ===========================

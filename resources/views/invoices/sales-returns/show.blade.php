@@ -271,12 +271,12 @@
                     <tr>
                         <td>{{ $index + 1 }}</td>
                         <td>
-                            <div style="font-weight: 700;">{{ $item->product->name ?? '-' }}</div>
-                            <div style="font-size: 11px; color: var(--tf-text-m);">{{ $item->product->sku ?? '' }}</div>
+                            <div style="font-weight: 700;">{{ $item->product?->name ?? '-' }}</div>
+                            <div style="font-size: 11px; color: var(--tf-text-m);">{{ $item->product?->sku ?? '' }}</div>
                         </td>
                         <td>
                             <span style="font-weight: 700;">{{ number_format($item->quantity_returned, 3) }}</span>
-                            <span style="font-size: 12px; color: var(--tf-text-m);">{{ $item->product->unit ?? '' }}</span>
+                            <span style="font-size: 12px; color: var(--tf-text-m);">{{ $item->product?->unit ?? '' }}</span>
                         </td>
                         <td>{{ number_format($item->unit_price, 2) }} ج.م</td>
                         <td style="font-weight: 800; color: var(--tf-green);">{{ number_format($item->total, 2) }} ج.م</td>

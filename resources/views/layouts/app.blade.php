@@ -6,8 +6,16 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'نظام إدارة المخازن')</title>
 
+    @php
+        // جلب بيانات الشركة لكل الصفحات
+        $company = \App\Models\Company::first();
+    @endphp
+
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Bootstrap CSS (for warehouse-orders pages) -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
 
     <!-- Alpine.js -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
@@ -836,30 +844,38 @@
 
     <!-- Logo -->
     <div class="sidebar-logo">
-        <div class="logo-icon" style="background:transparent;box-shadow:none;">
-            <svg class="logo-sparkle-anim" width="40" height="40" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-                <circle cx="50" cy="50" r="48" fill="url(#badge-bg)"/>
-                <circle cx="50" cy="50" r="46" stroke="#bdc5e0" stroke-width="0.9" fill="none" opacity="0.55"/>
-                <circle cx="50" cy="50" r="43" stroke="#bdc5e0" stroke-width="0.4" stroke-dasharray="2.5,4" fill="none" opacity="0.3"/>
-                <polyline points="14,72 14,32 50,52 86,32 86,72"
-                    fill="none" stroke="url(#m-grad-s)" stroke-width="11"
-                    stroke-linejoin="miter" stroke-miterlimit="10" stroke-linecap="butt"/>
-                <polyline points="9,31 14,22 19,31" fill="none" stroke="#5572ff" stroke-width="2" stroke-linejoin="round" filter="url(#blue-pk)"/>
-                <polyline points="81,31 86,22 91,31" fill="none" stroke="#5572ff" stroke-width="2" stroke-linejoin="round" filter="url(#blue-pk)"/>
-                <path d="M 79,13 L 81,19 L 87,21 L 81,23 L 79,29 L 77,23 L 71,21 L 77,19 Z" fill="white" opacity="0.92" filter="url(#spk)"/>
-                <path d="M 21,13 L 23,19 L 29,21 L 23,23 L 21,29 L 19,23 L 13,21 L 19,19 Z" fill="white" opacity="0.92" filter="url(#spk)"/>
-                <path d="M 50,5 L 51.5,9.5 L 56,11 L 51.5,12.5 L 50,17 L 48.5,12.5 L 44,11 L 48.5,9.5 Z" fill="white" opacity="0.82" filter="url(#spk)"/>
-                <path d="M 13,54 L 14.2,58 L 18,59.2 L 14.2,60.4 L 13,64.4 L 11.8,60.4 L 8,59.2 L 11.8,58 Z" fill="white" opacity="0.62" filter="url(#spk)"/>
-                <path d="M 87,54 L 88.2,58 L 92,59.2 L 88.2,60.4 L 87,64.4 L 85.8,60.4 L 82,59.2 L 85.8,58 Z" fill="white" opacity="0.62" filter="url(#spk)"/>
-                <path d="M 39,14 L 39.8,16.5 L 42,17.3 L 39.8,18 L 39,20.5 L 38.2,18 L 36,17.3 L 38.2,16.5 Z" fill="white" opacity="0.55"/>
-                <path d="M 61,14 L 61.8,16.5 L 64,17.3 L 61.8,18 L 61,20.5 L 60.2,18 L 58,17.3 L 60.2,16.5 Z" fill="white" opacity="0.55"/>
-                <circle cx="37" cy="57" r="1.2" fill="#7b92ff" opacity="0.6"/>
-                <circle cx="63" cy="57" r="1.2" fill="#7b92ff" opacity="0.6"/>
-            </svg>
-        </div>
+        @if(isset($company) && $company->logo && file_exists(public_path('storage/' . $company->logo)))
+            <div class="logo-icon" style="background: white; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+                <img src="{{ asset('storage/' . $company->logo) }}"
+                     alt="{{ $company->name }}"
+                     style="width: 100%; height: 100%; object-fit: contain; border-radius: 12px;">
+            </div>
+        @else
+            <div class="logo-icon" style="background:transparent;box-shadow:none;">
+                <svg class="logo-sparkle-anim" width="40" height="40" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="50" cy="50" r="48" fill="url(#badge-bg)"/>
+                    <circle cx="50" cy="50" r="46" stroke="#bdc5e0" stroke-width="0.9" fill="none" opacity="0.55"/>
+                    <circle cx="50" cy="50" r="43" stroke="#bdc5e0" stroke-width="0.4" stroke-dasharray="2.5,4" fill="none" opacity="0.3"/>
+                    <polyline points="14,72 14,32 50,52 86,32 86,72"
+                        fill="none" stroke="url(#m-grad-s)" stroke-width="11"
+                        stroke-linejoin="miter" stroke-miterlimit="10" stroke-linecap="butt"/>
+                    <polyline points="9,31 14,22 19,31" fill="none" stroke="#5572ff" stroke-width="2" stroke-linejoin="round" filter="url(#blue-pk)"/>
+                    <polyline points="81,31 86,22 91,31" fill="none" stroke="#5572ff" stroke-width="2" stroke-linejoin="round" filter="url(#blue-pk)"/>
+                    <path d="M 79,13 L 81,19 L 87,21 L 81,23 L 79,29 L 77,23 L 71,21 L 77,19 Z" fill="white" opacity="0.92" filter="url(#spk)"/>
+                    <path d="M 21,13 L 23,19 L 29,21 L 23,23 L 21,29 L 19,23 L 13,21 L 19,19 Z" fill="white" opacity="0.92" filter="url(#spk)"/>
+                    <path d="M 50,5 L 51.5,9.5 L 56,11 L 51.5,12.5 L 50,17 L 48.5,12.5 L 44,11 L 48.5,9.5 Z" fill="white" opacity="0.82" filter="url(#spk)"/>
+                    <path d="M 13,54 L 14.2,58 L 18,59.2 L 14.2,60.4 L 13,64.4 L 11.8,60.4 L 8,59.2 L 11.8,58 Z" fill="white" opacity="0.62" filter="url(#spk)"/>
+                    <path d="M 87,54 L 88.2,58 L 92,59.2 L 88.2,60.4 L 87,64.4 L 85.8,60.4 L 82,59.2 L 85.8,58 Z" fill="white" opacity="0.62" filter="url(#spk)"/>
+                    <path d="M 39,14 L 39.8,16.5 L 42,17.3 L 39.8,18 L 39,20.5 L 38.2,18 L 36,17.3 L 38.2,16.5 Z" fill="white" opacity="0.55"/>
+                    <path d="M 61,14 L 61.8,16.5 L 64,17.3 L 61.8,18 L 61,20.5 L 60.2,18 L 58,17.3 L 60.2,16.5 Z" fill="white" opacity="0.55"/>
+                    <circle cx="37" cy="57" r="1.2" fill="#7b92ff" opacity="0.6"/>
+                    <circle cx="63" cy="57" r="1.2" fill="#7b92ff" opacity="0.6"/>
+                </svg>
+            </div>
+        @endif
         <div class="logo-text">
-            <h2>MAGZANI</h2>
-            <p>نظام إدارة المخازن</p>
+            <h2>{{ $company->name ?? 'MAGZANI' }}</h2>
+            <p>{{ $company->email ?? 'نظام إدارة المخازن' }}</p>
         </div>
         <button class="toggle-btn" onclick="toggleSidebar()" id="toggleBtn">
             <i class="fas fa-chevron-right" id="toggleIcon"></i>
@@ -879,8 +895,8 @@
         <div class="nav-divider"></div>
         <div class="nav-section-label">إدارة المخزون</div>
 
-        <div x-data="{ open: {{ request()->routeIs('warehouses.*','transfers.*','stock-counts.*','movements.*') ? 'true' : 'false' }} }">
-            <button class="nav-item {{ request()->routeIs('warehouses.*','transfers.*','stock-counts.*','movements.*') ? 'active' : '' }}"
+        <div x-data="{ open: {{ request()->routeIs('warehouses.*','transfers.*','stock-counts.*','movements.*','warehouse-orders.*') ? 'true' : 'false' }} }">
+            <button class="nav-item {{ request()->routeIs('warehouses.*','transfers.*','stock-counts.*','movements.*','warehouse-orders.*') ? 'active' : '' }}"
                     @click="open = !open" data-tip="المخازن">
                 <div class="icon"><i class="fas fa-warehouse"></i></div>
                 <span class="label">المخازن والجرد</span>
@@ -891,6 +907,8 @@
                 <a href="{{ route('warehouses.create') }}"  class="sub-item {{ request()->routeIs('warehouses.create')  ? 'active' : '' }}"><span class="dot"></span>إضافة مخزن</a>
                 <a href="{{ route('transfers.create') }}"   class="sub-item {{ request()->routeIs('transfers.create')   ? 'active' : '' }}"><span class="dot"></span>تحويل بين المخازن</a>
                 <a href="{{ route('transfers.index') }}"    class="sub-item {{ request()->routeIs('transfers.index')    ? 'active' : '' }}"><span class="dot"></span>سجل التحويلات</a>
+                <a href="{{ route('warehouse-orders.inbound.index') }}" class="sub-item {{ request()->routeIs('warehouse-orders.inbound.*') ? 'active' : '' }}"><span class="dot"></span>أذونات الإدخال</a>
+                <a href="{{ route('warehouse-orders.outbound.index') }}" class="sub-item {{ request()->routeIs('warehouse-orders.outbound.*') ? 'active' : '' }}"><span class="dot"></span>أذونات الإخراج</a>
                 <a href="{{ route('stock-counts.index') }}" class="sub-item {{ request()->routeIs('stock-counts.index') ? 'active' : '' }}"><span class="dot"></span>إدارة الجرد</a>
                 <a href="{{ route('stock-counts.create') }}" class="sub-item {{ request()->routeIs('stock-counts.create') ? 'active' : '' }}"><span class="dot"></span>جرد جديد</a>
                 <a href="{{ route('movements.index') }}"    class="sub-item {{ request()->routeIs('movements.*')        ? 'active' : '' }}"><span class="dot"></span>حركات المخزن</a>
@@ -911,14 +929,17 @@
             </div>
         </div>
 
-        <div x-data="{ open: {{ request()->routeIs('manufacturing.*') ? 'true' : 'false' }} }">
-            <button class="nav-item {{ request()->routeIs('manufacturing.*') ? 'active' : '' }}"
+        <div x-data="{ open: {{ request()->routeIs('manufacturing.*','manufacturing-orders.*') ? 'true' : 'false' }} }">
+            <button class="nav-item {{ request()->routeIs('manufacturing.*','manufacturing-orders.*') ? 'active' : '' }}"
                     @click="open = !open" data-tip="التصنيع">
                 <div class="icon"><i class="fas fa-industry"></i></div>
                 <span class="label">التصنيع</span>
                 <i class="fas fa-chevron-down chevron" :class="open ? 'open' : ''"></i>
             </button>
             <div class="sub-menu" :class="open ? 'open' : ''">
+                <a href="{{ route('manufacturing-orders.index') }}"  class="sub-item {{ request()->routeIs('manufacturing-orders.index')  ? 'active' : '' }}"><span class="dot"></span>أوامر التصنيع</a>
+                <a href="{{ route('manufacturing-orders.create') }}" class="sub-item {{ request()->routeIs('manufacturing-orders.create') ? 'active' : '' }}"><span class="dot"></span>إنشاء أمر تصنيع</a>
+                <div style="height:1px;background:rgba(255,255,255,0.08);margin:6px 0;"></div>
                 <a href="{{ route('manufacturing.index') }}"  class="sub-item {{ request()->routeIs('manufacturing.index')  ? 'active' : '' }}"><span class="dot"></span>حسابات التكلفة</a>
                 <a href="{{ route('manufacturing.create') }}" class="sub-item {{ request()->routeIs('manufacturing.create') ? 'active' : '' }}"><span class="dot"></span>حساب جديد</a>
             </div>
@@ -1002,6 +1023,12 @@
            data-tip="المستخدمين">
             <div class="icon"><i class="fas fa-users-cog"></i></div>
             <span class="label">إدارة المستخدمين</span>
+        </a>
+        <a href="{{ route('permissions.index') }}"
+           class="nav-item {{ request()->routeIs('permissions.*') ? 'active' : '' }}"
+           data-tip="الصلاحيات">
+            <div class="icon"><i class="fas fa-shield-alt"></i></div>
+            <span class="label">إدارة الصلاحيات</span>
         </a>
         @endif
 
@@ -1248,6 +1275,9 @@
         });
     }, 5000);
 </script>
+
+<!-- Bootstrap JS (for warehouse-orders pages) -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
 @stack('scripts')
 </body>

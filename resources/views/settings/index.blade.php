@@ -10,6 +10,23 @@
         <p class="text-gray-600 mt-1">إدارة إعدادات الشركة والنظام</p>
     </div>
 
+    @if(session('success'))
+        <div class="mb-6 p-4 bg-green-100 border border-green-200 text-green-700 rounded-xl flex items-center gap-3">
+            <i class="fas fa-check-circle text-xl"></i>
+            <p class="font-semibold">{{ session('success') }}</p>
+        </div>
+    @endif
+
+    @if($errors->any())
+        <div class="mb-6 p-4 bg-red-100 border border-red-200 text-red-700 rounded-xl">
+            <ul class="list-disc list-inside font-semibold">
+                @foreach($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
     <!-- Tabs -->
     <div class="bg-white rounded-xl shadow-sm mb-6" x-data="{ tab: 'company' }">
         <div class="border-b border-gray-200">
@@ -43,54 +60,113 @@
 
         <!-- Company Info Tab -->
         <div x-show="tab === 'company'" class="p-6">
-            <form class="space-y-6">
+            <div style="background: linear-gradient(135deg, #ecfdf5, #f0f9ff); padding: 20px 24px; border-radius: 16px; margin-bottom: 24px; border: 2px solid #10b981;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <i class="fas fa-info-circle" style="color: #10b981; font-size: 28px;"></i>
+                    <div>
+                        <h3 style="margin: 0; color: #065f46; font-size: 18px; font-weight: 800;">بيانات الشركة للفاتورة</h3>
+                        <p style="margin: 5px 0 0 0; color: #047857; font-size: 14px;">
+                            هذه البيانات ستظهر في طباعة الفواتير - تأكد من صحتها
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <form action="{{ route('settings.company.update') }}" method="POST" enctype="multipart/form-data" class="space-y-6">
+                @csrf
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div class="md:col-span-2">
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">اسم الشركة</label>
-                        <input type="text" value="نظام إدارة المخازن" 
-                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">
+                            <i class="fas fa-building ml-1" style="color: #4f63d2;"></i>
+                            اسم الشركة / النشاط التجاري
+                        </label>
+                        <input type="text" name="name" value="{{ old('name', $company->name ?? '') }}"
+                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                               placeholder="مثال: شركة ماجزاني للأخشاب والمواد البناءية" required>
+                        <small class="text-gray-500">هذا الاسم سيظهر كعنوان رئيسي في الفاتورة</small>
                     </div>
 
                     <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">رقم الهاتف</label>
-                        <input type="tel" value="02-12345678" 
-                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">
+                            <i class="fas fa-phone ml-1" style="color: #10b981;"></i>
+                            رقم الهاتف
+                        </label>
+                        <input type="tel" name="phone" value="{{ old('phone', $company->phone ?? '') }}"
+                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                               placeholder="01XXXXXXXXX">
                     </div>
 
                     <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">البريد الإلكتروني</label>
-                        <input type="email" value="info@company.com" 
-                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">
+                            <i class="fas fa-envelope ml-1" style="color: #3a8ef0;"></i>
+                            البريد الإلكتروني
+                        </label>
+                        <input type="email" name="email" value="{{ old('email', $company->email ?? '') }}"
+                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                               placeholder="info@company.com">
                     </div>
 
                     <div class="md:col-span-2">
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">العنوان</label>
-                        <textarea rows="2" 
-                                  class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">القاهرة - مدينة نصر - شارع عباس العقاد</textarea>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">
+                            <i class="fas fa-map-marker-alt ml-1" style="color: #e8930a;"></i>
+                            العنوان الكامل
+                        </label>
+                        <textarea name="address" rows="3"
+                                  class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                  placeholder="المحافظة - المدينة - الشارع - رقم المبنى">{{ old('address', $company->address ?? '') }}</textarea>
                     </div>
 
                     <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">الرقم الضريبي</label>
-                        <input type="text" value="123-456-789" 
-                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">
+                            <i class="fas fa-receipt ml-1" style="color: #7c5cec;"></i>
+                            الرقم الضريبي
+                        </label>
+                        <input type="text" name="tax_number" value="{{ old('tax_number', $company->tax_number ?? '') }}"
+                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                               placeholder="XXX-XXX-XXX">
                     </div>
 
                     <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">السجل التجاري</label>
-                        <input type="text" value="987654321" 
-                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">
+                            <i class="fas fa-file-contract ml-1" style="color: #dc2626;"></i>
+                            السجل التجاري
+                        </label>
+                        <input type="text" name="commercial_register" value="{{ old('commercial_register', $company->commercial_register ?? '') }}"
+                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                               placeholder="رقم السجل">
                     </div>
 
-                    <div class="md:col-span-2">
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">شعار الشركة</label>
-                        <div class="flex items-center gap-4">
-                            <img src="https://via.placeholder.com/100" alt="Logo" class="w-24 h-24 rounded-lg border border-gray-300">
-                            <div>
-                                <button type="button" class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition">
-                                    <i class="fas fa-upload ml-2"></i>
-                                    تحميل شعار
+                    <div class="md:col-span-2" style="background: linear-gradient(135deg, #f8faff, #ffffff); padding: 24px; border-radius: 16px; border: 2px dashed #4f63d2;">
+                        <label class="block text-sm font-semibold text-gray-700 mb-3">
+                            <i class="fas fa-image ml-1" style="color: #4f63d2;"></i>
+                            شعار الشركة (Logo)
+                            <span style="color: #dc2626; font-size: 11px;">* هام جداً للطباعة</span>
+                        </label>
+                        <div class="flex items-center gap-6">
+                            @if(isset($company->logo) && $company->logo)
+                                <div style="position: relative; display: inline-block;">
+                                    <img src="{{ asset('storage/' . $company->logo) }}" alt="Logo" class="w-32 h-32 rounded-xl border-4 border-white shadow-lg object-contain p-3" style="background: white;">
+                                    <span style="position: absolute; bottom: -8px; right: -8px; background: #10b981; color: white; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 800;">
+                                        نشط
+                                    </span>
+                                </div>
+                            @else
+                                <div class="w-32 h-32 rounded-xl border-4 border-dashed border-gray-300 bg-gradient-to-br from-gray-50 to-gray-100 flex flex-col items-center justify-center text-gray-400">
+                                    <i class="fas fa-image text-4xl mb-2"></i>
+                                    <span style="font-size: 11px; font-weight: 700;">لا يوجد شعار</span>
+                                </div>
+                            @endif
+                            <div style="flex: 1;">
+                                <input type="file" name="logo" id="logo-input" class="hidden" accept="image/*">
+                                <button type="button" onclick="document.getElementById('logo-input').click()" class="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl font-bold transition shadow-lg" style="display: inline-flex; align-items: center; gap: 8px;">
+                                    <i class="fas fa-cloud-upload-alt"></i>
+                                    رفع شعار جديد
                                 </button>
-                                <p class="text-sm text-gray-500 mt-2">PNG, JPG بحجم أقصى 2MB</p>
+                                <div style="margin-top: 12px; display: flex; gap: 8px; flex-wrap: wrap;">
+                                    <span class="text-xs text-gray-500">✨ يفضل: PNG شفاف بخلفية بيضاء</span>
+                                    <span class="text-xs text-gray-500">📏 الحجم المقترح: 200×200 بكسل</span>
+                                    <span class="text-xs text-gray-500">💾 أقصى حجم: 2 ميجابايت</span>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -107,41 +183,42 @@
 
         <!-- System Settings Tab -->
         <div x-show="tab === 'system'" class="p-6">
-            <form class="space-y-6">
+            <form action="{{ route('settings.system.update') }}" method="POST" class="space-y-6">
+                @csrf
                 <div>
                     <h3 class="text-lg font-bold text-gray-800 mb-4">الإعدادات العامة</h3>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
                             <label class="block text-sm font-semibold text-gray-700 mb-2">العملة الافتراضية</label>
-                            <select class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                                <option>جنيه مصري (ج.م)</option>
-                                <option>دولار أمريكي ($)</option>
-                                <option>يورو (€)</option>
+                            <select name="default_currency" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                <option value="ج.م" {{ (old('default_currency', $system->default_currency ?? '') == 'ج.م') ? 'selected' : '' }}>جنيه مصري (ج.م)</option>
+                                <option value="$" {{ (old('default_currency', $system->default_currency ?? '') == '$') ? 'selected' : '' }}>دولار أمريكي ($)</option>
+                                <option value="€" {{ (old('default_currency', $system->default_currency ?? '') == '€') ? 'selected' : '' }}>يورو (€)</option>
                             </select>
                         </div>
 
                         <div>
                             <label class="block text-sm font-semibold text-gray-700 mb-2">التنسيق الافتراضي للتاريخ</label>
-                            <select class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                                <option>YYYY-MM-DD</option>
-                                <option>DD/MM/YYYY</option>
-                                <option>MM/DD/YYYY</option>
+                            <select name="date_format" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                <option value="Y-m-d" {{ (old('date_format', $system->date_format ?? '') == 'Y-m-d') ? 'selected' : '' }}>YYYY-MM-DD</option>
+                                <option value="d/m/Y" {{ (old('date_format', $system->date_format ?? '') == 'd/m/Y') ? 'selected' : '' }}>DD/MM/YYYY</option>
+                                <option value="m/d/Y" {{ (old('date_format', $system->date_format ?? '') == 'm/d/Y') ? 'selected' : '' }}>MM/DD/YYYY</option>
                             </select>
                         </div>
 
                         <div>
                             <label class="block text-sm font-semibold text-gray-700 mb-2">نسبة الضريبة الافتراضية (%)</label>
-                            <input type="number" value="14" step="0.01"
+                            <input type="number" name="default_tax" value="{{ old('default_tax', $system->default_tax ?? 0) }}" step="0.01"
                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                         </div>
 
                         <div>
                             <label class="block text-sm font-semibold text-gray-700 mb-2">عدد الأسطر في الصفحة</label>
-                            <select class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                                <option>10</option>
-                                <option selected>25</option>
-                                <option>50</option>
-                                <option>100</option>
+                            <select name="rows_per_page" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                <option value="10" {{ (old('rows_per_page', $system->rows_per_page ?? 25) == 10) ? 'selected' : '' }}>10</option>
+                                <option value="25" {{ (old('rows_per_page', $system->rows_per_page ?? 25) == 25) ? 'selected' : '' }}>25</option>
+                                <option value="50" {{ (old('rows_per_page', $system->rows_per_page ?? 25) == 50) ? 'selected' : '' }}>50</option>
+                                <option value="100" {{ (old('rows_per_page', $system->rows_per_page ?? 25) == 100) ? 'selected' : '' }}>100</option>
                             </select>
                         </div>
                     </div>
@@ -153,17 +230,17 @@
                     <h3 class="text-lg font-bold text-gray-800 mb-4">إعدادات المخزون</h3>
                     <div class="space-y-4">
                         <label class="flex items-center gap-3 cursor-pointer">
-                            <input type="checkbox" checked class="w-5 h-5 text-blue-600 rounded focus:ring-2 focus:ring-blue-500">
+                            <input type="checkbox" name="low_stock_alert" value="1" {{ old('low_stock_alert', $system->low_stock_alert ?? false) ? 'checked' : '' }} class="w-5 h-5 text-blue-600 rounded focus:ring-2 focus:ring-blue-500">
                             <span class="text-gray-700 font-semibold">تفعيل تنبيهات المخزون المنخفض</span>
                         </label>
 
                         <label class="flex items-center gap-3 cursor-pointer">
-                            <input type="checkbox" checked class="w-5 h-5 text-blue-600 rounded focus:ring-2 focus:ring-blue-500">
+                            <input type="checkbox" name="allow_negative_stock" value="1" {{ old('allow_negative_stock', $system->allow_negative_stock ?? false) ? 'checked' : '' }} class="w-5 h-5 text-blue-600 rounded focus:ring-2 focus:ring-blue-500">
                             <span class="text-gray-700 font-semibold">السماح بالبيع من المخزون السالب</span>
                         </label>
 
                         <label class="flex items-center gap-3 cursor-pointer">
-                            <input type="checkbox" class="w-5 h-5 text-blue-600 rounded focus:ring-2 focus:ring-blue-500">
+                            <input type="checkbox" name="confirm_before_delete" value="1" {{ old('confirm_before_delete', $system->confirm_before_delete ?? false) ? 'checked' : '' }} class="w-5 h-5 text-blue-600 rounded focus:ring-2 focus:ring-blue-500">
                             <span class="text-gray-700 font-semibold">طلب تأكيد قبل حذف الأصناف</span>
                         </label>
                     </div>
@@ -175,17 +252,17 @@
                     <h3 class="text-lg font-bold text-gray-800 mb-4">إعدادات الفواتير</h3>
                     <div class="space-y-4">
                         <label class="flex items-center gap-3 cursor-pointer">
-                            <input type="checkbox" checked class="w-5 h-5 text-blue-600 rounded focus:ring-2 focus:ring-blue-500">
+                            <input type="checkbox" name="auto_invoice_number" value="1" {{ old('auto_invoice_number', $system->auto_invoice_number ?? false) ? 'checked' : '' }} class="w-5 h-5 text-blue-600 rounded focus:ring-2 focus:ring-blue-500">
                             <span class="text-gray-700 font-semibold">ترقيم تلقائي للفواتير</span>
                         </label>
 
                         <label class="flex items-center gap-3 cursor-pointer">
-                            <input type="checkbox" checked class="w-5 h-5 text-blue-600 rounded focus:ring-2 focus:ring-blue-500">
+                            <input type="checkbox" name="auto_print_invoice" value="1" {{ old('auto_print_invoice', $system->auto_print_invoice ?? false) ? 'checked' : '' }} class="w-5 h-5 text-blue-600 rounded focus:ring-2 focus:ring-blue-500">
                             <span class="text-gray-700 font-semibold">طباعة تلقائية بعد الحفظ</span>
                         </label>
 
                         <label class="flex items-center gap-3 cursor-pointer">
-                            <input type="checkbox" class="w-5 h-5 text-blue-600 rounded focus:ring-2 focus:ring-blue-500">
+                            <input type="checkbox" name="auto_email_invoice" value="1" {{ old('auto_email_invoice', $system->auto_email_invoice ?? false) ? 'checked' : '' }} class="w-5 h-5 text-blue-600 rounded focus:ring-2 focus:ring-blue-500">
                             <span class="text-gray-700 font-semibold">إرسال الفاتورة بالبريد الإلكتروني تلقائياً</span>
                         </label>
                     </div>

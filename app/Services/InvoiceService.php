@@ -752,7 +752,7 @@ class InvoiceService
                 // إضافة المبلغ لرصيد العميل
                 DB::table('customers')
                     ->where('id', $invoice->customer_id)
-                    ->increment('credit_balance', $invoice->paid);
+                    ->increment('balance', $invoice->paid);
             }
             
             // ==================== تحديث الفاتورة ====================

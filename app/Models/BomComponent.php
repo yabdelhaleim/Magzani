@@ -26,13 +26,29 @@ class BomComponent extends Model
         'volume_cm3' => 'decimal:4',
     ];
 
+    /* ===========================
+     * 🔗 RELATIONSHIPS
+     * =========================== */
+
     public function manufacturingCost(): BelongsTo
     {
         return $this->belongsTo(ManufacturingCost::class);
     }
 
+    /* ===========================
+     * 🛠️ HELPER METHODS
+     * =========================== */
+
+    /**
+     * Calculate volume: length × width × thickness × quantity
+     */
     public function calculateVolume(): float
     {
-        return (float) ($this->length_cm * $this->width_cm * $this->thickness_cm * $this->quantity);
+        return (float) (
+            $this->length_cm *
+            $this->width_cm *
+            $this->thickness_cm *
+            $this->quantity
+        );
     }
 }

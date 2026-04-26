@@ -246,8 +246,8 @@
                                     <i class="fas fa-box text-blue-600 text-xs"></i>
                                 </div>
                                 <div>
-                                    <div class="text-sm font-semibold text-gray-900">{{ $movement->product->name }}</div>
-                                    <div class="text-xs text-gray-500">{{ $movement->product->sku }}</div>
+                                    <div class="text-sm font-semibold text-gray-900">{{ $movement->product?->name ?? '[محذوف]' }}</div>
+                                    <div class="text-xs text-gray-500">{{ $movement->product?->sku ?? 'N/A' }}</div>
                                 </div>
                             </div>
                         </td>

@@ -190,11 +190,283 @@
         border-radius: 50px; font-size: 12px; font-weight: 800;
         background: var(--tf-amber-soft); color: var(--tf-amber);
     }
+
+    .tf-grand-total {
+        font-size: 28px; font-weight: 900; color: var(--tf-green);
+        text-shadow: 0 2px 4px rgba(15, 170, 126, 0.1);
+    }
+
+    /* تحسين شكل جدول الإجماليات */
+    .totals-card {
+        background: linear-gradient(135deg, #ffffff, #fcfdfe);
+        border-radius: 24px;
+        padding: 30px;
+        border: 1px solid var(--tf-border);
+        box-shadow: var(--tf-shadow-card);
+    }
+    .totals-title {
+        font-size: 18px;
+        font-weight: 800;
+        color: var(--tf-text-h);
+        margin-bottom: 25px;
+        padding-bottom: 15px;
+        border-bottom: 2px solid var(--tf-border-soft);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .total-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 18px;
+    }
+    .total-item label {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--tf-text-m);
+    }
+    .total-item .value {
+        font-size: 15px;
+        font-weight: 800;
+        color: var(--tf-text-h);
+    }
+    .grand-total-item {
+        margin-top: 25px;
+        padding-top: 20px;
+        border-top: 2px dashed var(--tf-border-soft);
+    }
+
+    /* Footer Styles */
+    .invoice-footer {
+        margin-top: 50px;
+        padding: 40px;
+        text-align: center;
+        border-top: 1px solid var(--tf-border-soft);
+        color: var(--tf-text-m);
+    }
+    .footer-links {
+        display: flex;
+        justify-content: center;
+        gap: 30px;
+        margin-bottom: 20px;
+    }
+    .footer-links a {
+        color: var(--tf-text-m);
+        text-decoration: none;
+        font-weight: 700;
+        font-size: 13px;
+        transition: color 0.2s;
+    }
+    .footer-links a:hover { color: var(--tf-indigo); }
+    
+    .powered-by {
+        font-size: 12px;
+        font-weight: 600;
+        opacity: 0.8;
+    }
+    .powered-by span { color: var(--tf-indigo); font-weight: 800; }
+    /* هيدر الشركة الاحترافي */
+    .company-invoice-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: linear-gradient(to left, #ffffff, #f8faff);
+        padding: 30px 40px;
+        border-radius: 24px;
+        margin-bottom: 30px;
+        border: 1px solid var(--tf-border);
+        box-shadow: var(--tf-shadow-sm);
+        position: relative;
+        overflow: hidden;
+    }
+    .company-invoice-header::before {
+        content: '';
+        position: absolute;
+        top: 0; right: 0; width: 8px; height: 100%;
+        background: linear-gradient(to bottom, var(--tf-indigo), var(--tf-blue));
+    }
+    .company-invoice-header::after {
+        content: '\f571';
+        font-family: 'Font Awesome 5 Free';
+        font-weight: 900;
+        position: absolute;
+        left: -20px;
+        bottom: -20px;
+        font-size: 120px;
+        color: rgba(79, 99, 210, 0.03);
+        transform: rotate(-15deg);
+        pointer-events: none;
+    }
+    .header-info h1 {
+        font-size: 28px;
+        font-weight: 900;
+        color: var(--tf-text-h);
+        margin: 0 0 8px 0;
+        letter-spacing: -0.5px;
+    }
+    .header-info p {
+        font-size: 14px;
+        color: var(--tf-text-m);
+        margin: 4px 0;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .header-logo img {
+        max-height: 85px;
+        filter: drop-shadow(0 10px 15px rgba(0,0,0,0.08));
+    }
+    .header-badge {
+        background: white;
+        color: var(--tf-indigo);
+        padding: 8px 18px;
+        border-radius: 50px;
+        font-size: 12px;
+        font-weight: 800;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 15px;
+        box-shadow: 0 4px 12px rgba(79, 99, 210, 0.1);
+        border: 1px solid var(--tf-indigo-soft);
+    }
+
+    /* تحسين شكل المربعات في الجدول */
+    .tf-table-input {
+        width: 100%;
+        padding: 10px 14px;
+        border: 1.5px solid var(--tf-border-soft);
+        border-radius: 12px;
+        font-size: 14px;
+        font-weight: 700;
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        background: #fcfdfe;
+        text-align: center;
+    }
+    .tf-table-input:focus {
+        border-color: var(--tf-indigo);
+        background: white;
+        box-shadow: 0 0 0 4px rgba(79, 99, 210, 0.1);
+        outline: none;
+        transform: translateY(-1px);
+    }
+
+    @media (max-width: 992px) {
+        .tf-table-wrapper { border: none; }
+        .tf-table thead { display: none; }
+        .tf-table tbody tr {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            padding: 20px;
+            background: white;
+            border-radius: 20px;
+            margin-bottom: 20px;
+            border: 1px solid var(--tf-border);
+            box-shadow: var(--tf-shadow-sm);
+        }
+        .tf-table tbody td {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            padding: 0 !important;
+            border: none !important;
+        }
+        .tf-table tbody td::before {
+            content: attr(data-label);
+            font-size: 11px;
+            font-weight: 800;
+            color: var(--tf-text-m);
+            text-transform: uppercase;
+        }
+        .tf-table tbody td:first-child, 
+        .tf-table tbody td:nth-child(2),
+        .tf-table tbody td:last-child {
+            grid-column: span 2;
+        }
+        .tf-table-input { text-align: right; }
+    }
 </style>
 @endpush
 
 @section('content')
-<div class="tf-page">
+<div class="tf-page" x-data="{ showConfigModal: false }">
+    <!-- هيدر الشركة الاحترافي -->
+    <div class="company-invoice-header tf-section">
+        <button type="button" @click="showConfigModal = true" style="position: absolute; top: 20px; left: 20px; width: 35px; height: 35px; background: white; border: 1px solid var(--tf-border); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: var(--tf-text-m); cursor: pointer; transition: all 0.2s; z-index: 10;" title="تعديل بيانات الفاتورة">
+            <i class="fas fa-cog"></i>
+        </button>
+
+        <div class="header-info">
+            <h1>{{ $company->name ?? 'نظام ماجزني لإدارة المخازن' }}</h1>
+            <p><i class="fas fa-map-marker-alt" style="color: var(--tf-indigo);"></i> {{ $company->address ?? 'العنوان غير مسجل' }}</p>
+            <p><i class="fas fa-phone" style="color: var(--tf-indigo);"></i> {{ $company->phone ?? '01XXXXXXXXX' }}</p>
+            <div class="header-badge">
+                <i class="fas fa-shield-alt"></i>
+                نظام الفواتير المعتمد
+            </div>
+        </div>
+        <div class="header-logo">
+            @if(isset($company->logo) && $company->logo)
+                <img src="{{ asset('storage/' . $company->logo) }}" alt="Logo">
+            @else
+                <div style="width: 80px; height: 80px; background: linear-gradient(135deg, var(--tf-indigo-soft), #e0e7ff); border-radius: 20px; display: flex; align-items: center; justify-content: center; font-weight: 900; color: var(--tf-indigo); font-size: 32px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);">
+                    {{ substr($company->name ?? 'M', 0, 1) }}
+                </div>
+            @endif
+        </div>
+    </div>
+
+    <!-- Modal Quick Setup -->
+    <div x-show="showConfigModal" 
+         style="position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 20px;"
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         style="display: none;">
+        
+        <div style="background: white; border-radius: 24px; width: 100%; max-width: 500px; box-shadow: var(--tf-shadow-lg); overflow: hidden;" @click.away="showConfigModal = false">
+            <div style="padding: 25px; background: var(--tf-surface2); border-bottom: 1px solid var(--tf-border-soft); display: flex; justify-content: space-between; align-items: center;">
+                <h3 class="tf-title-text">تعديل بيانات الهوية</h3>
+                <button type="button" @click="showConfigModal = false" class="tf-text-m hover:text-red-500">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form action="{{ route('settings.company.update') }}" method="POST" enctype="multipart/form-data">
+                @csrf
+                <div style="padding: 25px;">
+                    <div style="margin-bottom: 20px;">
+                        <label class="tf-label">اسم الشركة / النشاط</label>
+                        <input type="text" name="name" value="{{ $company->name ?? '' }}" class="tf-input" required>
+                    </div>
+                    <div style="margin-bottom: 20px;">
+                        <label class="tf-label">شعار الفاتورة (Logo)</label>
+                        <input type="file" name="logo" class="tf-input" accept="image/*">
+                    </div>
+                    <div class="tf-grid-2">
+                        <div>
+                            <label class="tf-label">رقم الهاتف</label>
+                            <input type="text" name="phone" value="{{ $company->phone ?? '' }}" class="tf-input">
+                        </div>
+                        <div>
+                            <label class="tf-label">العنوان</label>
+                            <input type="text" name="address" value="{{ $company->address ?? '' }}" class="tf-input">
+                        </div>
+                    </div>
+                </div>
+                <div style="padding: 20px 25px; background: var(--tf-surface2); border-top: 1px solid var(--tf-border-soft); display: flex; justify-content: flex-end; gap: 12px;">
+                    <button type="button" @click="showConfigModal = false" class="tf-btn tf-btn-secondary">إلغاء</button>
+                    <button type="submit" class="tf-btn tf-btn-primary">حفظ التغييرات</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <div class="tf-card tf-section">
         <div class="tf-card-head">
             <div class="tf-card-title">
@@ -312,27 +584,51 @@
                 </div>
             </div>
 
-            <div class="tf-grid-2" style="margin-bottom: 20px;">
-                <div class="tf-total-box">
-                    <h4 style="font-size: 14px; font-weight: 800; color: var(--tf-text-h); margin-bottom: 16px;">
-                        <i class="fas fa-money-bill-wave" style="color: var(--tf-green);"></i> معلومات الدفع
+            <div class="tf-grid-3 tf-section">
+                <div class="totals-card">
+                    <h4 class="totals-title">
+                        <i class="fas fa-calculator" style="color: var(--tf-green);"></i> الحسابات
                     </h4>
-                    <div class="tf-total-row">
-                        <span class="tf-total-label">إجمالي الفاتورة:</span>
-                        <span class="tf-total-value">{{ number_format($invoice->calculated_details['net_total'] ?? 0, 2) }} ج.م</span>
+                    <div class="total-item">
+                        <label>إجمالي الفاتورة:</label>
+                        <span class="value">{{ number_format($invoice->calculated_details['net_total'] ?? 0, 2) }} ج.م</span>
                     </div>
-                    <div style="margin-top: 12px;">
-                        <label class="tf-label">المبلغ المدفوع</label>
-                        <input type="number" name="paid" id="paid" value="{{ $invoice->paid ?? 0 }}" step="0.01" min="0" max="{{ $invoice->calculated_details['net_total'] ?? 0 }}" class="tf-input" style="font-weight: 700;">
+                    <div class="total-item">
+                        <label style="color: var(--tf-red);">الخصم العام:</label>
+                        <input type="number" name="discount_value" value="{{ $invoice->discount_value ?? 0 }}" step="0.01" min="0" class="tf-table-input" style="width: 100px;">
                     </div>
-                    <div style="margin-top: 12px;">
-                        <label class="tf-label">المتبقي</label>
-                        <div id="remaining-amount" style="font-size: 24px; font-weight: 900; padding: 12px; border-radius: 14px; background: var(--tf-amber-soft); color: var(--tf-amber);">
-                            {{ number_format($invoice->calculated_details['remaining'] ?? 0, 2) }} ج.م
+                    <div class="total-item">
+                        <label style="color: var(--tf-blue);">الضريبة:</label>
+                        <input type="number" name="tax_amount" value="{{ $invoice->tax_amount ?? 0 }}" step="0.01" min="0" class="tf-table-input" style="width: 100px;">
+                    </div>
+                    <div class="grand-total-item">
+                        <div class="total-item" style="margin-bottom: 0;">
+                            <label style="font-size: 16px; color: var(--tf-text-h);">الإجمالي النهائي:</label>
+                            <span class="tf-grand-total">{{ number_format($invoice->calculated_details['net_total'] ?? 0, 2) }} ج.م</span>
                         </div>
                     </div>
-                    <div class="tf-alert tf-alert-warning" style="margin-top: 16px;">
-                        <span class="tf-badge" id="payment-status-badge">
+                </div>
+
+                <div class="totals-card">
+                    <h4 class="totals-title">
+                        <i class="fas fa-wallet" style="color: var(--tf-blue);"></i> الدفع
+                    </h4>
+                    <div style="margin-bottom: 20px;">
+                        <label class="tf-label">المبلغ المدفوع</label>
+                        <div class="square-input" style="background: white; border: 1.5px solid var(--tf-border); border-radius: 14px; padding: 5px;">
+                            <input type="number" name="paid" id="paid" value="{{ $invoice->paid ?? 0 }}" step="0.01" min="0" 
+                                   class="tf-table-input" style="border: none; background: transparent; font-size: 20px;" placeholder="0.00">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="tf-label">المتبقي</label>
+                        <div id="remaining-amount" style="font-size: 28px; font-weight: 900; padding: 15px; border-radius: 18px; text-align: center; transition: all 0.3s;"
+                             :style="{{ ($invoice->calculated_details['remaining'] ?? 0) > 0 ? 'background: var(--tf-red-soft); color: var(--tf-red);' : 'background: var(--tf-green-soft); color: var(--tf-green);' }}">
+                             {{ number_format($invoice->calculated_details['remaining'] ?? 0, 2) }} ج.م
+                        </div>
+                    </div>
+                    <div style="margin-top: 15px; text-align: center;">
+                        <span class="tf-badge" id="payment-status-badge" style="padding: 8px 20px; font-size: 13px;">
                             @php
                                 if ($invoice->payment_status == 'paid') echo 'مدفوعة بالكامل';
                                 elseif ($invoice->payment_status == 'partial') echo 'مدفوعة جزئياً';
@@ -342,46 +638,34 @@
                     </div>
                 </div>
 
-                <div>
-                    <div class="tf-total-box" style="margin-bottom: 16px;">
-                        <h4 style="font-size: 14px; font-weight: 800; color: var(--tf-text-h); margin-bottom: 16px;">
-                            <i class="fas fa-percent" style="color: var(--tf-amber);"></i> إضافات
-                        </h4>
-                        <div style="margin-bottom: 12px;">
-                            <label class="tf-label">خصم عام</label>
-                            <input type="number" name="discount_value" value="{{ $invoice->discount_value ?? 0 }}" step="0.01" min="0" class="tf-input">
-                        </div>
-                        <div style="margin-bottom: 12px;">
-                            <label class="tf-label">ضريبة عامة</label>
-                            <input type="number" name="tax_amount" value="{{ $invoice->tax_amount ?? 0 }}" step="0.01" min="0" class="tf-input">
-                        </div>
-                        <div style="margin-bottom: 12px;">
-                            <label class="tf-label">تكلفة الشحن</label>
-                            <input type="number" name="shipping_cost" value="{{ $invoice->shipping_cost ?? 0 }}" step="0.01" min="0" class="tf-input">
-                        </div>
-                        <div>
-                            <label class="tf-label">مصاريف أخرى</label>
-                            <input type="number" name="other_charges" value="{{ $invoice->other_charges ?? 0 }}" step="0.01" min="0" class="tf-input">
-                        </div>
-                    </div>
+                <div class="totals-card">
+                    <h4 class="totals-title">
+                        <i class="fas fa-sticky-note" style="color: var(--tf-violet);"></i> ملاحظات
+                    </h4>
+                    <textarea name="notes" class="tf-input" style="height: 150px; resize: none; border-radius: 18px;" placeholder="أضف ملاحظات إضافية هنا...">{{ $invoice->notes }}</textarea>
                 </div>
             </div>
 
-            <div style="margin-bottom: 20px;">
-                <label class="tf-label"><i class="fas fa-sticky-note" style="color: var(--tf-violet);"></i> ملاحظات</label>
-                <textarea name="notes" rows="3" class="tf-input" placeholder="أضف أي ملاحظات هنا...">{{ $invoice->notes }}</textarea>
-            </div>
-
-            <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 20px; border-top: 1px solid var(--tf-border-soft);">
-                <a href="{{ route('invoices.sales.index') }}" class="tf-btn tf-btn-secondary">
+            <div style="display: flex; justify-content: flex-end; align-items: center; padding: 30px; gap: 15px; margin-top: 20px; background: var(--tf-surface2); border-radius: 20px; border: 1px solid var(--tf-border);">
+                <a href="{{ route('invoices.sales.index') }}" class="tf-btn tf-btn-secondary" style="padding: 14px 30px;">
                     <i class="fas fa-arrow-right"></i> إلغاء
                 </a>
-                <button type="submit" class="tf-btn tf-btn-primary">
+                <button type="submit" class="tf-btn tf-btn-primary" style="padding: 14px 40px; font-size: 16px;">
                     <i class="fas fa-save"></i> حفظ التعديلات
                 </button>
             </div>
         </form>
     </div>
+
+    <footer class="invoice-footer tf-section">
+        <div class="footer-links">
+            <a href="#">الدعم الفني</a>
+            <a href="#">سياسة الاستخدام</a>
+            <a href="#">دليل المستخدم</a>
+        </div>
+        <p class="powered-by">تم التطوير بواسطة <span>نظام ماجزني الذكي</span> &copy; {{ date('Y') }}</p>
+    </footer>
+</div>
 
     <div class="tf-card tf-section">
         <div class="tf-card-body">

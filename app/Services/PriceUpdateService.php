@@ -258,8 +258,8 @@ class PriceUpdateService
 
             $preview[] = [
                 'product_id' => $pricing->product_id,
-                'product_name' => $pricing->product->name,
-                'sku' => $pricing->product->sku,
+                'product_name' => $pricing->product?->name ?? null,
+                'sku' => $pricing->product?->sku ?? null,
                 'base_unit' => $pricing->base_unit,
                 'old_purchase_price' => (float) $pricing->base_purchase_price,
                 'new_purchase_price' => $newPurchasePrice,

@@ -6,6 +6,9 @@ use App\Models\Supplier;
 use Illuminate\Http\Request;
 use App\Http\Requests\SupplierRequest;
 use App\Services\SupplierService;
+use App\Exports\SupplierStatementExport;
+use App\Exports\SuppliersExport;
+use Maatwebsite\Excel\Facades\Excel;
 
 class SupplierController extends Controller
 {
@@ -134,6 +137,19 @@ class SupplierController extends Controller
     }
 
     /**
+     * تصدير كشف حساب المورد إلى Excel
+     */
+    public function exportStatement(Request $request, Supplier $supplier)
+    {
+        $filters = $request->only(['date_from', 'date_to', 'type']);
+
+        return Excel::download(
+            new SupplierStatementExport($supplier, $filters),
+            'statement-supplier-' . $supplier->code . '-' . date('Y-m-d') . '.xlsx'
+        );
+    }
+
+    /**
      * تفعيل/إيقاف مورد
      */
     public function toggleStatus(Supplier $supplier)
@@ -155,7 +171,9 @@ class SupplierController extends Controller
      */
     public function export(Request $request)
     {
-        // سيتم إضافتها لاحقاً
-        return back()->with('info', 'ميزة التصدير قريباً');
+        return Excel::download(
+            new SuppliersExport($request),
+            'suppliers-' . date('Y-m-d') . '.xlsx'
+        );
     }
 }

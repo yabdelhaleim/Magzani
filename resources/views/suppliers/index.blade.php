@@ -12,11 +12,18 @@
             <h2 class="text-2xl font-bold text-gray-800">قائمة الموردين</h2>
             <p class="text-gray-600 mt-1">عرض وإدارة جميع الموردين في النظام</p>
         </div>
-        <a href="{{ route('suppliers.create') }}" 
-           class="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all shadow-lg hover:shadow-xl">
-            <i class="fas fa-plus-circle"></i>
-            <span>إضافة مورد جديد</span>
-        </a>
+        <div class="flex gap-3">
+            <a href="{{ route('suppliers.export') . '?' . request()->getQueryString() }}"
+               class="flex items-center gap-2 px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-all shadow-lg hover:shadow-xl">
+                <i class="fas fa-file-excel"></i>
+                <span>تصدير Excel</span>
+            </a>
+            <a href="{{ route('suppliers.create') }}" 
+               class="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all shadow-lg hover:shadow-xl">
+                <i class="fas fa-plus-circle"></i>
+                <span>إضافة مورد جديد</span>
+            </a>
+        </div>
     </div>
 
     <!-- Statistics Cards -->

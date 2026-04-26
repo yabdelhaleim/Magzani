@@ -17,7 +17,9 @@ class SettingsController extends Controller
 
     public function index()
     {
-        return view('settings.index');
+        $company = \App\Models\Company::first();
+        $system = \App\Models\SystemSetting::first();
+        return view('settings.index', compact('company', 'system'));
     }
 
     public function updateCompany(Request $request)
@@ -35,6 +37,13 @@ class SettingsController extends Controller
         $this->service->updateCompany($data);
 
         return redirect()->back()->with('success', 'تم تحديث بيانات الشركة بنجاح.');
+    }
+
+    public function deleteLogo()
+    {
+        $this->service->deleteLogo();
+
+        return redirect()->back()->with('success', 'تم حذف شعار الشركة بنجاح.');
     }
 
     public function updateSystem(Request $request)

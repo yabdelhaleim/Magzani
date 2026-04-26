@@ -48,10 +48,59 @@
 
     /* ── Page ── */
     .wh-page {
-        max-width: 1180px;
+        max-width: 1200px;
         margin: 0 auto;
-        padding: 2rem 1.25rem 4rem;
+        padding: 26px 22px;
         animation: fadeUp .5s var(--ease) both;
+    }
+
+    /* هيدر الشركة الاحترافي */
+    .company-invoice-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: white;
+        padding: 25px 35px;
+        border-radius: 20px;
+        margin-bottom: 25px;
+        border: 1px solid rgba(99,102,241,0.12);
+        box-shadow: 0 2px 12px rgba(79,99,210,0.07);
+        position: relative;
+        overflow: hidden;
+    }
+    .company-invoice-header::before {
+        content: '';
+        position: absolute;
+        top: 0; right: 0; width: 6px; height: 100%;
+        background: #4f63d2;
+    }
+    .header-info h1 {
+        font-size: 24px;
+        font-weight: 900;
+        color: #1a2140;
+        margin: 0 0 5px 0;
+    }
+    .header-info p {
+        font-size: 13px;
+        color: #7e90b0;
+        margin: 0;
+        font-weight: 600;
+    }
+    .header-logo img {
+        max-height: 70px;
+        filter: drop-shadow(0 4px 8px rgba(0,0,0,0.05));
+    }
+    .header-badge {
+        background: #eef0fc;
+        color: #4f63d2;
+        padding: 6px 15px;
+        border-radius: 50px;
+        font-size: 12px;
+        font-weight: 800;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        margin-top: 10px;
     }
 
     @keyframes fadeUp {
@@ -568,6 +617,28 @@
 
 <div class="wh-page">
 
+    <!-- هيدر الشركة الاحترافي -->
+    <div class="company-invoice-header">
+        <div class="header-info">
+            <h1>{{ $company->name ?? 'نظام ماجزني لإدارة المخازن' }}</h1>
+            <p><i class="fas fa-map-marker-alt"></i> {{ $company->address ?? 'العنوان غير مسجل' }}</p>
+            <p><i class="fas fa-phone"></i> {{ $company->phone ?? '01XXXXXXXXX' }}</p>
+            <div class="header-badge">
+                <i class="fas fa-warehouse"></i>
+                نظام إدارة المخازن الذكي
+            </div>
+        </div>
+        <div class="header-logo">
+            @if(isset($company->logo) && $company->logo)
+                <img src="{{ asset('storage/' . $company->logo) }}" alt="Logo">
+            @else
+                <div style="width: 70px; height: 70px; background: #eef0fc; border-radius: 15px; display: flex; align-items: center; justify-content: center; font-weight: 900; color: #4f63d2; font-size: 24px;">
+                    M
+                </div>
+            @endif
+        </div>
+    </div>
+
     <!-- ══ Header ══ -->
     <div class="page-header">
         <div class="header-left">
@@ -837,14 +908,14 @@
                             {{ $index + 1 }}
                         </td>
                         <td>
-                            <p class="product-name">{{ $item->product->name }}</p>
-                            @if($item->product->category)
+                            <p class="product-name">{{ $item->product?->name ?? '[محذوف]' }}</p>
+                            @if($item->product && $item->product->category)
                                 <p class="product-cat">{{ $item->product->category }}</p>
                             @endif
                         </td>
                         <td>
                             <span class="sku-badge">
-                                {{ $item->product->code ?? $item->product->sku ?? 'N/A' }}
+                                {{ ($item->product?->code ?? $item->product?->sku) ?? 'N/A' }}
                             </span>
                         </td>
                         <td>

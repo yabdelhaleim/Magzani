@@ -40,8 +40,9 @@ class PurchaseInvoiceController extends Controller
         $suppliers = Supplier::all();
         $warehouses = Warehouse::all();
         $products = Product::all();
+        $company = \App\Models\Company::first();
 
-        return view('invoices.purchases.create', compact('suppliers', 'warehouses', 'products'));
+        return view('invoices.purchases.create', compact('suppliers', 'warehouses', 'products', 'company'));
     }
 
     /**
@@ -69,8 +70,9 @@ class PurchaseInvoiceController extends Controller
     public function show(PurchaseInvoice $invoice)
     {
         $invoice->load(['supplier', 'warehouse', 'items.product']);
+        $company = \App\Models\Company::first();
 
-        return view('invoices.purchases.show', compact('invoice'));
+        return view('invoices.purchases.show', compact('invoice', 'company'));
     }
 
     /**
@@ -82,8 +84,9 @@ class PurchaseInvoiceController extends Controller
         $suppliers = Supplier::all();
         $warehouses = Warehouse::all();
         $products = Product::all();
+        $company = \App\Models\Company::first();
 
-        return view('invoices.purchases.edit', compact('invoice', 'suppliers', 'warehouses', 'products'));
+        return view('invoices.purchases.edit', compact('invoice', 'suppliers', 'warehouses', 'products', 'company'));
     }
 
     /**

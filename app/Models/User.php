@@ -81,6 +81,125 @@ class User extends Authenticatable
     }
 
     /**
+     * صلاحيات المستخدم (مباشرة + عبر الأدوار)
+     */
+    public function allPermissions()
+    {
+        $directPermissions = $this->permissions()->pluck('name')->toArray();
+        $rolePermissions = $this->roles()->with('permissions')
+            ->get()
+            ->pluck('permissions')
+            ->flatten()
+            ->pluck('name')
+            ->toArray();
+
+        return array_unique(array_merge($directPermissions, $rolePermissions));
+    }
+
+    // ==================== Permission Methods ====================
+
+    /**
+     * التحقق مما إذا كان المستخدم لديه صلاحية معينة
+     */
+    public function hasPermission(string $permission): bool
+    {
+        // المدير لديه كل الصلاحيات
+        if ($this->isAdmin()) {
+            return true;
+        }
+
+        return in_array($permission, $this->allPermissions());
+    }
+
+    /**
+     * التحقق مما إذا كان المستخدم لديه أحد الصلاحيات المحددة
+     */
+    public function hasAnyPermission(array $permissions): bool
+    {
+        if ($this->isAdmin()) {
+            return true;
+        }
+
+        return !empty(array_intersect($permissions, $this->allPermissions()));
+    }
+
+    /**
+     * التحقق مما إذا كان المستخدم لديه جميع الصلاحيات المحددة
+     */
+    public function hasAllPermissions(array $permissions): bool
+    {
+        if ($this->isAdmin()) {
+            return true;
+        }
+
+        $userPermissions = $this->allPermissions();
+
+        return empty(array_diff($permissions, $userPermissions));
+    }
+
+    /**
+     * منح صلاحية مباشرة للمستخدم
+     */
+    public function givePermissionTo(Permission $permission)
+    {
+        $this->permissions()->attach($permission->id);
+        return $this;
+    }
+
+    /**
+     * سحب صلاحية من المستخدم
+     */
+    public function revokePermissionFrom(Permission $permission)
+    {
+        $this->permissions()->detach($permission->id);
+        return $this;
+    }
+
+    /**
+     * منح صلاحيات متعددة للمستخدم
+     */
+    public function syncPermissions(array $permissions)
+    {
+        $this->permissions()->sync($permissions);
+        return $this;
+    }
+
+    /**
+     * إضافة دور للمستخدم
+     */
+    public function assignRole(Role $role)
+    {
+        $this->roles()->attach($role->id);
+        return $this;
+    }
+
+    /**
+     * إزالة دور من المستخدم
+     */
+    public function removeRole(Role $role)
+    {
+        $this->roles()->detach($role->id);
+        return $this;
+    }
+
+    /**
+     * تحديث أدوار المستخدم
+     */
+    public function syncRoles(array $roleIds)
+    {
+        $this->roles()->sync($roleIds);
+        return $this;
+    }
+
+    /**
+     * التحقق مما إذا كان المستخدم لديه دور معين
+     */
+    public function hasRole(string $roleName): bool
+    {
+        return $this->roles()->where('name', $roleName)->exists();
+    }
+
+    /**
      * فواتير البيع اللي أنشأها
      */
     public function salesInvoices()

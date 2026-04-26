@@ -186,6 +186,8 @@ class ProductController extends Controller
      */
     public function destroy(Product $product)
     {
+        // ✅ Security: Check authorization
+        $this->authorize('delete', $product);
         try {
             $productName = $product->name;
             $this->productService->deleteProduct($product);

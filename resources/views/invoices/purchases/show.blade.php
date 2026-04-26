@@ -106,7 +106,90 @@
         color: var(--tf-surface); border: none;
         box-shadow: 0 4px 16px rgba(124,92,236,0.35);
     }
-    .tf-btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(124,92,236,0.45); }
+    .tf-btn-violet:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(124,92,236,0.45); }
+
+    /* هيدر الشركة الاحترافي */
+    .company-invoice-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: white;
+        padding: 25px 35px;
+        border-radius: 20px;
+        margin-bottom: 25px;
+        border: 1px solid var(--tf-border);
+        box-shadow: var(--tf-shadow-sm);
+        position: relative;
+        overflow: hidden;
+    }
+    .company-invoice-header::before {
+        content: '';
+        position: absolute;
+        top: 0; right: 0; width: 6px; height: 100%;
+        background: var(--tf-violet);
+    }
+    .header-info h1 {
+        font-size: 24px;
+        font-weight: 900;
+        color: var(--tf-text-h);
+        margin: 0 0 5px 0;
+    }
+    .header-info p {
+        font-size: 13px;
+        color: var(--tf-text-m);
+        margin: 0;
+        font-weight: 600;
+    }
+    .header-logo img {
+        max-height: 70px;
+        filter: drop-shadow(0 4px 8px rgba(0,0,0,0.05));
+    }
+    .header-badge {
+        background: var(--tf-violet-soft);
+        color: var(--tf-violet);
+        padding: 6px 15px;
+        border-radius: 50px;
+        font-size: 12px;
+        font-weight: 800;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        margin-top: 10px;
+    }
+
+    @media (max-width: 992px) {
+        .tf-grid-3 { grid-template-columns: 1fr; }
+        .tf-table thead { display: none; }
+        .tf-table tbody tr {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            padding: 20px;
+            background: white;
+            border-radius: 20px;
+            margin-bottom: 20px;
+            border: 1px solid var(--tf-border);
+        }
+        .tf-table tbody td {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            padding: 0 !important;
+            border: none !important;
+        }
+        .tf-table tbody td::before {
+            content: attr(data-label);
+            font-size: 11px;
+            font-weight: 800;
+            color: var(--tf-text-m);
+            text-transform: uppercase;
+        }
+        .tf-table tbody td:first-child, 
+        .tf-table tbody td:last-child {
+            grid-column: span 2;
+        }
+    }
+
     .tf-btn-secondary {
         background: var(--tf-surface); color: var(--tf-text-b);
         border: 1.5px solid var(--tf-border);
@@ -215,6 +298,28 @@
     </div>
     @endif
 
+    <!-- هيدر الشركة الاحترافي (للشاشة فقط) -->
+    <div class="company-invoice-header tf-section no-print">
+        <div class="header-info">
+            <h1>{{ $company->name ?? 'نظام ماجزني لإدارة المخازن' }}</h1>
+            <p><i class="fas fa-map-marker-alt"></i> {{ $company->address ?? 'العنوان غير مسجل' }}</p>
+            <p><i class="fas fa-phone"></i> {{ $company->phone ?? '01XXXXXXXXX' }}</p>
+            <div class="header-badge">
+                <i class="fas fa-file-invoice-dollar"></i>
+                نظام الفواتير الذكي
+            </div>
+        </div>
+        <div class="header-logo">
+            @if(isset($company->logo) && $company->logo)
+                <img src="{{ asset('storage/' . $company->logo) }}" alt="Logo">
+            @else
+                <div style="width: 70px; height: 70px; background: var(--tf-violet-soft); border-radius: 15px; display: flex; align-items: center; justify-content: center; font-weight: 900; color: var(--tf-violet); font-size: 24px;">
+                    M
+                </div>
+            @endif
+        </div>
+    </div>
+
     <div class="tf-card tf-section">
         <div class="tf-card-head">
             <div class="tf-card-title">
@@ -282,11 +387,11 @@
                     <tbody>
                         @foreach($invoice->items as $index => $item)
                         <tr>
-                            <td>{{ $index + 1 }}</td>
-                            <td style="font-weight: 700;">{{ $item->product->name }}</td>
-                            <td>{{ number_format($item->qty, 2) }}</td>
-                            <td>{{ number_format($item->price, 2) }} ج.م</td>
-                            <td style="font-weight: 800;">{{ number_format($item->total, 2) }} ج.م</td>
+                            <td data-label="#">{{ $index + 1 }}</td>
+                            <td data-label="الصنف" style="font-weight: 700;">{{ $item->product?->name ?? '[محذوف]' }}</td>
+                            <td data-label="الكمية">{{ number_format($item->qty, 2) }}</td>
+                            <td data-label="سعر الوحدة">{{ number_format($item->price, 2) }} ج.م</td>
+                            <td data-label="الإجمالي" style="font-weight: 800;">{{ number_format($item->total, 2) }} ج.م</td>
                         </tr>
                         @endforeach
                     </tbody>

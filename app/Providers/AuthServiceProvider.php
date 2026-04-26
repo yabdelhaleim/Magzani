@@ -2,7 +2,7 @@
 
 namespace App\Providers;
 
-// use Illuminate\Support\Facades\Gate;
+use App\Models\Product;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 
 class AuthServiceProvider extends ServiceProvider
@@ -13,7 +13,7 @@ class AuthServiceProvider extends ServiceProvider
      * @var array<class-string, class-string>
      */
     protected $policies = [
-        //
+        Product::class => \App\Policies\ProductPolicy::class,
     ];
 
     /**
@@ -21,6 +21,33 @@ class AuthServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        // التحقق من الصلاحيات قبل كل شيء
+        \Gate::before(function ($user, $ability) {
+            if ($user->isAdmin()) {
+                return true;
+            }
+        });
+
+        // تعريف بوابة عامة للصلاحيات
+        \Gate::define('warehouse.transfers.read', function ($user) {
+            return $user->hasPermission('warehouse.transfers.read');
+        });
+
+        \Gate::define('warehouse.transfers.create', function ($user) {
+            return $user->hasPermission('warehouse.transfers.create');
+        });
+
+        \Gate::define('warehouse.transfers.update', function ($user) {
+            return $user->hasPermission('warehouse.transfers.update');
+        });
+
+        \Gate::define('warehouse.transfers.delete', function ($user) {
+            return $user->hasPermission('warehouse.transfers.delete');
+        });
+
+        // تحديد صلاحية المستخدم
+        \Gate::define('users.permissions', function ($user) {
+            return $user->isAdmin() || $user->hasPermission('users.permissions');
+        });
     }
 }

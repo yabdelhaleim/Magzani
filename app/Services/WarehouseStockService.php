@@ -82,8 +82,8 @@ class WarehouseStockService
         return $query->get()->map(function ($stock) {
             return [
                 'product_id' => $stock->product_id,
-                'product_name' => $stock->product->name ?? 'غير معروف',
-                'sku' => $stock->product->sku ?? '',
+                'product_name' => $stock->product?->name ?? 'غير معروف',
+                'sku' => $stock->product?->sku ?? '',
                 'quantity' => $stock->quantity,
                 'available' => $stock->quantity - ($stock->reserved_quantity ?? 0),
                 'reserved' => $stock->reserved_quantity ?? 0,
@@ -279,16 +279,16 @@ class WarehouseStockService
             ->whereRaw('quantity < min_stock')
             ->with('product:id,name,sku,code')
             ->get()
-            ->map(function ($stock) {
-                return [
-                    'product_id' => $stock->product_id,
-                    'product_name' => $stock->product->name ?? 'غير معروف',
-                    'sku' => $stock->product->sku ?? '',
-                    'current_quantity' => $stock->quantity,
-                    'min_stock' => $stock->min_stock ?? 0,
-                    'shortage' => ($stock->min_stock ?? 0) - $stock->quantity,
-                ];
-            });
+                ->map(function ($stock) {
+                    return [
+                        'product_id' => $stock->product_id,
+                        'product_name' => $stock->product?->name ?? 'غير معروف',
+                        'sku' => $stock->product?->sku ?? '',
+                        'current_quantity' => $stock->quantity,
+                        'min_stock' => $stock->min_stock ?? 0,
+                        'shortage' => ($stock->min_stock ?? 0) - $stock->quantity,
+                    ];
+                });
     }
 
     /**

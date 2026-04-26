@@ -13,19 +13,27 @@ class CustomerService
      */
     public function create(array $data): Customer
     {
-        // تحقق من عدم وجود عميل بنفس الاسم أو الهاتف
-        $this->ensureUniqueCustomer($data['name'], $data['phone'] ?? null);
+        try {
+            // تحقق من عدم وجود عميل بنفس الاسم أو الهاتف
+            $this->ensureUniqueCustomer($data['name'], $data['phone'] ?? null);
 
-        return Customer::create([
-            'name'         => $data['name'],
-            'phone'        => $data['phone'] ?? null,
-            'email'        => $data['email'] ?? null,
-            'address'      => $data['address'] ?? null,
-            'balance'      => $data['balance'] ?? 0,
-            'credit_limit' => $data['credit_limit'] ?? 0,
-            'is_active'    => !empty($data['is_active']),
-            'code'         => $data['code'] ?? uniqid('cus-'),
-        ]);
+            return Customer::create([
+                'name'         => $data['name'],
+                'phone'        => $data['phone'] ?? null,
+                'email'        => $data['email'] ?? null,
+                'address'      => $data['address'] ?? null,
+                'balance'      => $data['balance'] ?? 0,
+                'credit_limit' => $data['credit_limit'] ?? 0,
+                'is_active'    => !empty($data['is_active']),
+                'code'         => $data['code'] ?? uniqid('cus-'),
+            ]);
+        } catch (\Illuminate\Database\QueryException $e) {
+            \Log::error('Database error creating customer: ' . $e->getMessage());
+            throw new RuntimeException('حدث خطأ أثناء حفظ العميل. يرجى المحاولة مرة أخرى.');
+        } catch (\Exception $e) {
+            \Log::error('Unexpected error creating customer: ' . $e->getMessage());
+            throw new RuntimeException('حدث خطأ غير متوقع. يرجى المحاولة مرة أخرى.');
+        }
     }
 
     /**

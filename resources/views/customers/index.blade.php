@@ -12,10 +12,11 @@
         <p class="text-gray-600 mt-1">إدارة وتتبع العملاء والحسابات</p>
     </div>
     <div class="flex gap-3">
-        <button class="px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold transition flex items-center gap-2">
-            <i class="fas fa-file-export"></i>
+        <a href="{{ route('customers.export') . '?' . request()->getQueryString() }}"
+           class="px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold transition flex items-center gap-2">
+            <i class="fas fa-file-excel"></i>
             تصدير Excel
-        </button>
+        </a>
         <a href="{{ route('customers.create') }}"
            class="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition flex items-center gap-2">
             <i class="fas fa-plus"></i>

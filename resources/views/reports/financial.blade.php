@@ -148,17 +148,214 @@
         border-radius: 16px; padding: 1.5rem; color: white;
     }
 
+    /* طباعة احترافية */
     @media print {
-        .no-print { display: none !important; }
-        body { background: white; }
+        @page {
+            size: A4 landscape;
+            margin: 8mm;
+        }
+
+        * {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+        }
+
+        body {
+            background: white !important;
+            font-size: 10pt !important;
+            line-height: 1.3 !important;
+        }
+
+        .tf-page {
+            background: white !important;
+            padding: 0 !important;
+            min-height: auto !important;
+        }
+
+        .no-print {
+            display: none !important;
+        }
+
+        .tf-card {
+            box-shadow: none !important;
+            border: 1px solid #000 !important;
+            border-radius: 0 !important;
+            margin-bottom: 15px !important;
+            page-break-inside: avoid;
+        }
+
+        .tf-card-head {
+            background: #4338ca !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+            color: white !important;
+            padding: 10px !important;
+        }
+
+        .tf-stat-card {
+            border: 1px solid #000 !important;
+            border-radius: 0 !important;
+            padding: 10px !important;
+            page-break-inside: avoid;
+        }
+
+        .tf-header-gradient {
+            background: #4338ca !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+            border-radius: 0 !important;
+            padding: 15px !important;
+            page-break-after: avoid;
+        }
+
+        /* ترويسة الطباعة */
+        .print-header {
+            display: block !important;
+            page-break-after: avoid;
+            border-bottom: 3px solid #4338ca !important;
+            padding-bottom: 15px !important;
+            margin-bottom: 15px !important;
+        }
+
+        .print-footer {
+            display: block !important;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            text-align: center;
+            font-size: 8pt;
+            color: #666;
+            border-top: 1px solid #ddd;
+            padding: 8px;
+        }
+
+        .print-logo {
+            max-height: 60px !important;
+            max-width: 120px !important;
+        }
+
+        .print-company-name {
+            font-size: 20pt !important;
+            font-weight: 900 !important;
+            color: #4338ca !important;
+            margin-bottom: 5px !important;
+        }
+
+        .print-title {
+            font-size: 16pt !important;
+            font-weight: 800 !important;
+            text-align: center;
+            margin: 10px 0 !important;
+            color: #1e293b !important;
+            text-decoration: underline;
+        }
+
+        /* تنسيق الجدول للطباعة */
+        table {
+            page-break-inside: avoid;
+        }
+
+        thead {
+            display: table-header-group;
+        }
+
+        th {
+            background: #4338ca !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+            color: white !important;
+            border: 1px solid #000 !important;
+            padding: 6px !important;
+            font-size: 9pt !important;
+        }
+
+        td {
+            border: 1px solid #000 !important;
+            padding: 6px !important;
+            font-size: 9pt !important;
+        }
+
+        tbody tr:nth-child(even) {
+            background: #f8fafc !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+        }
+
+        .tf-section-head {
+            background: #e0f2fe !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+        }
+
+        .tf-badge {
+            border: 1px solid #000 !important;
+            background: white !important;
+            color: #000 !important;
+        }
+    }
+
+    .print-header {
+        display: none;
+    }
+
+    .print-footer {
+        display: none;
     }
 </style>
 @endpush
 
 @section('content')
+@php
+    $company = \App\Models\Company::first();
+@endphp
+
 <div class="tf-page">
+
+    {{-- Print Header --}}
+    <div class="print-header">
+        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 15px;">
+            <div style="text-align: right; flex: 1;">
+                @if($company && $company->logo)
+                    <img src="{{ asset('storage/' . $company->logo) }}" class="print-logo" alt="شعار الشركة">
+                @endif
+            </div>
+
+            <div style="text-align: center; flex: 2; padding: 0 15px;">
+                <h1 class="print-company-name">{{ $company->name ?? 'شركة ماجزاني' }}</h1>
+                @if($company->address)
+                    <p style="font-size: 9pt; margin: 3px 0;">
+                        <i class="fas fa-map-marker-alt"></i> {{ $company->address }}
+                    </p>
+                @endif
+                @if($company->phone)
+                    <p style="font-size: 9pt; margin: 3px 0;">
+                        <i class="fas fa-phone"></i> {{ $company->phone }}
+                    </p>
+                @endif
+                @if($company->tax_number)
+                    <p style="font-size: 9pt; margin: 3px 0;">
+                        <i class="fas fa-file-invoice"></i> الرقم الضريبي: {{ $company->tax_number }}
+                    </p>
+                @endif
+            </div>
+
+            <div style="text-align: left; flex: 1;">
+                <p style="font-size: 9pt; margin: 2px 0;"><strong>التاريخ:</strong> {{ \Carbon\Carbon::now()->format('Y-m-d') }}</p>
+                <p style="font-size: 9pt; margin: 2px 0;"><strong>الساعة:</strong> {{ \Carbon\Carbon::now()->format('H:i') }}</p>
+                <p style="font-size: 9pt; margin: 2px 0;"><strong>الفترة:</strong>
+                    {{ $startDate->format('Y-m-d') }} إلى {{ $endDate->format('Y-m-d') }}
+                </p>
+            </div>
+        </div>
+
+        <h2 class="print-title">
+            <i class="fas fa-chart-line"></i> التقرير المالي الشامل
+        </h2>
+    </div>
+
     <!-- Header -->
-    <div class="tf-header-gradient tf-section mb-5">
+    <div class="tf-header-gradient tf-section mb-5 no-print">
         <h2 class="text-3xl font-bold mb-1">التقارير المالية الشاملة</h2>
         <p class="text-white/80 text-sm">
             من {{ $startDate->format('d/m/Y') }} إلى {{ $endDate->format('d/m/Y') }}
@@ -194,6 +391,11 @@
                     <button type="submit" class="tf-btn tf-btn-primary flex-1">
                         <i class="fas fa-search"></i>عرض
                     </button>
+                    <a href="{{ route('reports.financial.export') . '?' . request()->getQueryString() }}"
+                       class="tf-btn tf-btn-secondary"
+                       title="تصدير Excel">
+                        <i class="fas fa-file-excel"></i>
+                    </a>
                     <button type="button" onclick="window.print()" class="tf-btn tf-btn-secondary">
                         <i class="fas fa-print"></i>
                     </button>
@@ -390,6 +592,11 @@
                 </tbody>
             </table>
         </div>
+    </div>
+
+    {{-- Print Footer --}}
+    <div class="print-footer">
+        <p>تم طباعة هذا التقرير من نظام إدارة المخازن - {{ $company->name ?? 'شركة ماجزاني' }} - {{ \Carbon\Carbon::now()->format('Y-m-d H:i') }}</p>
     </div>
 </div>
 @endsection

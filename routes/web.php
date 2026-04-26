@@ -26,6 +26,7 @@ use App\Http\Controllers\StockCountController;
 use App\Http\Controllers\InventoryMovementController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\ManufacturingCostController;
+use App\Http\Controllers\ManufacturingOrderController;
 
 
 /*
@@ -84,6 +85,29 @@ Route::prefix('transfers')->name('transfers.')->middleware('auth')->group(functi
 
 /*
 |--------------------------------------------------------------------------
+| Warehouse Orders (Inbound & Outbound) - Admin Only
+|--------------------------------------------------------------------------
+*/
+Route::prefix('warehouse-orders')->name('warehouse-orders.')->middleware('auth', 'role')->group(function () {
+    // Inbound Orders
+    Route::get('/inbound', [App\Http\Controllers\WarehouseOrderController::class, 'inboundIndex'])->name('inbound.index');
+    Route::get('/inbound/create', [App\Http\Controllers\WarehouseOrderController::class, 'inboundCreate'])->name('inbound.create');
+    Route::post('/inbound', [App\Http\Controllers\WarehouseOrderController::class, 'inboundStore'])->name('inbound.store');
+    Route::get('/inbound/{order}', [App\Http\Controllers\WarehouseOrderController::class, 'inboundShow'])->name('inbound.show');
+    Route::get('/inbound/{order}/print', [App\Http\Controllers\WarehouseOrderController::class, 'inboundPrint'])->name('inbound.print');
+
+    // Outbound Orders
+    Route::get('/outbound', [App\Http\Controllers\WarehouseOrderController::class, 'outboundIndex'])->name('outbound.index');
+    Route::get('/outbound/create', [App\Http\Controllers\WarehouseOrderController::class, 'outboundCreate'])->name('outbound.create');
+    Route::post('/outbound', [App\Http\Controllers\WarehouseOrderController::class, 'outboundStore'])->name('outbound.store');
+    Route::get('/outbound/{order}', [App\Http\Controllers\WarehouseOrderController::class, 'outboundShow'])->name('outbound.show');
+    Route::get('/outbound/{order}/print', [App\Http\Controllers\WarehouseOrderController::class, 'outboundPrint'])->name('outbound.print');
+    Route::post('/outbound/{order}/approve', [App\Http\Controllers\WarehouseOrderController::class, 'outboundApprove'])->name('outbound.approve');
+    Route::post('/outbound/{order}/cancel', [App\Http\Controllers\WarehouseOrderController::class, 'outboundCancel'])->name('outbound.cancel');
+});
+
+/*
+|--------------------------------------------------------------------------
 | Stock Counts (Admin Only)
 |--------------------------------------------------------------------------
 */
@@ -121,8 +145,6 @@ Route::prefix('movements')->name('movements.')->middleware('auth')->group(functi
 */
 Route::prefix('products')->name('products.')->middleware('auth')->group(function () {
     Route::get('/', [ProductController::class, 'index'])->name('index');
-    Route::get('/create', [ProductController::class, 'create'])->name('create');
-    Route::post('/', [ProductController::class, 'store'])->name('store');
     Route::get('/barcode/print', [ProductController::class, 'barcode'])->name('barcode');
     Route::get('/bulk-price-update', [PriceUpdateController::class, 'bulkPriceUpdatePage'])->name('bulk-price-update');
     Route::get('/ajax/categories-by-unit', [PriceUpdateController::class, 'getCategoriesByUnit'])->name('ajax.categories-by-unit');
@@ -138,6 +160,12 @@ Route::prefix('products')->name('products.')->middleware('auth')->group(function
     Route::post('/{product}/update-price', [ProductController::class, 'updatePrice'])->name('update-price');
     Route::get('/{product}/price-history', [ProductController::class, 'priceHistory'])->name('price-history');
     Route::get('/{product}', [ProductController::class, 'show'])->name('show');
+});
+
+// ✅ Admin-only product management
+Route::prefix('products')->name('products.')->middleware('auth', 'admin.only')->group(function () {
+    Route::get('/create', [ProductController::class, 'create'])->name('create');
+    Route::post('/', [ProductController::class, 'store'])->name('store');
     Route::get('/{product}/edit', [ProductController::class, 'edit'])->name('edit');
     Route::put('/{product}', [ProductController::class, 'update'])->name('update');
     Route::delete('/{product}', [ProductController::class, 'destroy'])->name('destroy');
@@ -148,7 +176,7 @@ Route::prefix('products')->name('products.')->middleware('auth')->group(function
 | Manufacturing Cost Calculator (Admin Only)
 |--------------------------------------------------------------------------
 */
-Route::prefix('manufacturing')->name('manufacturing.')->middleware('auth', 'role')->group(function () {
+Route::prefix('manufacturing')->name('manufacturing.')->middleware('auth', 'admin.only')->group(function () {
     Route::get('/', [ManufacturingCostController::class, 'index'])->name('index');
     Route::get('/create', [ManufacturingCostController::class, 'create'])->name('create');
     Route::post('/', [ManufacturingCostController::class, 'store'])->name('store');
@@ -162,17 +190,41 @@ Route::prefix('manufacturing')->name('manufacturing.')->middleware('auth', 'role
 
 /*
 |--------------------------------------------------------------------------
+| Manufacturing Orders (Admin Only)
+|--------------------------------------------------------------------------
+*/
+Route::prefix('manufacturing-orders')->name('manufacturing-orders.')->middleware('auth', 'admin.only')->group(function () {
+    Route::get('/', [ManufacturingOrderController::class, 'index'])->name('index');
+    Route::get('/create', [ManufacturingOrderController::class, 'create'])->name('create');
+    Route::post('/', [ManufacturingOrderController::class, 'store'])->name('store');
+    Route::post('/calculate', [ManufacturingOrderController::class, 'calculateCosts'])->name('calculate');
+    Route::get('/{manufacturingOrder}', [ManufacturingOrderController::class, 'show'])->name('show');
+    Route::get('/{manufacturingOrder}/edit', [ManufacturingOrderController::class, 'edit'])->name('edit');
+    Route::put('/{manufacturingOrder}', [ManufacturingOrderController::class, 'update'])->name('update');
+    Route::delete('/{manufacturingOrder}', [ManufacturingOrderController::class, 'destroy'])->name('destroy');
+    Route::post('/{manufacturingOrder}/confirm', [ManufacturingOrderController::class, 'confirm'])->name('confirm');
+    Route::post('/{manufacturingOrder}/complete', [ManufacturingOrderController::class, 'complete'])->name('complete');
+    Route::post('/{manufacturingOrder}/cancel', [ManufacturingOrderController::class, 'cancel'])->name('cancel');
+});
+
+/*
+|--------------------------------------------------------------------------
 | Invoices - Sales (Protected - Both Admin and Employee)
 |--------------------------------------------------------------------------
 */
 Route::prefix('invoices/sales')->name('invoices.sales.')->controller(SalesController::class)->middleware('auth')->group(function () {
     Route::get('/', 'index')->name('index');
-    Route::get('/create', 'create')->name('create');
-    Route::post('/', 'store')->name('store');
+    
+    // Admin-only creation/editing routes should come BEFORE show/{id} to avoid matching 'create' as ID
+    Route::middleware('admin.only')->group(function () {
+        Route::get('/create', 'create')->name('create');
+        Route::post('/', 'store')->name('store');
+        Route::get('/{id}/edit', 'edit')->name('edit');
+        Route::put('/{id}', 'update')->name('update');
+        Route::delete('/{id}', 'destroy')->name('destroy');
+    });
+
     Route::get('/{id}', 'show')->name('show');
-    Route::get('/{id}/edit', 'edit')->name('edit');
-    Route::put('/{id}', 'update')->name('update');
-    Route::delete('/{id}', 'destroy')->name('destroy');
 });
 
 /*
@@ -224,34 +276,46 @@ Route::prefix('invoices/purchase-returns')->name('invoices.purchase-returns.')->
 
 /*
 |--------------------------------------------------------------------------
-| Customers (Protected - Both Admin and Employee)
+| Customers (Protected - View for all, Modify for Admin)
 |--------------------------------------------------------------------------
 */
 Route::prefix('customers')->name('customers.')->middleware('auth')->group(function () {
     Route::get('/', [CustomerController::class, 'index'])->name('index');
+    Route::get('/export', [CustomerController::class, 'export'])->name('export');
+    Route::get('/{customer}', [CustomerController::class, 'show'])->name('show');
+    Route::get('/{customer}/statement', [CustomerController::class, 'statement'])->name('statement');
+    Route::get('/{customer}/statement/export', [CustomerController::class, 'exportStatement'])->name('statement.export');
+});
+
+// ✅ Admin-only customer management
+Route::prefix('customers')->name('customers.')->middleware('auth', 'admin.only')->group(function () {
     Route::get('/create', [CustomerController::class, 'create'])->name('create');
     Route::post('/', [CustomerController::class, 'store'])->name('store');
-    Route::get('/{customer}', [CustomerController::class, 'show'])->name('show');
     Route::get('/{customer}/edit', [CustomerController::class, 'edit'])->name('edit');
     Route::put('/{customer}', [CustomerController::class, 'update'])->name('update');
     Route::delete('/{customer}', [CustomerController::class, 'destroy'])->name('destroy');
-    Route::get('/{customer}/statement', [CustomerController::class, 'statement'])->name('statement');
 });
 
 /*
 |--------------------------------------------------------------------------
-| Suppliers (Protected - Both Admin and Employee)
+| Suppliers (Protected - View for all, Modify for Admin)
 |--------------------------------------------------------------------------
 */
 Route::prefix('suppliers')->name('suppliers.')->middleware('auth')->group(function () {
     Route::get('/', [SupplierController::class, 'index'])->name('index');
+    Route::get('/export', [SupplierController::class, 'export'])->name('export');
+    Route::get('/{supplier}', [SupplierController::class, 'show'])->name('show');
+    Route::get('/{supplier}/statement', [SupplierController::class, 'statement'])->name('statement');
+    Route::get('/{supplier}/statement/export', [SupplierController::class, 'exportStatement'])->name('statement.export');
+});
+
+// ✅ Admin-only supplier management
+Route::prefix('suppliers')->name('suppliers.')->middleware('auth', 'admin.only')->group(function () {
     Route::get('/create', [SupplierController::class, 'create'])->name('create');
     Route::post('/', [SupplierController::class, 'store'])->name('store');
-    Route::get('/{supplier}', [SupplierController::class, 'show'])->name('show');
     Route::get('/{supplier}/edit', [SupplierController::class, 'edit'])->name('edit');
     Route::put('/{supplier}', [SupplierController::class, 'update'])->name('update');
     Route::delete('/{supplier}', [SupplierController::class, 'destroy'])->name('destroy');
-    Route::get('/{supplier}/statement', [SupplierController::class, 'statement'])->name('statement');
 });
 
 /*
@@ -259,7 +323,7 @@ Route::prefix('suppliers')->name('suppliers.')->middleware('auth')->group(functi
 | Accounting (Admin Only)
 |--------------------------------------------------------------------------
 */
-Route::prefix('accounting')->name('accounting.')->middleware('auth', 'role')->group(function () {
+Route::prefix('accounting')->name('accounting.')->middleware('auth', 'admin.only')->group(function () {
     Route::get('/treasury', [AccountingController::class, 'treasury'])->name('treasury');
     Route::get('/payments', [AccountingController::class, 'index'])->name('payments');
     Route::post('/deposits', [AccountingController::class, 'storeDeposit'])->name('deposits.store');
@@ -278,10 +342,13 @@ Route::prefix('accounting')->name('accounting.')->middleware('auth', 'role')->gr
 | Reports (Admin Only)
 |--------------------------------------------------------------------------
 */
-Route::prefix('reports')->name('reports.')->middleware('auth', 'role')->group(function () {
+Route::prefix('reports')->name('reports.')->middleware('auth', 'admin.only')->group(function () {
     Route::get('/financial', [ReportingController::class, 'financial'])->name('financial');
+    Route::get('/financial/export', [ReportingController::class, 'exportFinancial'])->name('financial.export');
     Route::get('/inventory', [ReportingController::class, 'inventory'])->name('inventory');
+    Route::get('/inventory/export', [ReportingController::class, 'exportInventory'])->name('inventory.export');
     Route::get('/profit-loss', [ReportingController::class, 'profitLoss'])->name('profit-loss');
+    Route::get('/profit-loss/export', [ReportingController::class, 'exportProfitLoss'])->name('profit-loss.export');
 });
 
 /*
@@ -289,15 +356,17 @@ Route::prefix('reports')->name('reports.')->middleware('auth', 'role')->group(fu
 | Settings (Admin Only)
 |--------------------------------------------------------------------------
 */
-Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index')->middleware('auth', 'role');
-Route::post('/settings', [SettingsController::class, 'update'])->name('settings.update')->middleware('auth', 'role');
+Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index')->middleware('auth', 'admin.only');
+Route::post('/settings/company', [SettingsController::class, 'updateCompany'])->name('settings.company.update')->middleware('auth', 'admin.only');
+Route::post('/settings/logo/delete', [SettingsController::class, 'deleteLogo'])->name('settings.logo.delete')->middleware('auth', 'admin.only');
+Route::post('/settings/system', [SettingsController::class, 'updateSystem'])->name('settings.system.update')->middleware('auth', 'admin.only');
 
 /*
 |--------------------------------------------------------------------------
 | User Management (Admin Only)
 |--------------------------------------------------------------------------
 */
-Route::prefix('users')->name('users.')->middleware('auth', 'role')->group(function () {
+Route::prefix('users')->name('users.')->middleware('auth', 'admin.only')->group(function () {
     Route::get('/', [UserController::class, 'index'])->name('index');
     Route::get('/create', [UserController::class, 'create'])->name('create');
     Route::post('/', [UserController::class, 'store'])->name('store');
@@ -306,4 +375,21 @@ Route::prefix('users')->name('users.')->middleware('auth', 'role')->group(functi
     Route::put('/{user}', [UserController::class, 'update'])->name('update');
     Route::delete('/{user}', [UserController::class, 'destroy'])->name('destroy');
     Route::post('/{user}/toggle-active', [UserController::class, 'toggleActive'])->name('toggle-active');
+});
+
+/*
+|--------------------------------------------------------------------------
+| Permissions Management (Admin Only)
+|--------------------------------------------------------------------------
+*/
+Route::prefix('permissions')->name('permissions.')->middleware('auth', 'admin.only')->group(function () {
+    Route::get('/', [App\Http\Controllers\PermissionsController::class, 'index'])->name('index');
+    Route::get('/users/{user}/edit', [App\Http\Controllers\PermissionsController::class, 'editUser'])->name('edit-user');
+    Route::put('/users/{user}', [App\Http\Controllers\PermissionsController::class, 'updateUser'])->name('update-user');
+    Route::get('/roles', [App\Http\Controllers\PermissionsController::class, 'roles'])->name('roles');
+    Route::post('/roles', [App\Http\Controllers\PermissionsController::class, 'storeRole'])->name('store-role');
+    Route::put('/roles/{role}', [App\Http\Controllers\PermissionsController::class, 'updateRole'])->name('update-role');
+    Route::delete('/roles/{role}', [App\Http\Controllers\PermissionsController::class, 'destroyRole'])->name('destroy-role');
+    Route::put('/roles/{role}/permissions', [App\Http\Controllers\PermissionsController::class, 'updateRolePermissions'])->name('update-role-permissions');
+    Route::get('/print', [App\Http\Controllers\PermissionsController::class, 'printReport'])->name('print');
 });

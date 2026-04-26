@@ -90,7 +90,7 @@ class SalesController extends Controller
         $query->orderBy($sortBy, $sortOrder);
 
         // جلب الفواتير مع الترقيم
-        $invoices = $query->paginate(20)->withQueryString();
+        $invoices = $query->paginate(20)->appends($request->query());
 
         // حساب التفاصيل لكل فاتورة
         foreach ($invoices as $invoice) {
@@ -224,6 +224,9 @@ class SalesController extends Controller
         $customers = Customer::where('is_active', 1)->get();
         $warehouses = Warehouse::where('is_active', 1)->get();
         
+        // جلب بيانات الشركة
+        $company = \App\Models\Company::first();
+        
         // ✅ جلب المنتجات مع الوحدات والمخزون والوحدة الأساسية - متوافق مع Product Model
         $products = Product::active()
             ->with([
@@ -238,7 +241,7 @@ class SalesController extends Controller
             ])
             ->get();
         
-        return view('invoices.sales.create', compact('customers', 'warehouses', 'products'));
+        return view('invoices.sales.create', compact('customers', 'warehouses', 'products', 'company'));
     }
 
     /**
@@ -297,11 +300,14 @@ class SalesController extends Controller
                 'items.sellingUnit',
                 'payments'
             ])
-            ->findOrFail($id);
-        
+            ->findOrFail($id); // ← هينا المشكلة، خلصها كده:
+
         $invoice->calculated_details = $this->invoiceService->calculateInvoiceDetails($invoice);
-        
-        return view('invoices.sales.show', compact('invoice'));
+
+        // جلب بيانات الشركة للطباعة
+        $company = \App\Models\Company::first();
+
+        return view('invoices.sales.show', compact('invoice', 'company'));
     }
 
     /**
@@ -343,7 +349,9 @@ class SalesController extends Controller
             ])
             ->get();
         
-        return view('invoices.sales.edit', compact('invoice', 'customers', 'warehouses', 'products'));
+        $company = \App\Models\Company::first();
+        
+        return view('invoices.sales.edit', compact('invoice', 'customers', 'warehouses', 'products', 'company'));
     }
 
     /**

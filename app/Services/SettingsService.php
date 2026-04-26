@@ -25,6 +25,25 @@ class SettingsService
         return $company;
     }
 
+    // حذف شعار الشركة
+    public function deleteLogo()
+    {
+        $company = Company::first();
+
+        if($company->logo){
+            // حذف الملف الفعلي
+            $logoPath = public_path('storage/' . $company->logo);
+            if(file_exists($logoPath)){
+                unlink($logoPath);
+            }
+
+            // حذف المسار من قاعدة البيانات
+            $company->update(['logo' => null]);
+        }
+
+        return $company;
+    }
+
     // تحديث إعدادات النظام
     public function updateSystem(array $data)
     {
