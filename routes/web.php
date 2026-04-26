@@ -214,7 +214,7 @@ Route::prefix('manufacturing-orders')->name('manufacturing-orders.')->middleware
 */
 Route::prefix('invoices/sales')->name('invoices.sales.')->controller(SalesController::class)->middleware('auth')->group(function () {
     Route::get('/', 'index')->name('index');
-    
+
     // Admin-only creation/editing routes should come BEFORE show/{id} to avoid matching 'create' as ID
     Route::middleware('admin.only')->group(function () {
         Route::get('/create', 'create')->name('create');
@@ -282,18 +282,19 @@ Route::prefix('invoices/purchase-returns')->name('invoices.purchase-returns.')->
 Route::prefix('customers')->name('customers.')->middleware('auth')->group(function () {
     Route::get('/', [CustomerController::class, 'index'])->name('index');
     Route::get('/export', [CustomerController::class, 'export'])->name('export');
+
+    // Admin-only routes MUST come BEFORE show/{customer} to avoid matching 'create' as ID
+    Route::middleware('admin.only')->group(function () {
+        Route::get('/create', [CustomerController::class, 'create'])->name('create');
+        Route::post('/', [CustomerController::class, 'store'])->name('store');
+        Route::get('/{customer}/edit', [CustomerController::class, 'edit'])->name('edit');
+        Route::put('/{customer}', [CustomerController::class, 'update'])->name('update');
+        Route::delete('/{customer}', [CustomerController::class, 'destroy'])->name('destroy');
+    });
+
     Route::get('/{customer}', [CustomerController::class, 'show'])->name('show');
     Route::get('/{customer}/statement', [CustomerController::class, 'statement'])->name('statement');
     Route::get('/{customer}/statement/export', [CustomerController::class, 'exportStatement'])->name('statement.export');
-});
-
-// ✅ Admin-only customer management
-Route::prefix('customers')->name('customers.')->middleware('auth', 'admin.only')->group(function () {
-    Route::get('/create', [CustomerController::class, 'create'])->name('create');
-    Route::post('/', [CustomerController::class, 'store'])->name('store');
-    Route::get('/{customer}/edit', [CustomerController::class, 'edit'])->name('edit');
-    Route::put('/{customer}', [CustomerController::class, 'update'])->name('update');
-    Route::delete('/{customer}', [CustomerController::class, 'destroy'])->name('destroy');
 });
 
 /*
@@ -304,18 +305,19 @@ Route::prefix('customers')->name('customers.')->middleware('auth', 'admin.only')
 Route::prefix('suppliers')->name('suppliers.')->middleware('auth')->group(function () {
     Route::get('/', [SupplierController::class, 'index'])->name('index');
     Route::get('/export', [SupplierController::class, 'export'])->name('export');
+
+    // Admin-only routes MUST come BEFORE show/{supplier} to avoid matching 'create' as ID
+    Route::middleware('admin.only')->group(function () {
+        Route::get('/create', [SupplierController::class, 'create'])->name('create');
+        Route::post('/', [SupplierController::class, 'store'])->name('store');
+        Route::get('/{supplier}/edit', [SupplierController::class, 'edit'])->name('edit');
+        Route::put('/{supplier}', [SupplierController::class, 'update'])->name('update');
+        Route::delete('/{supplier}', [SupplierController::class, 'destroy'])->name('destroy');
+    });
+
     Route::get('/{supplier}', [SupplierController::class, 'show'])->name('show');
     Route::get('/{supplier}/statement', [SupplierController::class, 'statement'])->name('statement');
     Route::get('/{supplier}/statement/export', [SupplierController::class, 'exportStatement'])->name('statement.export');
-});
-
-// ✅ Admin-only supplier management
-Route::prefix('suppliers')->name('suppliers.')->middleware('auth', 'admin.only')->group(function () {
-    Route::get('/create', [SupplierController::class, 'create'])->name('create');
-    Route::post('/', [SupplierController::class, 'store'])->name('store');
-    Route::get('/{supplier}/edit', [SupplierController::class, 'edit'])->name('edit');
-    Route::put('/{supplier}', [SupplierController::class, 'update'])->name('update');
-    Route::delete('/{supplier}', [SupplierController::class, 'destroy'])->name('destroy');
 });
 
 /*
