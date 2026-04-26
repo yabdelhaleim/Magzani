@@ -14,30 +14,30 @@
     </nav>
 
     <!-- Header Card -->
-    <div class="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl shadow-lg p-8 text-white">
-        <div class="flex items-center justify-between">
+    <div class="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl shadow-lg p-4 md:p-8 text-white">
+        <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
             <div class="flex items-center gap-4">
-                <div class="w-20 h-20 bg-white bg-opacity-20 rounded-full flex items-center justify-center text-3xl font-bold">
+                <div class="w-16 h-16 md:w-20 md:h-20 bg-white bg-opacity-20 rounded-full flex items-center justify-center text-2xl md:text-3xl font-bold flex-shrink-0">
                     {{ substr($supplier->name, 0, 2) }}
                 </div>
                 <div>
-                    <h2 class="text-3xl font-bold mb-2">{{ $supplier->name }}</h2>
-                    <div class="flex items-center gap-4 text-sm text-blue-100">
+                    <h2 class="text-xl md:text-3xl font-bold mb-1 md:mb-2">{{ $supplier->name }}</h2>
+                    <div class="flex flex-wrap items-center gap-2 md:gap-4 text-sm text-blue-100">
                         <span><i class="fas fa-hashtag ml-1"></i>{{ $supplier->id }}</span>
                         <span><i class="fas fa-calendar ml-1"></i>{{ $supplier->created_at->format('Y-m-d') }}</span>
                         @if($supplier->is_active ?? true)
-                            <span class="px-3 py-1 bg-green-500 rounded-full"><i class="fas fa-check-circle ml-1"></i>نشط</span>
+                            <span class="px-2 py-0.5 md:px-3 md:py-1 bg-green-500 rounded-full text-xs md:text-sm"><i class="fas fa-check-circle ml-1"></i>نشط</span>
                         @else
-                            <span class="px-3 py-1 bg-gray-500 rounded-full"><i class="fas fa-pause-circle ml-1"></i>غير نشط</span>
+                            <span class="px-2 py-0.5 md:px-3 md:py-1 bg-gray-500 rounded-full text-xs md:text-sm"><i class="fas fa-pause-circle ml-1"></i>غير نشط</span>
                         @endif
                     </div>
                 </div>
             </div>
-            <div class="flex gap-2">
-                <a href="{{ route('suppliers.edit', $supplier->id) }}" class="px-4 py-2 bg-white bg-opacity-20 hover:bg-opacity-30 rounded-lg">
+            <div class="flex flex-wrap gap-2">
+                <a href="{{ route('suppliers.edit', $supplier->id) }}" class="px-3 py-2 md:px-4 bg-white text-blue-700 hover:bg-gray-100 rounded-lg font-semibold text-sm md:text-base">
                     <i class="fas fa-edit ml-2"></i>تعديل
                 </a>
-                <a href="{{ route('suppliers.statement', $supplier->id) }}" class="px-4 py-2 bg-white bg-opacity-20 hover:bg-opacity-30 rounded-lg">
+                <a href="{{ route('suppliers.statement', $supplier->id) }}" class="px-3 py-2 md:px-4 bg-white text-purple-700 hover:bg-gray-100 rounded-lg font-semibold text-sm md:text-base">
                     <i class="fas fa-file-invoice ml-2"></i>كشف الحساب
                 </a>
             </div>

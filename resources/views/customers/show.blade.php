@@ -134,7 +134,7 @@
         gap: 16px;
         margin-bottom: 20px;
     }
-    @media(max-width: 640px) { .stats-row { grid-template-columns: 1fr 1fr; } }
+    @media(max-width: 640px) { .stats-row { grid-template-columns: 1fr; } }
     .stat-card {
         background: var(--surface);
         border: 1px solid var(--border);
@@ -254,6 +254,22 @@
         margin-right: auto;
     }
     .btn-danger-outline:hover { background: var(--danger-soft); }
+
+    /* ═══ MOBILE RESPONSIVE ═══ */
+    @media(max-width: 640px) {
+        .page-header { padding: 20px 18px 64px; border-radius: 16px; }
+        .page-header h1 { font-size: 1.15rem; }
+        .header-inner { flex-direction: column; align-items: flex-start; gap: 10px; }
+        .header-actions { position: static; margin-top: 8px; width: 100%; justify-content: flex-start; }
+        .profile-card-body { flex-direction: column; align-items: center; text-align: center; padding: 0 18px 22px; gap: 14px; }
+        .profile-info { padding-top: 0; width: 100%; }
+        .profile-meta { justify-content: center; }
+        .action-row { flex-direction: column; align-items: stretch; gap: 8px; padding: 14px 16px; }
+        .action-row .btn { justify-content: center; }
+        .action-row form { margin-right: 0; }
+        .btn-danger-outline { margin-right: 0; }
+        .detail-item { padding: 12px 16px; gap: 10px; }
+    }
 </style>
 @endpush
 
