@@ -323,17 +323,17 @@
 
             <div style="text-align: center; flex: 2; padding: 0 15px;">
                 <h1 class="print-company-name">{{ $company->name ?? 'شركة ماجزاني' }}</h1>
-                @if($company->address)
+                @if($company->address ?? null)
                     <p style="font-size: 9pt; margin: 3px 0;">
                         <i class="fas fa-map-marker-alt"></i> {{ $company->address }}
                     </p>
                 @endif
-                @if($company->phone)
+                @if($company->phone ?? null)
                     <p style="font-size: 9pt; margin: 3px 0;">
                         <i class="fas fa-phone"></i> {{ $company->phone }}
                     </p>
                 @endif
-                @if($company->tax_number)
+                @if($company->tax_number ?? null)
                     <p style="font-size: 9pt; margin: 3px 0;">
                         <i class="fas fa-file-invoice"></i> الرقم الضريبي: {{ $company->tax_number }}
                     </p>

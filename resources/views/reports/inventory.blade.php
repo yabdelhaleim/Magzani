@@ -60,10 +60,10 @@
             </div>
             <div style="text-align: center; flex: 2;">
                 <h1 class="print-company-name">{{ $company->name ?? 'شركة ماجزاني' }}</h1>
-                @if($company->address)
+                @if($company->address ?? null)
                     <p style="font-size: 9pt; margin: 3px 0;"><i class="fas fa-map-marker-alt"></i> {{ $company->address }}</p>
                 @endif
-                @if($company->phone)
+                @if($company->phone ?? null)
                     <p style="font-size: 9pt; margin: 3px 0;"><i class="fas fa-phone"></i> {{ $company->phone }}</p>
                 @endif
             </div>
@@ -158,15 +158,15 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @forelse($products as $product)
+                    @forelse($inventory as $product)
                     <tr>
                         <td>{{ $product->name }}</td>
                         <td>{{ $product->code ?? '-' }}</td>
-                        <td>{{ $product->category->name ?? '-' }}</td>
+                        <td>{{ $product->warehouse_name ?? '-' }}</td>
                         <td>{{ number_format($product->quantity, 2) }}</td>
-                        <td>{{ number_format($product->cost_price, 2) }} ج.م</td>
+                        <td>{{ number_format($product->purchase_price, 2) }} ج.م</td>
                         <td>{{ number_format($product->selling_price, 2) }} ج.م</td>
-                        <td>{{ number_format($product->quantity * $product->cost_price, 2) }} ج.م</td>
+                        <td>{{ number_format($product->total_value, 2) }} ج.م</td>
                         <td>
                             @if($product->quantity <= 0)
                                 <span class="px-3 py-1 bg-red-100 text-red-700 rounded-full text-xs font-semibold">نفذ</span>

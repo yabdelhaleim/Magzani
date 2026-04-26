@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Services\ReportingService;
+use App\Models\Category;
 use App\Models\Warehouse;
 use Illuminate\Http\Request;
 use App\Exports\InventoryReportExport;
@@ -29,6 +30,7 @@ class ReportingController extends Controller
             
             // جلب المخازن
             $warehouses = Warehouse::all();
+            $categories = Category::all();
             
             // إحصائيات المخزون
             $totalValue = $inventory->sum('total_value') ?? 0;
@@ -40,6 +42,7 @@ class ReportingController extends Controller
             return view('reports.inventory', [
                 'inventory' => $inventory,
                 'warehouses' => $warehouses,
+                'categories' => $categories,
                 'totalValue' => $totalValue,
                 'lowStockCount' => $lowStockCount,
                 'totalProducts' => $totalProducts
@@ -115,12 +118,14 @@ class ReportingController extends Controller
 
         $report = $this->reportingService->profitLossReport($startDate, $endDate);
         $expensesByCategory = $this->reportingService->expensesByCategory($startDate, $endDate);
-        
+        $warehouses = Warehouse::all();
+
         return view('reports.profit-loss', [
             'report' => $report,
             'startDate' => $startDate,
             'endDate' => $endDate,
-            'expensesByCategory' => $expensesByCategory
+            'expensesByCategory' => $expensesByCategory,
+            'warehouses' => $warehouses
         ]);
     }
 
