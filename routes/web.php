@@ -34,6 +34,7 @@ use App\Http\Controllers\ManufacturingOrderController;
 | Authentication Routes (Public)
 |--------------------------------------------------------------------------
 */
+
 Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login')->middleware('guest');
 Route::post('/login', [LoginController::class, 'login'])->middleware('guest');
 Route::get('/register', [RegisterController::class, 'showRegistrationForm'])->name('register')->middleware('guest');
@@ -157,18 +158,19 @@ Route::prefix('products')->name('products.')->middleware('auth')->group(function
     Route::get('/units-statistics', [PriceUpdateController::class, 'unitsStatistics'])->name('units-statistics');
     Route::get('/ajax/convert-unit-price', [PriceUpdateController::class, 'convertUnitPrice'])->name('ajax.convert-unit-price');
     Route::get('/ajax/unit-details', [PriceUpdateController::class, 'getUnitDetails'])->name('ajax.unit-details');
+
+    // ✅ Admin-only routes MUST come BEFORE /{product} to avoid matching 'create' as an ID
+    Route::middleware('admin.only')->group(function () {
+        Route::get('/create', [ProductController::class, 'create'])->name('create');
+        Route::post('/', [ProductController::class, 'store'])->name('store');
+        Route::get('/{product}/edit', [ProductController::class, 'edit'])->name('edit');
+        Route::put('/{product}', [ProductController::class, 'update'])->name('update');
+        Route::delete('/{product}', [ProductController::class, 'destroy'])->name('destroy');
+    });
+
     Route::post('/{product}/update-price', [ProductController::class, 'updatePrice'])->name('update-price');
     Route::get('/{product}/price-history', [ProductController::class, 'priceHistory'])->name('price-history');
     Route::get('/{product}', [ProductController::class, 'show'])->name('show');
-});
-
-// ✅ Admin-only product management
-Route::prefix('products')->name('products.')->middleware('auth', 'admin.only')->group(function () {
-    Route::get('/create', [ProductController::class, 'create'])->name('create');
-    Route::post('/', [ProductController::class, 'store'])->name('store');
-    Route::get('/{product}/edit', [ProductController::class, 'edit'])->name('edit');
-    Route::put('/{product}', [ProductController::class, 'update'])->name('update');
-    Route::delete('/{product}', [ProductController::class, 'destroy'])->name('destroy');
 });
 
 /*

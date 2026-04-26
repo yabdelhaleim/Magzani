@@ -25,10 +25,10 @@ class CustomerController extends Controller
         // Apply search
         if ($request->filled('search')) {
             $search = $request->search;
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('code', 'like', "%{$search}%")
-                  ->orWhere('phone', 'like', "%{$search}%");
+                    ->orWhere('code', 'like', "%{$search}%")
+                    ->orWhere('phone', 'like', "%{$search}%");
             });
         }
 
@@ -131,24 +131,24 @@ class CustomerController extends Controller
     public function statement(Request $request, $id)
     {
         $customer = Customer::with('salesInvoices')->findOrFail($id);
-        
+
         // Apply filters to the relationship
         $query = $customer->salesInvoices();
-        
+
         if ($request->date_from) {
             $query->whereDate('invoice_date', '>=', $request->date_from);
         }
-        
+
         if ($request->date_to) {
             $query->whereDate('invoice_date', '<=', $request->date_to);
         }
-        
+
         if ($request->status) {
             $query->where('payment_status', $request->status);
         }
-        
+
         $filteredInvoices = $query->orderBy('invoice_date', 'asc')->get();
-        
+
         // Replace the relation with filtered results
         $customer->setRelation('salesInvoices', $filteredInvoices);
         $company = \App\Models\Company::first();
@@ -162,9 +162,9 @@ class CustomerController extends Controller
     public function exportStatement(Request $request, $id)
     {
         $customer = Customer::with('salesInvoices')->findOrFail($id);
-        
+
         $filters = $request->only(['date_from', 'date_to', 'status']);
-        
+
         return Excel::download(
             new CustomerStatementExport($customer, $filters),
             'statement-customer-' . $customer->code . '-' . date('Y-m-d') . '.xlsx'

@@ -49,7 +49,6 @@ class SupplierController extends Controller
             return redirect()
                 ->route('suppliers.show', $supplier->id)
                 ->with('success', 'تم إنشاء المورد بنجاح');
-
         } catch (\Exception $e) {
             return back()
                 ->withInput()
@@ -63,7 +62,7 @@ class SupplierController extends Controller
     public function show(Supplier $supplier)
     {
         $summary = $this->supplierService->getFinancialSummary($supplier);
-        
+
         // أحدث الفواتير
         $recentInvoices = $supplier->purchaseInvoices()
             ->with('warehouse')
@@ -99,7 +98,6 @@ class SupplierController extends Controller
             return redirect()
                 ->route('suppliers.show', $supplier->id)
                 ->with('success', 'تم تحديث بيانات المورد بنجاح');
-
         } catch (\Exception $e) {
             return back()
                 ->withInput()
@@ -118,7 +116,6 @@ class SupplierController extends Controller
             return redirect()
                 ->route('suppliers.index')
                 ->with('success', 'تم حذف المورد بنجاح');
-
         } catch (\Exception $e) {
             return back()
                 ->with('error', 'حدث خطأ أثناء حذف المورد: ' . $e->getMessage());
@@ -159,9 +156,8 @@ class SupplierController extends Controller
             $this->supplierService->toggleStatus($supplier);
 
             $status = $supplier->is_active ? 'تم تفعيل' : 'تم إيقاف';
-            
-            return back()->with('success', "{$status} المورد بنجاح");
 
+            return back()->with('success', "{$status} المورد بنجاح");
         } catch (\Exception $e) {
             return back()->with('error', 'حدث خطأ: ' . $e->getMessage());
         }

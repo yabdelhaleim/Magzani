@@ -5,7 +5,7 @@
 
 @section('content')
 <div class="space-y-6" x-data="{ showPaymentModal: false }">
-    
+
     <!-- Breadcrumb -->
     <nav class="flex items-center gap-2 text-sm text-gray-600">
         <a href="{{ route('suppliers.index') }}" class="hover:text-blue-600">الموردين</a>
