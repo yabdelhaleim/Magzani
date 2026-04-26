@@ -23,6 +23,11 @@
         .mfg-page { padding: 26px 22px; }
     }
 
+    /* Make room for fixed action buttons on mobile */
+    @media (max-width: 767px) {
+        .mfg-page { padding-bottom: 100px; }
+    }
+
     .mfg-title {
         font-size: 20px;
         font-weight: 900;
@@ -211,17 +216,78 @@
         .mfg-table td { padding: 10px; }
     }
 
-    /* Component row on mobile */
-    .component-card {
-        background: #f8faff;
-        border-radius: 12px;
-        padding: 12px;
-        margin-bottom: 12px;
-        border: 1px solid var(--tf-border);
-    }
+    /* ==========================================
+       MOBILE: Card-style table rows (< 768px)
+       ========================================== */
+    @media (max-width: 767px) {
+        .mfg-table thead {
+            display: none;
+        }
 
-    @media (min-width: 1024px) {
-        .component-card { display: none; }
+        .mfg-table tbody tr {
+            display: block;
+            background: #f8faff;
+            border-radius: 12px;
+            padding: 12px;
+            margin-bottom: 12px;
+            border: 1px solid var(--tf-border);
+        }
+
+        .mfg-table tbody td {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 0;
+            border-top: none;
+            text-align: right;
+        }
+
+        .mfg-table tbody td::before {
+            content: attr(data-label);
+            font-weight: 700;
+            font-size: 11px;
+            color: var(--tf-text-h);
+            white-space: nowrap;
+            flex-shrink: 0;
+            min-width: 70px;
+        }
+
+        .mfg-table tbody td .input-sm,
+        .mfg-table tbody td .form-control,
+        .mfg-table tbody td select.form-control {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .mfg-table tbody td .cost-display {
+            font-weight: 700;
+            color: var(--tf-indigo);
+        }
+
+        .mfg-table tbody td:last-child {
+            justify-content: flex-end;
+            padding-top: 8px;
+            border-top: 1px solid var(--tf-border);
+            margin-top: 4px;
+        }
+
+        .mfg-table tbody td:last-child::before {
+            display: none;
+        }
+
+        /* Cost display suffix for components table (column 7 of 8) */
+        #components-table tbody td:nth-child(7)::after {
+            content: ' ج.م';
+            font-size: 11px;
+            color: var(--tf-text-m);
+        }
+
+        /* Cost display suffix for additional table (column 4 of 5) */
+        #additional-table tbody td:nth-child(4)::after {
+            content: ' ج.م';
+            font-size: 11px;
+            color: var(--tf-text-m);
+        }
     }
 
     /* Summary */
@@ -358,24 +424,6 @@
         }
     }
 
-    /* Mobile table view - hide on desktop */
-    .mobile-table {
-        display: block;
-    }
-
-    @media (min-width: 1024px) {
-        .mobile-table { display: none; }
-    }
-
-    /* Desktop table view - hide on mobile */
-    .desktop-table {
-        display: none;
-    }
-
-    @media (min-width: 1024px) {
-        .desktop-table { display: block; }
-    }
-
     /* Remove button */
     .remove-btn {
         background: var(--tf-red);
@@ -493,8 +541,7 @@
                     <i class="fas fa-plus"></i> [+ إضافة قطعة خشب]
                 </button>
 
-                <!-- Desktop Table -->
-                <div class="desktop-table table-responsive">
+                <div class="table-responsive">
                     <table class="mfg-table" id="components-table">
                         <thead>
                             <tr>
@@ -513,11 +560,6 @@
                         </tbody>
                     </table>
                 </div>
-
-                <!-- Mobile Cards -->
-                <div class="mobile-table" id="components-mobile">
-                    <!-- Mobile component cards will be added here -->
-                </div>
             </div>
         </div>
 
@@ -532,8 +574,7 @@
                     <i class="fas fa-plus"></i> [+ إضافة مكون إضافي]
                 </button>
 
-                <!-- Desktop Table -->
-                <div class="desktop-table table-responsive">
+                <div class="table-responsive">
                     <table class="mfg-table" id="additional-table">
                         <thead>
                             <tr>
@@ -548,11 +589,6 @@
                             <!-- Additional components will be added here -->
                         </tbody>
                     </table>
-                </div>
-
-                <!-- Mobile Cards -->
-                <div class="mobile-table" id="additional-mobile">
-                    <!-- Mobile additional cards will be added here -->
                 </div>
             </div>
         </div>
@@ -657,12 +693,10 @@ let additionalIndex = 0;
 function addComponent() {
     componentIndex++;
     const tbody = document.getElementById('components-body');
-    const mobile = document.getElementById('components-mobile');
 
-    // Desktop row
     const row = document.createElement('tr');
     row.innerHTML = `
-        <td>
+        <td data-label="النوع">
             <select name="components[${componentIndex}][type]" class="form-control" style="padding:6px 8px;">
                 <option value="الفرش1">الفرش1</option>
                 <option value="الروباط ">الروباط </option>
@@ -670,73 +704,20 @@ function addComponent() {
                 <option value="دكم او عوارض">دكم او عوارض</option>
             </select>
         </td>
-        <td><input type="number" name="components[${componentIndex}][thickness]" class="input-sm" step="0.1" placeholder="2.5"></td>
-        <td><input type="number" name="components[${componentIndex}][width]" class="input-sm" step="0.1" placeholder="12"></td>
-        <td><input type="number" name="components[${componentIndex}][length]" class="input-sm" step="0.01" placeholder="4.00"></td>
-        <td><input type="number" name="components[${componentIndex}][quantity]" class="input-sm" value="1"></td>
-        <td><input type="number" name="components[${componentIndex}][price]" class="input-sm" step="0.01" placeholder="0" oninput="recalculateAll()"></td>
-        <td><span class="cost-display">0.00</span></td>
-        <td><button type="button" class="remove-btn" onclick="removeComponent(${componentIndex}, this)"><i class="fas fa-trash"></i></button></td>
+        <td data-label="السمك (سم)"><input type="number" name="components[${componentIndex}][thickness]" class="input-sm" step="0.1" placeholder="2.5"></td>
+        <td data-label="العرض (سم)"><input type="number" name="components[${componentIndex}][width]" class="input-sm" step="0.1" placeholder="12"></td>
+        <td data-label="الطول (م)"><input type="number" name="components[${componentIndex}][length]" class="input-sm" step="0.01" placeholder="4.00"></td>
+        <td data-label="العدد"><input type="number" name="components[${componentIndex}][quantity]" class="input-sm" value="1"></td>
+        <td data-label="سعر المتر"><input type="number" name="components[${componentIndex}][price]" class="input-sm" step="0.01" placeholder="0" oninput="recalculateAll()"></td>
+        <td data-label="التكلفة"><span class="cost-display">0.00</span></td>
+        <td data-label="إجراء"><button type="button" class="remove-btn" onclick="removeComponent(${componentIndex}, this)"><i class="fas fa-trash"></i></button></td>
     `;
     tbody.appendChild(row);
-
-    // Mobile card
-    const card = document.createElement('div');
-    card.className = 'component-card';
-    card.id = `mobile-comp-${componentIndex}`;
-    card.innerHTML = `
-        <div class="form-group">
-            <label class="form-label">النوع</label>
-            <select name="components[${componentIndex}][type]" class="form-control">
-                <option value="مصطبة">مصطبة</option>
-                <option value="كشري">كشري</option>
-                <option value="بياض">بياض</option>
-                <option value="طرش">طرش</option>
-            </select>
-        </div>
-        <div class="grid-2">
-            <div class="form-group">
-                <label class="form-label">السمك (سم)</label>
-                <input type="number" name="components[${componentIndex}][thickness]" class="form-control" step="0.1" placeholder="2.5">
-            </div>
-            <div class="form-group">
-                <label class="form-label">العرض (سم)</label>
-                <input type="number" name="components[${componentIndex}][width]" class="form-control" step="0.1" placeholder="12">
-            </div>
-        </div>
-        <div class="grid-2">
-            <div class="form-group">
-                <label class="form-label">الطول (م)</label>
-                <input type="number" name="components[${componentIndex}][length]" class="form-control" step="0.01" placeholder="4.00">
-            </div>
-            <div class="form-group">
-                <label class="form-label">العدد</label>
-                <input type="number" name="components[${componentIndex}][quantity]" class="form-control" value="1">
-            </div>
-        </div>
-        <div class="grid-2">
-            <div class="form-group">
-                <label class="form-label">سعر المتر</label>
-                <input type="number" name="components[${componentIndex}][price]" class="form-control" step="0.01" placeholder="0" oninput="recalculateAll()">
-            </div>
-            <div class="form-group">
-                <label class="form-label">التكلفة</label>
-                <div class="form-control" style="background:#f8faff;">0.00</div>
-            </div>
-        </div>
-        <button type="button" class="btn btn-red btn-sm btn-block" onclick="removeComponent(${componentIndex}, this)">
-            <i class="fas fa-trash"></i> حذف
-        </button>
-    `;
-    mobile.appendChild(card);
 }
 
 function removeComponent(index, btn) {
     const row = btn.closest('tr');
     if (row) row.remove();
-
-    const mobile = document.getElementById(`mobile-comp-${index}`);
-    if (mobile) mobile.remove();
 
     recalculateAll();
 }
@@ -744,55 +725,21 @@ function removeComponent(index, btn) {
 function addAdditionalComponent() {
     additionalIndex++;
     const tbody = document.getElementById('additional-body');
-    const mobile = document.getElementById('additional-mobile');
 
-    // Desktop row
     const row = document.createElement('tr');
     row.innerHTML = `
-        <td><input type="text" name="additional[${additionalIndex}][name]" class="input-sm" placeholder="غراء، مسامير، إلخ" style="text-align:right;"></td>
-        <td><input type="number" name="additional[${additionalIndex}][quantity]" class="input-sm" value="1"></td>
-        <td><input type="number" name="additional[${additionalIndex}][price]" class="input-sm" step="0.01" placeholder="0" oninput="recalculateAll()"></td>
-        <td><span class="cost-display">0.00</span></td>
-        <td><button type="button" class="remove-btn" onclick="removeAdditional(${additionalIndex}, this)"><i class="fas fa-trash"></i></button></td>
+        <td data-label="اسم المكون"><input type="text" name="additional[${additionalIndex}][name]" class="input-sm" placeholder="غراء، مسامير، إلخ" style="text-align:right;"></td>
+        <td data-label="العدد/الكمية"><input type="number" name="additional[${additionalIndex}][quantity]" class="input-sm" value="1"></td>
+        <td data-label="سعر الوحدة"><input type="number" name="additional[${additionalIndex}][price]" class="input-sm" step="0.01" placeholder="0" oninput="recalculateAll()"></td>
+        <td data-label="التكلفة"><span class="cost-display">0.00</span></td>
+        <td data-label="إجراء"><button type="button" class="remove-btn" onclick="removeAdditional(${additionalIndex}, this)"><i class="fas fa-trash"></i></button></td>
     `;
     tbody.appendChild(row);
-
-    // Mobile card
-    const card = document.createElement('div');
-    card.className = 'component-card';
-    card.id = `mobile-add-${additionalIndex}`;
-    card.innerHTML = `
-        <div class="form-group">
-            <label class="form-label">اسم المكون</label>
-            <input type="text" name="additional[${additionalIndex}][name]" class="form-control" placeholder="غراء، مسامير، إلخ">
-        </div>
-        <div class="grid-2">
-            <div class="form-group">
-                <label class="form-label">العدد</label>
-                <input type="number" name="additional[${additionalIndex}][quantity]" class="form-control" value="1">
-            </div>
-            <div class="form-group">
-                <label class="form-label">سعر الوحدة</label>
-                <input type="number" name="additional[${additionalIndex}][price]" class="form-control" step="0.01" placeholder="0" oninput="recalculateAll()">
-            </div>
-        </div>
-        <div class="form-group">
-            <label class="form-label">التكلفة</label>
-            <div class="form-control" style="background:#f8faff;">0.00</div>
-        </div>
-        <button type="button" class="btn btn-red btn-sm btn-block" onclick="removeAdditional(${additionalIndex}, this)">
-            <i class="fas fa-trash"></i> حذف
-        </button>
-    `;
-    mobile.appendChild(card);
 }
 
 function removeAdditional(index, btn) {
     const row = btn.closest('tr');
     if (row) row.remove();
-
-    const mobile = document.getElementById(`mobile-add-${index}`);
-    if (mobile) mobile.remove();
 
     recalculateAll();
 }
@@ -838,26 +785,6 @@ function recalculateAll() {
     document.getElementById('summary-quantity').textContent = quantityProduced;
     document.getElementById('summary-pallet').textContent = palletCost.toFixed(2) + ' ج.م';
     document.getElementById('summary-total').textContent = totalCost.toFixed(2) + ' ج.م';
-
-    // Update mobile displays
-    document.querySelectorAll('#components-mobile .component-card').forEach((card, i) => {
-        const inputs = card.querySelectorAll('input');
-        const length = parseFloat(inputs[2]?.value) || 0;
-        const quantity = parseFloat(inputs[3]?.value) || 0;
-        const price = parseFloat(inputs[4]?.value) || 0;
-        const cost = length * quantity * price;
-        const display = card.querySelectorAll('.form-control')[3];
-        if (display) display.textContent = cost.toFixed(2);
-    });
-
-    document.querySelectorAll('#additional-mobile .component-card').forEach((card, i) => {
-        const inputs = card.querySelectorAll('input');
-        const quantity = parseFloat(inputs[1]?.value) || 0;
-        const price = parseFloat(inputs[2]?.value) || 0;
-        const cost = quantity * price;
-        const display = card.querySelectorAll('.form-control')[2];
-        if (display) display.textContent = cost.toFixed(2);
-    });
 }
 
 // Add one component by default
