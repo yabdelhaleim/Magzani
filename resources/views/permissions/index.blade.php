@@ -6,24 +6,24 @@
 <div class="page-body">
 
     <!-- Header -->
-    <div class="flex justify-between items-center mb-6">
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4 md:mb-6">
         <div>
-            <h1 class="text-2xl font-bold text-gray-800">
+            <h1 class="text-xl md:text-2xl font-bold text-gray-800">
                 <i class="fas fa-shield-alt text-blue-600 ml-2"></i>
                 إدارة الصلاحيات
             </h1>
-            <p class="text-gray-600 mt-1">
+            <p class="text-sm text-gray-600 mt-1">
                 إدارة صلاحيات وأدوار المستخدمين في النظام
             </p>
         </div>
-        <div class="flex gap-3">
-            <a href="{{ route('permissions.roles') }}" 
-               class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition flex items-center gap-2">
+        <div class="flex gap-2 w-full sm:w-auto">
+            <a href="{{ route('permissions.roles') }}"
+               class="flex-1 sm:flex-none text-center px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition text-sm flex items-center justify-center gap-1">
                 <i class="fas fa-user-tag"></i>
                 إدارة الأدوار
             </a>
-            <a href="{{ route('permissions.print') }}" 
-               class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg font-semibold transition flex items-center gap-2">
+            <a href="{{ route('permissions.print') }}"
+               class="flex-1 sm:flex-none text-center px-3 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg font-semibold transition text-sm flex items-center justify-center gap-1">
                 <i class="fas fa-print"></i>
                 طباعة التقرير
             </a>
@@ -46,133 +46,131 @@
     @endif
 
     <!-- Stats Grid -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-        <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-200 hover:shadow-md transition">
-            <div class="flex items-center gap-4">
-                <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                    <i class="fas fa-users text-blue-600 text-xl"></i>
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6 mb-4 md:mb-6">
+        <div class="bg-white rounded-xl shadow-sm p-3 md:p-6 border border-gray-200 hover:shadow-md transition">
+            <div class="flex items-center gap-3 md:gap-4">
+                <div class="w-10 h-10 md:w-12 md:h-12 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <i class="fas fa-users text-blue-600 text-lg md:text-xl"></i>
                 </div>
                 <div>
-                    <p class="text-gray-600 text-sm">عدد المستخدمين</p>
-                    <h3 class="text-2xl font-bold text-gray-800">{{ $users->total() }}</h3>
+                    <p class="text-gray-600 text-xs md:text-sm">المستخدمين</p>
+                    <h3 class="text-lg md:text-2xl font-bold text-gray-800">{{ $users->total() }}</h3>
                 </div>
             </div>
         </div>
 
-        <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-200 hover:shadow-md transition">
-            <div class="flex items-center gap-4">
-                <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                    <i class="fas fa-user-tag text-green-600 text-xl"></i>
+        <div class="bg-white rounded-xl shadow-sm p-3 md:p-6 border border-gray-200 hover:shadow-md transition">
+            <div class="flex items-center gap-3 md:gap-4">
+                <div class="w-10 h-10 md:w-12 md:h-12 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <i class="fas fa-user-tag text-green-600 text-lg md:text-xl"></i>
                 </div>
                 <div>
-                    <p class="text-gray-600 text-sm">عدد الأدوار</p>
-                    <h3 class="text-2xl font-bold text-gray-800">{{ $roles->count() }}</h3>
+                    <p class="text-gray-600 text-xs md:text-sm">الأدوار</p>
+                    <h3 class="text-lg md:text-2xl font-bold text-gray-800">{{ $roles->count() }}</h3>
                 </div>
             </div>
         </div>
 
-        <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-200 hover:shadow-md transition">
-            <div class="flex items-center gap-4">
-                <div class="w-12 h-12 bg-amber-100 rounded-lg flex items-center justify-center">
-                    <i class="fas fa-key text-amber-600 text-xl"></i>
+        <div class="bg-white rounded-xl shadow-sm p-3 md:p-6 border border-gray-200 hover:shadow-md transition">
+            <div class="flex items-center gap-3 md:gap-4">
+                <div class="w-10 h-10 md:w-12 md:h-12 bg-amber-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <i class="fas fa-key text-amber-600 text-lg md:text-xl"></i>
                 </div>
                 <div>
-                    <p class="text-gray-600 text-sm">عدد الصلاحيات</p>
-                    <h3 class="text-2xl font-bold text-gray-800">{{ $allPermissions->count() }}</h3>
+                    <p class="text-gray-600 text-xs md:text-sm">الصلاحيات</p>
+                    <h3 class="text-lg md:text-2xl font-bold text-gray-800">{{ $allPermissions->count() }}</h3>
                 </div>
             </div>
         </div>
 
-        <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-200 hover:shadow-md transition">
-            <div class="flex items-center gap-4">
-                <div class="w-12 h-12 bg-cyan-100 rounded-lg flex items-center justify-center">
-                    <i class="fas fa-cubes text-cyan-600 text-xl"></i>
+        <div class="bg-white rounded-xl shadow-sm p-3 md:p-6 border border-gray-200 hover:shadow-md transition">
+            <div class="flex items-center gap-3 md:gap-4">
+                <div class="w-10 h-10 md:w-12 md:h-12 bg-cyan-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <i class="fas fa-cubes text-cyan-600 text-lg md:text-xl"></i>
                 </div>
                 <div>
-                    <p class="text-gray-600 text-sm">عدد الموديولات</p>
-                    <h3 class="text-2xl font-bold text-gray-800">{{ $modules->count() }}</h3>
+                    <p class="text-gray-600 text-xs md:text-sm">الموديولات</p>
+                    <h3 class="text-lg md:text-2xl font-bold text-gray-800">{{ $modules->count() }}</h3>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- Users Table -->
-    <div class="bg-white rounded-xl shadow-sm border border-gray-200 mb-6">
-        <div class="p-6 border-b border-gray-200">
-            <div class="flex justify-between items-center">
-                <h5 class="text-lg font-bold text-gray-800 mb-0">
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 mb-4 md:mb-6">
+        <div class="p-4 md:p-6 border-b border-gray-200">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                <h5 class="text-base md:text-lg font-bold text-gray-800 mb-0">
                     <i class="fas fa-users text-blue-600 ml-2"></i>
                     المستخدمين وصلاحياتهم
                 </h5>
-                <form class="flex gap-2" method="GET" action="">
+                <form class="flex gap-2 w-full sm:w-auto" method="GET" action="">
                     <input type="text" name="search" value="{{ request('search') }}"
-                           class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                           class="flex-1 sm:w-auto px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
                            placeholder="بحث عن مستخدم...">
-                    <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition">
+                    <button type="submit" class="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition text-sm">
                         <i class="fas fa-search"></i>
                     </button>
                 </form>
             </div>
         </div>
         <div class="overflow-x-auto">
-            <table class="w-full">
+            <table class="w-full min-w-[700px]">
                 <thead class="bg-gray-50">
                     <tr>
-                        <th class="px-6 py-4 text-right text-xs font-bold text-gray-600 uppercase">المستخدم</th>
-                        <th class="px-6 py-4 text-right text-xs font-bold text-gray-600 uppercase">البريد الإلكتروني</th>
-                        <th class="px-6 py-4 text-right text-xs font-bold text-gray-600 uppercase">الدور</th>
-                        <th class="px-6 py-4 text-right text-xs font-bold text-gray-600 uppercase">الصلاحيات</th>
-                        <th class="px-6 py-4 text-right text-xs font-bold text-gray-600 uppercase">الحالة</th>
-                        <th class="px-6 py-4 text-right text-xs font-bold text-gray-600 uppercase">الإجراءات</th>
+                        <th class="px-3 md:px-6 py-3 md:py-4 text-right text-xs font-bold text-gray-600 uppercase">المستخدم</th>
+                        <th class="px-3 md:px-6 py-3 md:py-4 text-right text-xs font-bold text-gray-600 uppercase">البريد</th>
+                        <th class="px-3 md:px-6 py-3 md:py-4 text-right text-xs font-bold text-gray-600 uppercase">الدور</th>
+                        <th class="px-3 md:px-6 py-3 md:py-4 text-right text-xs font-bold text-gray-600 uppercase">الصلاحيات</th>
+                        <th class="px-3 md:px-6 py-3 md:py-4 text-right text-xs font-bold text-gray-600 uppercase">الحالة</th>
+                        <th class="px-3 md:px-6 py-3 md:py-4 text-right text-xs font-bold text-gray-600 uppercase">الإجراءات</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-200">
                     @forelse($users as $user)
                     <tr class="hover:bg-gray-50 transition">
-                        <td class="px-6 py-4">
-                            <div class="flex items-center gap-3">
-                                <div class="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
-                                    <i class="fas fa-user-circle text-gray-400 text-xl"></i>
+                        <td class="px-3 md:px-6 py-3 md:py-4">
+                            <div class="flex items-center gap-2 md:gap-3">
+                                <div class="w-8 h-8 md:w-10 md:h-10 bg-gray-100 rounded-full flex items-center justify-center flex-shrink-0">
+                                    <i class="fas fa-user-circle text-gray-400 text-base md:text-xl"></i>
                                 </div>
-                                <div>
-                                    <div class="font-bold text-gray-800">{{ $user->name }}</div>
-                                </div>
+                                <div class="font-bold text-gray-800 text-xs md:text-sm">{{ $user->name }}</div>
                             </div>
                         </td>
-                        <td class="px-6 py-4 text-gray-600">{{ $user->email }}</td>
-                        <td class="px-6 py-4">
+                        <td class="px-3 md:px-6 py-3 md:py-4 text-gray-600 text-xs md:text-sm">{{ $user->email }}</td>
+                        <td class="px-3 md:px-6 py-3 md:py-4">
                             @if($user->roles->count() > 0)
                                 @foreach($user->roles as $role)
-                                    <span class="inline-block px-2 py-1 rounded-full text-xs font-semibold mb-1" 
+                                    <span class="inline-block px-2 py-1 rounded-full text-xs font-semibold mb-1"
                                           style="background-color: {{ $role->color }}20; color: {{ $role->color }};">
                                         {{ $role->display_name }}
                                     </span>
                                 @endforeach
                             @else
-                                <span class="text-gray-400 text-sm">لا يوجد دور</span>
+                                <span class="text-gray-400 text-xs">لا يوجد دور</span>
                             @endif
                         </td>
-<td class="px-6 py-4">
-                                <span class="text-sm text-gray-600">
+<td class="px-3 md:px-6 py-3 md:py-4">
+                                <span class="text-xs md:text-sm text-gray-600">
                                     {{ count($user->allPermissions()) }} صلاحية
                                 </span>
                             </td>
-                        <td class="px-6 py-4">
+                        <td class="px-3 md:px-6 py-3 md:py-4">
                             @if($user->is_active)
-                                <span class="inline-block px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-bold">
+                                <span class="inline-block px-2 md:px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-bold">
                                     <i class="fas fa-check ml-1"></i>نشط
                                 </span>
                             @else
-                                <span class="inline-block px-3 py-1 bg-red-100 text-red-700 rounded-full text-xs font-bold">
+                                <span class="inline-block px-2 md:px-3 py-1 bg-red-100 text-red-700 rounded-full text-xs font-bold">
                                     <i class="fas fa-times ml-1"></i>غير نشط
                                 </span>
                             @endif
                         </td>
-                        <td class="px-6 py-4">
+                        <td class="px-3 md:px-6 py-3 md:py-4">
                             <a href="{{ route('permissions.edit-user', $user) }}"
-                               class="inline-flex items-center gap-2 px-3 py-2 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-lg text-sm font-semibold transition">
+                               class="inline-flex items-center gap-1 px-2 md:px-3 py-1.5 md:py-2 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-lg text-xs md:text-sm font-semibold transition">
                                 <i class="fas fa-edit"></i>
-                                تعديل الصلاحيات
+                                تعديل
                             </a>
                         </td>
                     </tr>
@@ -196,14 +194,14 @@
 
     <!-- Permissions by Module -->
     <div class="bg-white rounded-xl shadow-sm border border-gray-200">
-        <div class="p-6 border-b border-gray-200">
-            <h5 class="text-lg font-bold text-gray-800 mb-0">
+        <div class="p-4 md:p-6 border-b border-gray-200">
+            <h5 class="text-base md:text-lg font-bold text-gray-800 mb-0">
                 <i class="fas fa-cubes text-cyan-600 ml-2"></i>
                 الصلاحيات المتاحة حسب الموديول
             </h5>
         </div>
-        <div class="p-6">
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div class="p-4 md:p-6">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
                 @foreach($modules as $module)
                 <div class="border border-gray-200 rounded-lg p-4 hover:border-blue-300 transition">
                     <h6 class="font-bold text-gray-800 mb-3 flex items-center gap-2">
