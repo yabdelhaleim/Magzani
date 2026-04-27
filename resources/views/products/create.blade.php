@@ -606,17 +606,17 @@ function productCreateApp() {
         profit: 0,
         profitPercentage: 0,
         suggestions: null,
-        
+
         init() {
             this.updateBaseUnitLabel();
             this.calculatePrices();
             this.setupWarehouseToggle();
-            
+
             if (this.baseUnit && this.category) {
                 this.loadPricingSuggestions();
             }
         },
-        
+
         validateAndSubmit(e) {
             if (!this.baseUnit) { alert('⚠️ يجب اختيار الوحدة الأساسية'); e.preventDefault(); return false; }
             if (!this.category) { alert('⚠️ يجب إدخال التصنيف'); e.preventDefault(); return false; }
@@ -627,14 +627,14 @@ function productCreateApp() {
             }
             e.target.submit();
         },
-        
+
         updateBaseUnitLabel() {
             const select = document.querySelector('[name="base_unit"]');
             if (select && select.selectedOptions[0]) {
                 this.baseUnitLabel = select.selectedOptions[0].text;
             }
         },
-        
+
         async loadPricingSuggestions() {
             if (!this.baseUnit) { this.suggestions = null; return; }
             try {
@@ -647,23 +647,23 @@ function productCreateApp() {
                 else this.suggestions = null;
             } catch (error) { this.suggestions = null; }
         },
-        
+
         applySuggestions() {
             if (!this.suggestions) return;
             this.purchasePrice = this.suggestions.suggested_purchase_price;
             this.sellingPrice = this.suggestions.suggested_selling_price;
             this.calculatePrices();
         },
-        
+
         calculatePrices() {
             const purchase = parseFloat(this.purchasePrice) || 0;
             const selling = parseFloat(this.sellingPrice) || 0;
             this.profit = selling - purchase;
             this.profitPercentage = purchase > 0 ? (this.profit / purchase) * 100 : 0;
         },
-        
+
         calculateProfitFromSelling() { this.calculatePrices(); },
-        
+
         setupWarehouseToggle() {
             const warehouseSelect = document.getElementById('warehouse_id');
             const quantityInput = document.getElementById('initial_quantity');
@@ -672,7 +672,7 @@ function productCreateApp() {
                 if (!this.value) quantityInput.value = 0;
             });
         },
-        
+
         formatPrice(value) {
             return new Intl.NumberFormat('ar-EG', { style: 'decimal', minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value || 0) + ' ج.م';
         }

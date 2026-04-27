@@ -244,30 +244,30 @@
     </div>
 
     {{-- Header --}}
-    <div class="bg-white rounded-xl shadow-sm p-6 mb-6 no-print">
-        <div class="flex items-start justify-between">
+    <div class="bg-white rounded-xl shadow-sm p-4 md:p-6 mb-4 md:mb-6 no-print">
+        <div class="flex flex-col gap-4">
             <div class="flex items-center gap-4">
                 <img src="https://ui-avatars.com/api/?name={{ urlencode($customer->name) }}&size=80"
-                     class="w-20 h-20 rounded-full">
-                <div>
-                    <h2 class="text-2xl font-bold text-gray-800">{{ $customer->name }}</h2>
-                    <p class="text-gray-600">
+                     class="w-14 h-14 md:w-20 md:h-20 rounded-full flex-shrink-0">
+                <div class="min-w-0">
+                    <h2 class="text-xl md:text-2xl font-bold text-gray-800 truncate">{{ $customer->name }}</h2>
+                    <p class="text-gray-600 text-sm">
                         كود العميل: C-{{ str_pad($customer->id, 3, '0', STR_PAD_LEFT) }}
                     </p>
-                    <div class="flex items-center gap-4 mt-2 text-sm">
+                    <div class="flex flex-wrap items-center gap-2 md:gap-4 mt-2 text-xs md:text-sm">
                         <span class="text-gray-600">
                             <i class="fas fa-phone ml-1 text-blue-600"></i>{{ $customer->phone ?? '-' }}
                         </span>
-                        <span class="text-gray-600">
+                        <span class="text-gray-600 truncate">
                             <i class="fas fa-envelope ml-1 text-blue-600"></i>{{ $customer->email ?? '-' }}
                         </span>
                     </div>
                 </div>
             </div>
 
-            <div class="flex gap-3">
+            <div class="flex gap-3 justify-end">
                 <button onclick="window.print()"
-                        class="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold">
+                        class="px-4 py-2 md:px-6 md:py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold text-sm md:text-base">
                     <i class="fas fa-print ml-2"></i> طباعة
                 </button>
             </div>
@@ -281,32 +281,32 @@
         $balance       = $totalInvoices - $totalPaid;
     @endphp
 
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-        <div class="bg-white rounded-xl shadow-sm p-6">
-            <p class="text-sm text-gray-600 mb-1">إجمالي المشتريات</p>
-            <h3 class="text-2xl font-bold">{{ number_format($totalInvoices) }} ج.م</h3>
-            <p class="text-xs text-gray-500 mt-2">
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6 mb-4 md:mb-6">
+        <div class="bg-white rounded-xl shadow-sm p-4 md:p-6">
+            <p class="text-xs md:text-sm text-gray-600 mb-1">إجمالي المشتريات</p>
+            <h3 class="text-lg md:text-2xl font-bold">{{ number_format($totalInvoices) }} ج.م</h3>
+            <p class="text-xs text-gray-500 mt-1 md:mt-2">
                 {{ $customer->salesInvoices->count() }} فاتورة
             </p>
         </div>
 
-        <div class="bg-white rounded-xl shadow-sm p-6">
-            <p class="text-sm text-gray-600 mb-1">المبلغ المدفوع</p>
-            <h3 class="text-2xl font-bold text-green-600">
+        <div class="bg-white rounded-xl shadow-sm p-4 md:p-6">
+            <p class="text-xs md:text-sm text-gray-600 mb-1">المبلغ المدفوع</p>
+            <h3 class="text-lg md:text-2xl font-bold text-green-600">
                 {{ number_format($totalPaid) }} ج.م
             </h3>
         </div>
 
-        <div class="bg-white rounded-xl shadow-sm p-6">
-            <p class="text-sm text-gray-600 mb-1">المتأخرات</p>
-            <h3 class="text-2xl font-bold text-orange-600">
+        <div class="bg-white rounded-xl shadow-sm p-4 md:p-6">
+            <p class="text-xs md:text-sm text-gray-600 mb-1">المتأخرات</p>
+            <h3 class="text-lg md:text-2xl font-bold text-orange-600">
                 {{ number_format(max($balance, 0)) }} ج.م
             </h3>
         </div>
 
-        <div class="bg-white rounded-xl shadow-sm p-6">
-            <p class="text-sm text-gray-600 mb-1">الرصيد</p>
-            <h3 class="text-2xl font-bold {{ $balance > 0 ? 'text-red-600' : 'text-green-600' }}">
+        <div class="bg-white rounded-xl shadow-sm p-4 md:p-6">
+            <p class="text-xs md:text-sm text-gray-600 mb-1">الرصيد</p>
+            <h3 class="text-lg md:text-2xl font-bold {{ $balance > 0 ? 'text-red-600' : 'text-green-600' }}">
                 {{ number_format($balance) }} ج.م
             </h3>
         </div>
@@ -314,20 +314,20 @@
 
     {{-- Statement Table --}}
     <div class="bg-white rounded-xl shadow-sm overflow-hidden">
-        <div class="p-6 border-b">
+        <div class="p-4 md:p-6 border-b">
             <h3 class="text-lg font-bold text-gray-800">سجل الحركات</h3>
         </div>
 
         <div class="overflow-x-auto">
-            <table class="w-full">
+            <table class="w-full min-w-[600px]">
                 <thead class="bg-gray-50">
                     <tr>
-                        <th class="px-6 py-4">التاريخ</th>
-                        <th class="px-6 py-4">المرجع</th>
-                        <th class="px-6 py-4">النوع</th>
-                        <th class="px-6 py-4">مدين</th>
-                        <th class="px-6 py-4">دائن</th>
-                        <th class="px-6 py-4">الرصيد</th>
+                        <th class="px-3 md:px-6 py-3 md:py-4 text-xs md:text-sm">التاريخ</th>
+                        <th class="px-3 md:px-6 py-3 md:py-4 text-xs md:text-sm">المرجع</th>
+                        <th class="px-3 md:px-6 py-3 md:py-4 text-xs md:text-sm">النوع</th>
+                        <th class="px-3 md:px-6 py-3 md:py-4 text-xs md:text-sm">مدين</th>
+                        <th class="px-3 md:px-6 py-3 md:py-4 text-xs md:text-sm">دائن</th>
+                        <th class="px-3 md:px-6 py-3 md:py-4 text-xs md:text-sm">الرصيد</th>
                     </tr>
                 </thead>
 
@@ -339,18 +339,18 @@
                             $runningBalance += $invoice->total;
                         @endphp
                         <tr>
-                            <td class="px-6 py-4">{{ $invoice->created_at->format('Y-m-d') }}</td>
-                            <td class="px-6 py-4">INV-{{ $invoice->id }}</td>
-                            <td class="px-6 py-4">
-                                <span class="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs">
+                            <td class="px-3 md:px-6 py-3 md:py-4 text-xs md:text-sm">{{ $invoice->created_at->format('Y-m-d') }}</td>
+                            <td class="px-3 md:px-6 py-3 md:py-4 text-xs md:text-sm">INV-{{ $invoice->id }}</td>
+                            <td class="px-3 md:px-6 py-3 md:py-4">
+                                <span class="px-2 md:px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs">
                                     فاتورة
                                 </span>
                             </td>
-                            <td class="px-6 py-4 text-red-600 font-bold">
+                            <td class="px-3 md:px-6 py-3 md:py-4 text-red-600 font-bold text-xs md:text-sm">
                                 {{ number_format($invoice->total) }}
                             </td>
-                            <td class="px-6 py-4">-</td>
-                            <td class="px-6 py-4 font-bold">
+                            <td class="px-3 md:px-6 py-3 md:py-4 text-xs md:text-sm">-</td>
+                            <td class="px-3 md:px-6 py-3 md:py-4 font-bold text-xs md:text-sm">
                                 {{ number_format($runningBalance) }}
                             </td>
                         </tr>
@@ -358,18 +358,18 @@
                         @if($invoice->paid > 0)
                             @php $runningBalance -= $invoice->paid; @endphp
                             <tr class="bg-gray-50">
-                                <td class="px-6 py-4">{{ $invoice->updated_at->format('Y-m-d') }}</td>
-                                <td class="px-6 py-4">PAY-{{ $invoice->id }}</td>
-                                <td class="px-6 py-4">
-                                    <span class="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-xs">
+                                <td class="px-3 md:px-6 py-3 md:py-4 text-xs md:text-sm">{{ $invoice->updated_at->format('Y-m-d') }}</td>
+                                <td class="px-3 md:px-6 py-3 md:py-4 text-xs md:text-sm">PAY-{{ $invoice->id }}</td>
+                                <td class="px-3 md:px-6 py-3 md:py-4">
+                                    <span class="px-2 md:px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-xs">
                                         دفعة
                                     </span>
                                 </td>
-                                <td class="px-6 py-4">-</td>
-                                <td class="px-6 py-4 text-green-600 font-bold">
+                                <td class="px-3 md:px-6 py-3 md:py-4 text-xs md:text-sm">-</td>
+                                <td class="px-3 md:px-6 py-3 md:py-4 text-green-600 font-bold text-xs md:text-sm">
                                     {{ number_format($invoice->paid) }}
                                 </td>
-                                <td class="px-6 py-4 font-bold">
+                                <td class="px-3 md:px-6 py-3 md:py-4 font-bold text-xs md:text-sm">
                                     {{ number_format($runningBalance) }}
                                 </td>
                             </tr>
