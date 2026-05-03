@@ -8,6 +8,7 @@ use App\Models\WarehouseInboundOrderItem;
 use App\Models\WarehouseOutboundOrder;
 use App\Models\WarehouseOutboundOrderItem;
 use App\Models\Product;
+use App\Services\InventoryMovementService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -53,9 +54,60 @@ class WarehouseOrderController extends Controller
         $this->authorize('warehouse.transfers.create');
 
         $warehouses = Warehouse::active()->get();
-        $products = Product::active()->get();
+        $products = Product::active()->with('baseunit')->get();
 
         return view('warehouse-orders.inbound.create', compact('warehouses', 'products'));
+    }
+
+    /**
+     * رصيد الصنف في المخزن، المتاح، واقتراح تكلفة الوحدة (لأذون الإدخال/الإخراج).
+     */
+    public function warehouseStockPreview(Request $request)
+    {
+        $this->authorize('warehouse.transfers.create');
+
+        $validated = $request->validate([
+            'warehouse_id' => 'required|exists:warehouses,id',
+            'product_id' => 'required|exists:products,id',
+        ]);
+
+        $warehouseId = (int) $validated['warehouse_id'];
+        $productId = (int) $validated['product_id'];
+
+        $product = Product::query()->with('baseunit')->findOrFail($productId);
+
+        $pw = DB::table('product_warehouse')
+            ->where('warehouse_id', $warehouseId)
+            ->where('product_id', $productId)
+            ->first();
+
+        $qtyInWarehouse = $pw ? (float) $pw->quantity : 0.0;
+        $reserved = $pw ? (float) ($pw->reserved_quantity ?? 0) : 0.0;
+        $availableInWarehouse = max(0, $qtyInWarehouse - $reserved);
+
+        $qtyTotalAllWarehouses = (float) DB::table('product_warehouse')
+            ->where('product_id', $productId)
+            ->sum('quantity');
+
+        $averageCost = null;
+        if ($pw !== null && isset($pw->average_cost) && (float) $pw->average_cost > 0) {
+            $averageCost = (float) $pw->average_cost;
+        }
+
+        $purchasePrice = (float) ($product->purchase_price ?? 0);
+        if ($purchasePrice <= 0 && $product->baseunit) {
+            $purchasePrice = (float) ($product->baseunit->base_purchase_price ?? 0);
+        }
+
+        $suggestedUnitCost = $averageCost ?? ($purchasePrice > 0 ? $purchasePrice : null);
+
+        return response()->json([
+            'quantity_in_warehouse' => $qtyInWarehouse,
+            'available_quantity' => $availableInWarehouse,
+            'quantity_total_all_warehouses' => $qtyTotalAllWarehouses,
+            'average_cost' => $averageCost,
+            'suggested_unit_cost' => $suggestedUnitCost,
+        ]);
     }
 
     public function inboundStore(Request $request)
@@ -181,7 +233,7 @@ class WarehouseOrderController extends Controller
         $this->authorize('warehouse.transfers.create');
 
         $warehouses = Warehouse::active()->get();
-        $products = Product::active()->get();
+        $products = Product::active()->with('baseunit')->get();
 
         return view('warehouse-orders.outbound.create', compact('warehouses', 'products'));
     }
@@ -201,6 +253,7 @@ class WarehouseOrderController extends Controller
             'items.*.product_id' => 'required|exists:products,id',
             'items.*.requested_quantity' => 'required|numeric|min:0.001',
             'items.*.unit' => 'required|string',
+            'items.*.unit_cost' => 'nullable|numeric|min:0',
         ]);
 
         DB::beginTransaction();
@@ -218,11 +271,15 @@ class WarehouseOrderController extends Controller
             ]);
 
             foreach ($request->items as $item) {
+                $totalCost = ($item['unit_cost'] ?? 0) * $item['requested_quantity'];
+
                 WarehouseOutboundOrderItem::create([
                     'outbound_order_id' => $order->id,
                     'product_id' => $item['product_id'],
                     'requested_quantity' => $item['requested_quantity'],
                     'unit' => $item['unit'],
+                    'unit_cost' => $item['unit_cost'] ?? null,
+                    'total_cost' => $totalCost > 0 ? $totalCost : null,
                     'notes' => $item['notes'] ?? null,
                 ]);
             }
@@ -263,6 +320,10 @@ class WarehouseOrderController extends Controller
     {
         $this->authorize('warehouse.transfers.update');
 
+        if ($order->status !== 'pending') {
+            return back()->with('error', 'لا يمكن اعتماد هذا الأذن في حالته الحالية.');
+        }
+
         $request->validate([
             'items' => 'required|array',
             'items.*.approved_quantity' => 'required|numeric|min:0',
@@ -277,7 +338,42 @@ class WarehouseOrderController extends Controller
                 $item->save();
             }
 
+            $order->refresh();
+            $order->load('items');
+
+            $movementService = app(InventoryMovementService::class);
+
+            foreach ($order->items as $item) {
+                $qty = (float) ($item->approved_quantity ?? $item->requested_quantity);
+                if ($qty <= 0) {
+                    continue;
+                }
+
+                $movementType = match ($order->purpose) {
+                    'sale' => 'sale',
+                    'transfer' => 'transfer_out',
+                    'return' => 'return_out',
+                    'damage' => 'damage',
+                    'sample' => 'consumption',
+                    'other' => 'consumption',
+                    default => 'consumption',
+                };
+
+                $movementService->recordMovement([
+                    'warehouse_id' => $order->warehouse_id,
+                    'product_id' => $item->product_id,
+                    'quantity_change' => -abs($qty),
+                    'movement_type' => $movementType,
+                    'reference_type' => WarehouseOutboundOrder::class,
+                    'reference_id' => $order->id,
+                    'notes' => 'أذن إخراج بضاعة رقم: '.$order->order_number,
+                    'created_by' => auth()->id(),
+                    'unit_cost' => $item->unit_cost !== null ? (float) $item->unit_cost : 0,
+                ]);
+            }
+
             $order->status = 'completed';
+            $order->completed_at = now();
             $order->save();
 
             DB::commit();
@@ -288,8 +384,9 @@ class WarehouseOrderController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
+
             return back()
-                ->with('error', 'حدث خطأ: ' . $e->getMessage());
+                ->with('error', 'حدث خطأ: '.$e->getMessage());
         }
     }
 

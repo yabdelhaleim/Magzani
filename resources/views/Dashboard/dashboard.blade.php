@@ -398,7 +398,7 @@
     </div>
 
     {{-- Mini Stats --}}
-    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6 dash-section">
+    <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-4 mb-6 dash-section">
 
         <div class="mini-card c-rose">
             <div class="mini-icon"><i class="fas fa-exclamation-triangle"></i></div>
@@ -431,6 +431,15 @@
                 <div class="mini-lbl">رصيد الخزينة ج.م</div>
             </div>
         </div>
+
+        {{-- Wood Stats 🪵 --}}
+        <a href="{{ route('manufacturing.wood-stocks.index') }}" class="mini-card" style="background: linear-gradient(135deg, #8B4513, #A0522D); color: white; text-decoration: none;">
+            <div class="mini-icon" style="background: rgba(255,255,255,0.2); color: white;"><i class="fas fa-tree"></i></div>
+            <div>
+                <div class="mini-val" style="color: white;">{{ number_format($summary['wood_remaining_m3'] ?? 0, 2) }}</div>
+                <div class="mini-lbl" style="color: rgba(255,255,255,0.8);">م³ خشب متاح</div>
+            </div>
+        </a>
 
     </div>
 

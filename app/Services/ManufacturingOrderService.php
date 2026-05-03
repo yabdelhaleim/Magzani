@@ -282,7 +282,7 @@ class ManufacturingOrderService
                 'warehouses' => [
                     [
                         'warehouse_id' => $warehouseId,
-                        'quantity' => $order->quantity_produced,
+                        'quantity' => 0, // Initialize with 0, as we will add the production movement below
                         'min_stock' => 10,
                     ]
                 ],

@@ -418,12 +418,12 @@
                     <tbody>
                         @foreach($manufacturingOrder->components as $component)
                         <tr>
-                            <td>{{ $component->wood_type }}</td>
-                            <td>{{ number_format($component->thickness, 1) }} سم</td>
-                            <td>{{ number_format($component->width, 1) }} سم</td>
-                            <td>{{ number_format($component->length, 2) }} م</td>
+                            <td>{{ $component->component_type }}</td>
+                            <td>{{ number_format($component->thickness_cm, 1) }} سم</td>
+                            <td>{{ number_format($component->width_cm, 1) }} سم</td>
+                            <td>{{ number_format($component->length_cm, 2) }} م</td>
                             <td>{{ number_format($component->quantity) }}</td>
-                            <td>{{ number_format($component->unit_price, 2) }} ج.م</td>
+                            <td>{{ number_format($component->price_per_cubic_meter, 2) }} ج.م</td>
                             <td><strong>{{ number_format($component->total_cost, 2) }} ج.م</strong></td>
                         </tr>
                         @endforeach
@@ -477,51 +477,106 @@
             <div class="grid-2">
                 <div class="summary-box">
                     <div class="summary-row">
-                        <span>تكلفة الخشب:</span>
-                        <strong>{{ number_format($manufacturingOrder->total_wood_cost, 2) }} ج.م</strong>
+                        <span>تكلفة الخشب للبالة:</span>
+                        <strong>{{ number_format($manufacturingOrder->getComponentsTotalCost(), 2) }} ج.م</strong>
                     </div>
                     <div class="summary-row">
-                        <span>المكونات الإضافية:</span>
-                        <strong>{{ number_format($manufacturingOrder->total_additional_cost, 2) }} ج.م</strong>
+                        <span>المكونات الإضافية للبالة:</span>
+                        <strong>{{ number_format($manufacturingOrder->waste_cost + $manufacturingOrder->labor_cost + $manufacturingOrder->nails_cost + $manufacturingOrder->tips_cost + $manufacturingOrder->transport_cost + $manufacturingOrder->fumigation_cost, 2) }} ج.م</strong>
                     </div>
                     <div class="summary-row">
-                        <span>تكلفة البالة:</span>
-                        <strong>{{ number_format($manufacturingOrder->cost_per_pallet, 2) }} ج.م</strong>
+                        <span>إجمالي التكلفة لكل بالة:</span>
+                        <strong>{{ number_format($manufacturingOrder->cost_per_unit, 2) }} ج.م</strong>
                     </div>
                     <div class="summary-row total">
-                        <span>الإجمالي الكلي:</span>
+                        <span>الإجمالي الكلي (للكمية كلها):</span>
                         <strong>{{ number_format($manufacturingOrder->total_cost, 2) }} ج.م</strong>
                     </div>
                 </div>
 
                 <div class="summary-box" style="background: linear-gradient(135deg, var(--tf-green), #059669);">
                     <div class="summary-row">
-                        <span>عدد البالات:</span>
+                        <span>عدد البالات المنتجة:</span>
                         <strong>{{ number_format($manufacturingOrder->quantity_produced, 2) }}</strong>
                     </div>
                     <div class="summary-row">
                         <span>التكلفة لكل بالة:</span>
-                        <strong>{{ number_format($manufacturingOrder->cost_per_pallet, 2) }} ج.م</strong>
+                        <strong>{{ number_format($manufacturingOrder->cost_per_unit, 2) }} ج.م</strong>
                     </div>
                     <div class="summary-row">
-                        <span>نسبة هامش الربح الموصى:</span>
-                        <strong>{{ number_format($manufacturingOrder->recommended_profit_margin, 1) }}%</strong>
+                        <span>نسبة هامش الربح:</span>
+                        <strong>{{ number_format($manufacturingOrder->profit_margin, 1) }}%</strong>
                     </div>
                     <div class="summary-row total">
-                        <span>سعر البيع الموصى:</span>
-                        <strong>{{ number_format($manufacturingOrder->recommended_selling_price, 2) }} ج.م</strong>
+                        <span>سعر البيع المقترح:</span>
+                        <strong>{{ number_format($manufacturingOrder->selling_price_per_unit, 2) }} ج.م</strong>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- Wood Dispensings (الخشب المستخدم) -->
+    @if($manufacturingOrder->woodDispensings && $manufacturingOrder->woodDispensings->count() > 0)
+    <div class="mfg-card mfg-section">
+        <div class="mfg-card-header">
+            <i class="fas fa-tree" style="color: #8B4513;"></i>
+            <h3 class="mfg-card-title">الخشب المستخدم</h3>
+        </div>
+        <div class="mfg-card-body">
+            <div class="table-responsive">
+                <table class="mfg-table">
+                    <thead>
+                        <tr>
+                            <th>التاريخ</th>
+                            <th>دفعة الخشب</th>
+                            <th>الأبعاد</th>
+                            <th>الكمية (م³)</th>
+                            <th>الموظف</th>
+                            <th>العميل</th>
+                            <th>ملاحظات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($manufacturingOrder->woodDispensings as $dispensing)
+                        <tr>
+                            <td>{{ $dispensing->dispensed_at?->format('Y-m-d') }}</td>
+                            <td>
+                                @if($dispensing->woodStock)
+                                    <span class="badge" style="background: #f0f0f0; color: #333;">
+                                        {{ $dispensing->woodStock->purchase_reference ?? 'دفعة #' . $dispensing->woodStock->id }}
+                                    </span>
+                                @else
+                                    <span class="text-muted">-</span>
+                                @endif
+                            </td>
+                            <td dir="ltr">
+                                @if($dispensing->woodStock)
+                                    {{ $dispensing->woodStock->length_cm }}×{{ $dispensing->woodStock->width_cm }}×{{ $dispensing->woodStock->thickness_cm }} سم
+                                @else
+                                    -
+                                @endif
+                            </td>
+                            <td>
+                                <strong>{{ number_format($dispensing->volume_cm3_taken / 1000000, 4) }}</strong> م³
+                            </td>
+                            <td>{{ $dispensing->user?->name ?? '-' }}</td>
+                            <td>{{ $dispensing->client?->name ?? '-' }}</td>
+                            <td>{{ $dispensing->notes ?? '-' }}</td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    @endif
+
     <!-- Action Buttons -->
     <div class="action-buttons mfg-section">
         @if($manufacturingOrder->status === 'draft')
             <form method="POST" action="{{ route('manufacturing-orders.confirm', $manufacturingOrder->id) }}" style="display: inline;">
                 @csrf
-                @method('PATCH')
                 <button type="submit" class="btn btn-amber btn-block">
                     <i class="fas fa-check"></i> تأكيد أمر التصنيع
                 </button>
@@ -529,7 +584,8 @@
         @elseif($manufacturingOrder->status === 'confirmed')
             <form method="POST" action="{{ route('manufacturing-orders.complete', $manufacturingOrder->id) }}" style="display: inline;">
                 @csrf
-                @method('PATCH')
+                <input type="hidden" name="warehouse_id" value="{{ $manufacturingOrder->warehouse_id }}">
+                <input type="hidden" name="product_id" value="{{ $manufacturingOrder->product_id }}">
                 <button type="submit" class="btn btn-green btn-block">
                     <i class="fas fa-check-double"></i> إكمال التصنيع
                 </button>

@@ -166,6 +166,8 @@ class InventoryMovement extends Model
             'expired' => '⏰ منتهي الصلاحية',
             'production' => '🏭 إنتاج',
             'consumption' => '🔧 استهلاك',
+            'wood_stock_in' => '🪵 استلام خشب',
+            'wood_stock_out' => '🪵 صرف خشب',
             default => '❓ غير محدد',
         };
     }

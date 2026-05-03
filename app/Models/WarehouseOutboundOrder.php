@@ -4,7 +4,6 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\DB;
 
 class WarehouseOutboundOrder extends Model
 {
@@ -70,45 +69,8 @@ class WarehouseOutboundOrder extends Model
             }
         });
 
-        static::updating(function ($order) {
-            // عند إكمال الأمر، يتم خصم الكميات من المخزون
-            if ($order->isDirty('status') && $order->status === 'completed') {
-                DB::beginTransaction();
-                try {
-                    foreach ($order->items as $item) {
-                        // تحديث كمية المنتج في المخزن
-                        $warehouseProduct = ProductWarehouse::where('warehouse_id', $order->warehouse_id)
-                            ->where('product_id', $item->product_id)
-                            ->first();
-
-                        if ($warehouseProduct) {
-                            $approvedQuantity = $item->approved_quantity ?? $item->requested_quantity;
-                            $warehouseProduct->quantity -= $approvedQuantity;
-                            $warehouseProduct->save();
-                        }
-
-                        // إنشاء حركة مخزون
-                        InventoryMovement::create([
-                            'warehouse_id' => $order->warehouse_id,
-                            'product_id' => $item->product_id,
-                            'quantity' => $item->approved_quantity ?? $item->requested_quantity,
-                            'unit' => $item->unit,
-                            'movement_type' => 'outbound',
-                            'reference_type' => 'WarehouseOutboundOrder',
-                            'reference_id' => $order->id,
-                            'notes' => 'أذن إخراج بضاعة رقم: ' . $order->order_number,
-                            'created_by' => $order->created_by,
-                        ]);
-                    }
-
-                    $order->completed_at = now();
-                    DB::commit();
-                } catch (\Exception $e) {
-                    DB::rollBack();
-                    throw $e;
-                }
-            }
-        });
+        // خصم المخزون وتسجيل الحركات يتم من WarehouseOrderController@outboundApprove
+        // عبر InventoryMovementService لتفادي قيم movement_type / أعمدة غير متوافقة مع الجدول.
     }
 
     public function scopePending($query)

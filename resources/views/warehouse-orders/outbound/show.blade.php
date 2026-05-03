@@ -4,6 +4,19 @@
 
 @section('content')
 <div class="container-fluid px-4">
+    @if(session('success'))
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        {{ session('success') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    @endif
+    @if(session('error'))
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        {{ session('error') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    @endif
+
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <h1 class="h3 mb-0">
@@ -117,8 +130,7 @@
                                         <td>
                                             <input type="number" name="items[{{ $item->id }}][approved_quantity]"
                                                    class="form-control" step="0.001" min="0"
-                                                   value="{{ $item->approved_quantity ?? $item->requested_quantity }}"
-                                                   max="{{ $currentStock }}">
+                                                   value="{{ $item->approved_quantity ?? $item->requested_quantity }}">
                                             <small class="text-muted">الرصيد: {{ number_format($currentStock, 3) }}</small>
                                         </td>
                                         <td>
@@ -137,12 +149,14 @@
                                 <i class="fas fa-check"></i>
                                 اعتماد وتنفيذ الأذن
                             </button>
-                            <a href="{{ route('warehouse-orders.outbound.cancel', $order) }}"
-                               class="btn btn-danger"
-                               onclick="return confirm('هل أنت متأكد من إلغاء هذا الأذن؟')">
-                                <i class="fas fa-times"></i>
-                                إلغاء الأذن
-                            </a>
+                            <form method="POST" action="{{ route('warehouse-orders.outbound.cancel', $order) }}" class="d-inline"
+                                  onsubmit="return confirm('هل أنت متأكد من إلغاء هذا الأذن؟');">
+                                @csrf
+                                <button type="submit" class="btn btn-danger">
+                                    <i class="fas fa-times"></i>
+                                    إلغاء الأذن
+                                </button>
+                            </form>
                             @endif
                         </div>
                     </form>
@@ -155,6 +169,8 @@
                                     <th>الكمية المطلوبة</th>
                                     <th>الكمية المعتمدة</th>
                                     <th>الوحدة</th>
+                                    <th>تكلفة الوحدة</th>
+                                    <th>إجمالي التكلفة</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -166,6 +182,8 @@
                                         <strong>{{ $item->approved_quantity ? number_format($item->approved_quantity, 3) : '-' }}</strong>
                                     </td>
                                     <td>{{ $item->unit }}</td>
+                                    <td>{{ $item->unit_cost !== null ? number_format($item->unit_cost, 2) : '—' }}</td>
+                                    <td>{{ $item->total_cost !== null ? number_format($item->total_cost, 2) : '—' }}</td>
                                 </tr>
                                 @endforeach
                             </tbody>

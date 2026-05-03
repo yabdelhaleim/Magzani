@@ -139,10 +139,88 @@ class ReportingController extends Controller
 
         $report = $this->reportingService->profitLossReport($startDate, $endDate);
         $expensesByCategory = $this->reportingService->expensesByCategory($startDate, $endDate);
-        
+
         return Excel::download(
             new ProfitLossReportExport($report, $startDate, $endDate, $expensesByCategory),
             'profit-loss-report-' . date('Y-m-d') . '.xlsx'
         );
+    }
+
+    /**
+     * Wood Stock Report - مخزون الخشب الحالي
+     */
+    public function woodStock(Request $request)
+    {
+        $filters = [
+            'supplier_id' => $request->supplier_id,
+            'warehouse_id' => $request->warehouse_id,
+            'date_from' => $request->date_from,
+            'date_to' => $request->date_to,
+            'min_remaining_m3' => $request->min_remaining_m3,
+        ];
+
+        $stocks = $this->reportingService->woodStockReport($filters);
+
+        // Get suppliers and warehouses for filters
+        $suppliers = \App\Models\Supplier::all();
+        $warehouses = Warehouse::all();
+
+        // Calculate summary
+        $summary = [
+            'total_batches' => $stocks->count(),
+            'total_m3' => $stocks->sum('total_m3'),
+            'remaining_m3' => $stocks->sum('remaining_m3'),
+            'remaining_value' => $stocks->sum('remaining_value'),
+        ];
+
+        return view('reports.wood-stock', [
+            'stocks' => $stocks,
+            'suppliers' => $suppliers,
+            'warehouses' => $warehouses,
+            'summary' => $summary,
+        ]);
+    }
+
+    /**
+     * Wood Movement Report - حركة الخشب
+     */
+    public function woodMovement(Request $request)
+    {
+        $filters = [
+            'date_from' => $request->date_from,
+            'date_to' => $request->date_to,
+            'user_id' => $request->user_id,
+            'client_id' => $request->client_id,
+        ];
+
+        $movements = $this->reportingService->woodMovementReport($filters);
+
+        // Get users and customers for filters
+        $users = \App\Models\User::all();
+        $customers = \App\Models\Customer::all();
+
+        return view('reports.wood-movement', [
+            'movements' => $movements,
+            'users' => $users,
+            'customers' => $customers,
+        ]);
+    }
+
+    /**
+     * Wood Cost in Production Report - تكلفة الخشب في الإنتاج
+     */
+    public function woodCostProduction(Request $request)
+    {
+        $filters = [
+            'date_from' => $request->date_from,
+            'date_to' => $request->date_to,
+            'status' => $request->status,
+        ];
+
+        $report = $this->reportingService->woodCostInProductionReport($filters);
+
+        return view('reports.wood-cost-production', [
+            'report' => $report,
+        ]);
     }
 }

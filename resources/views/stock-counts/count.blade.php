@@ -182,8 +182,8 @@
                                 </div>
                                 @endif
                                 <div>
-                                    <div class="font-bold text-gray-900">{{ $item->product->name }}</div>
-                                    <div class="text-sm text-gray-500 font-medium">{{ $item->product->code }}</div>
+                                    <div class="font-bold text-gray-900">{{ optional($item->product)->name ?? 'منتج محذوف/غير متاح' }}</div>
+                                    <div class="text-sm text-gray-500 font-medium">{{ optional($item->product)->code ?? '-' }}</div>
                                 </div>
                             </div>
                         </td>

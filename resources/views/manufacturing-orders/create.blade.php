@@ -699,18 +699,18 @@ function addComponent() {
     const row = document.createElement('tr');
     row.innerHTML = `
         <td data-label="النوع">
-            <select name="components[${componentIndex}][type]" class="form-control" style="padding:6px 8px;">
-                <option value="الفرش1">الفرش1</option>
-                <option value="الروباط ">الروباط </option>
-                <option value="الشاسيه">الشاسيه</option>
-                <option value="دكم او عوارض">دكم او عوارض</option>
+            <select name="components[${componentIndex}][component_type]" class="form-control" style="padding:6px 8px;">
+                <option value="فرش">فرش</option>
+                <option value="روباط">روباط</option>
+                <option value="شاسية">شاسية</option>
+                <option value="دكم">دكم</option>
             </select>
         </td>
-        <td data-label="السمك (سم)"><input type="number" name="components[${componentIndex}][thickness]" class="input-sm" step="0.1" placeholder="2.5"></td>
-        <td data-label="العرض (سم)"><input type="number" name="components[${componentIndex}][width]" class="input-sm" step="0.1" placeholder="12"></td>
-        <td data-label="الطول (م)"><input type="number" name="components[${componentIndex}][length]" class="input-sm" step="0.01" placeholder="4.00"></td>
+        <td data-label="السمك (سم)"><input type="number" name="components[${componentIndex}][thickness_cm]" class="input-sm" step="0.1" placeholder="2.5"></td>
+        <td data-label="العرض (سم)"><input type="number" name="components[${componentIndex}][width_cm]" class="input-sm" step="0.1" placeholder="12"></td>
+        <td data-label="الطول (م)"><input type="number" name="components[${componentIndex}][length_cm]" class="input-sm" step="0.01" placeholder="4.00"></td>
         <td data-label="العدد"><input type="number" name="components[${componentIndex}][quantity]" class="input-sm" value="1"></td>
-        <td data-label="سعر المتر"><input type="number" name="components[${componentIndex}][price]" class="input-sm" step="0.01" placeholder="0" oninput="recalculateAll()"></td>
+        <td data-label="سعر المتر"><input type="number" name="components[${componentIndex}][price_per_cubic_meter]" class="input-sm" step="0.01" placeholder="0" oninput="recalculateAll()"></td>
         <td data-label="التكلفة"><span class="cost-display">0.00</span></td>
         <td data-label="إجراء"><button type="button" class="remove-btn" onclick="removeComponent(${componentIndex}, this)"><i class="fas fa-trash"></i></button></td>
     `;

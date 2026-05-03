@@ -942,6 +942,9 @@
                 <div style="height:1px;background:rgba(255,255,255,0.08);margin:6px 0;"></div>
                 <a href="{{ route('manufacturing.index') }}"  class="sub-item {{ request()->routeIs('manufacturing.index')  ? 'active' : '' }}"><span class="dot"></span>حسابات التكلفة</a>
                 <a href="{{ route('manufacturing.create') }}" class="sub-item {{ request()->routeIs('manufacturing.create') ? 'active' : '' }}"><span class="dot"></span>حساب جديد</a>
+                <div style="height:1px;background:rgba(255,255,255,0.08);margin:6px 0;"></div>
+                <a href="{{ route('manufacturing.wood-stocks.index') }}" class="sub-item {{ request()->routeIs('manufacturing.wood-stocks.*') ? 'active' : '' }}"><span class="dot"></span>مخزون الخشب الخام</a>
+                <a href="{{ route('manufacturing.wood-dispensings.index') }}" class="sub-item {{ request()->routeIs('manufacturing.wood-dispensings.*') ? 'active' : '' }}"><span class="dot"></span>سجل الصرف</a>
             </div>
         </div>
 

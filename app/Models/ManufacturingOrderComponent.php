@@ -12,6 +12,7 @@ class ManufacturingOrderComponent extends Model
 
     protected $fillable = [
         'order_id',
+        'wood_stock_id',
         'component_name',   // legacy field for backward compatibility
         'component_type',
         'quantity',
@@ -44,6 +45,11 @@ class ManufacturingOrderComponent extends Model
     public function order(): BelongsTo
     {
         return $this->belongsTo(ManufacturingOrder::class, 'order_id');
+    }
+
+    public function woodStock(): BelongsTo
+    {
+        return $this->belongsTo(WoodStock::class);
     }
 
     public function creator(): BelongsTo

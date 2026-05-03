@@ -252,8 +252,8 @@
                             </span>
                         </td>
                         <td class="px-6 py-4">
-                            <div class="font-bold text-gray-900">{{ $item->product->name }}</div>
-                            <div class="text-sm text-gray-500 font-medium">{{ $item->product->code }}</div>
+                            <div class="font-bold text-gray-900">{{ optional($item->product)->name ?? 'منتج محذوف/غير متاح' }}</div>
+                            <div class="text-sm text-gray-500 font-medium">{{ optional($item->product)->code ?? '-' }}</div>
                         </td>
                         <td class="px-6 py-4">
                             <span class="text-lg font-black text-gray-900">{{ number_format($item->system_quantity, 2) }}</span>

@@ -15,12 +15,16 @@ class WarehouseOutboundOrderItem extends Model
         'requested_quantity',
         'approved_quantity',
         'unit',
+        'unit_cost',
+        'total_cost',
         'notes',
     ];
 
     protected $casts = [
         'requested_quantity' => 'decimal:3',
         'approved_quantity' => 'decimal:3',
+        'unit_cost' => 'decimal:2',
+        'total_cost' => 'decimal:2',
     ];
 
     public function outboundOrder()

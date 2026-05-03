@@ -93,6 +93,10 @@ class InventoryMovementService
                 ]);
             }
 
+            // مسح الكاش للمخزن
+            \Illuminate\Support\Facades\Cache::forget("warehouse_details_{$data['warehouse_id']}");
+            \Illuminate\Support\Facades\Cache::forget("warehouse_products_stock_{$data['warehouse_id']}");
+
             return $movement->fresh(['warehouse', 'product', 'creator']);
         });
     }
@@ -160,7 +164,8 @@ class InventoryMovementService
         $validTypes = [
             'purchase', 'sale', 'return_in', 'return_out',
             'transfer_in', 'transfer_out', 'adjustment',
-            'damage', 'expired', 'production', 'consumption'
+            'damage', 'expired', 'production', 'consumption',
+            'wood_stock_in', 'wood_stock_out'
         ];
 
         if (!in_array($data['movement_type'], $validTypes)) {
@@ -190,6 +195,8 @@ class InventoryMovementService
             'expired' => 'EXP',
             'production' => 'PRD',
             'consumption' => 'CON',
+            'wood_stock_in' => 'WSI',
+            'wood_stock_out' => 'WSO',
             default => 'MOV',
         };
 

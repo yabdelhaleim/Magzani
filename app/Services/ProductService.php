@@ -768,6 +768,10 @@ private function attachToWarehouseSecure(
             throw new RuntimeException("السجل لم يُنشأ رغم نجاح الـ insert!");
         }
 
+        // ✅ مسح كاش المخزن لضمان ظهور المنتج
+        \Illuminate\Support\Facades\Cache::forget("warehouse_details_{$warehouseId}");
+        \Illuminate\Support\Facades\Cache::forget("warehouse_products_stock_{$warehouseId}");
+
         Log::info('✅ تم ربط المنتج بالمخزن بنجاح', [
             'product_id' => $product->id,
             'warehouse_id' => $warehouseId,

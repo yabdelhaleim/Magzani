@@ -90,6 +90,8 @@ Route::prefix('transfers')->name('transfers.')->middleware('auth')->group(functi
 |--------------------------------------------------------------------------
 */
 Route::prefix('warehouse-orders')->name('warehouse-orders.')->middleware('auth', 'role')->group(function () {
+    Route::get('/stock-preview', [App\Http\Controllers\WarehouseOrderController::class, 'warehouseStockPreview'])->name('stock-preview');
+
     // Inbound Orders
     Route::get('/inbound', [App\Http\Controllers\WarehouseOrderController::class, 'inboundIndex'])->name('inbound.index');
     Route::get('/inbound/create', [App\Http\Controllers\WarehouseOrderController::class, 'inboundCreate'])->name('inbound.create');
@@ -183,6 +185,17 @@ Route::prefix('manufacturing')->name('manufacturing.')->middleware('auth', 'admi
     Route::get('/create', [ManufacturingCostController::class, 'create'])->name('create');
     Route::post('/', [ManufacturingCostController::class, 'store'])->name('store');
     Route::post('/calculate', [ManufacturingCostController::class, 'calculateAjax'])->name('calculate');
+
+    // Wood Inventory — MUST come before /{manufacturingCost} wildcard
+    Route::get('wood-stocks',                      [\App\Http\Controllers\WoodStockController::class, 'index'])->name('wood-stocks.index');
+    Route::get('wood-stocks/create',               [\App\Http\Controllers\WoodStockController::class, 'create'])->name('wood-stocks.create');
+    Route::post('wood-stocks',                     [\App\Http\Controllers\WoodStockController::class, 'store'])->name('wood-stocks.store');
+    Route::get('wood-dispensings',                 [\App\Http\Controllers\WoodDispensingController::class, 'index'])->name('wood-dispensings.index');
+    Route::get('wood-stocks/{woodStock}/dispense', [\App\Http\Controllers\WoodDispensingController::class, 'create'])->name('wood-dispensings.create');
+    Route::post('wood-dispensings',                [\App\Http\Controllers\WoodDispensingController::class, 'store'])->name('wood-dispensings.store');
+    Route::get('wood-dispensings/{dispensing}/create-invoice', [\App\Http\Controllers\WoodDispensingController::class, 'createInvoice'])->name('wood-dispensings.create-invoice');
+
+    // Manufacturing Cost Calculator (wildcard routes last)
     Route::get('/{manufacturingCost}', [ManufacturingCostController::class, 'show'])->name('show');
     Route::get('/{manufacturingCost}/edit', [ManufacturingCostController::class, 'edit'])->name('edit');
     Route::put('/{manufacturingCost}', [ManufacturingCostController::class, 'update'])->name('update');
@@ -204,9 +217,9 @@ Route::prefix('manufacturing-orders')->name('manufacturing-orders.')->middleware
     Route::get('/{manufacturingOrder}/edit', [ManufacturingOrderController::class, 'edit'])->name('edit');
     Route::put('/{manufacturingOrder}', [ManufacturingOrderController::class, 'update'])->name('update');
     Route::delete('/{manufacturingOrder}', [ManufacturingOrderController::class, 'destroy'])->name('destroy');
-    Route::post('/{manufacturingOrder}/confirm', [ManufacturingOrderController::class, 'confirm'])->name('confirm');
-    Route::post('/{manufacturingOrder}/complete', [ManufacturingOrderController::class, 'complete'])->name('complete');
-    Route::post('/{manufacturingOrder}/cancel', [ManufacturingOrderController::class, 'cancel'])->name('cancel');
+    Route::match(['post', 'patch'], '/{manufacturingOrder}/confirm', [ManufacturingOrderController::class, 'confirm'])->name('confirm');
+    Route::match(['post', 'patch'], '/{manufacturingOrder}/complete', [ManufacturingOrderController::class, 'complete'])->name('complete');
+    Route::match(['post', 'patch'], '/{manufacturingOrder}/cancel', [ManufacturingOrderController::class, 'cancel'])->name('cancel');
 });
 
 /*
@@ -353,6 +366,11 @@ Route::prefix('reports')->name('reports.')->middleware('auth', 'admin.only')->gr
     Route::get('/inventory/export', [ReportingController::class, 'exportInventory'])->name('inventory.export');
     Route::get('/profit-loss', [ReportingController::class, 'profitLoss'])->name('profit-loss');
     Route::get('/profit-loss/export', [ReportingController::class, 'exportProfitLoss'])->name('profit-loss.export');
+
+    // Wood Reports
+    Route::get('/wood-stock', [ReportingController::class, 'woodStock'])->name('wood-stock');
+    Route::get('/wood-movement', [ReportingController::class, 'woodMovement'])->name('wood-movement');
+    Route::get('/wood-cost-production', [ReportingController::class, 'woodCostProduction'])->name('wood-cost-production');
 });
 
 /*

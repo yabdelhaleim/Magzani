@@ -172,18 +172,23 @@ class ManufacturingOrderController extends Controller
      */
     public function show(string $id)
     {
-        $order = \App\Models\ManufacturingOrder::with([
+        $manufacturingOrder = \App\Models\ManufacturingOrder::with([
             'components',
+            'components.woodStock',
             'product',
             'creator',
             'updater',
             'completer',
-            'inventoryMovements'
+            'inventoryMovements',
+            'woodDispensings',
+            'woodDispensings.woodStock',
+            'woodDispensings.user',
+            'woodDispensings.client'
         ])->findOrFail($id);
 
         $warehouses = \App\Models\Warehouse::where('is_active', true)->get();
 
-        return view('manufacturing-orders.show', compact('order', 'warehouses'));
+        return view('manufacturing-orders.show', compact('manufacturingOrder', 'warehouses'));
     }
 
     /**

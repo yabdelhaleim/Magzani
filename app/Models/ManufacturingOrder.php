@@ -89,6 +89,11 @@ class ManufacturingOrder extends Model
         return $this->belongsTo(User::class, 'completed_by');
     }
 
+    public function woodDispensings(): HasMany
+    {
+        return $this->hasMany(WoodDispensing::class);
+    }
+
     public function inventoryMovements(): HasMany
     {
         return $this->hasMany(InventoryMovement::class, 'reference_id')

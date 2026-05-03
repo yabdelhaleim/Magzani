@@ -514,8 +514,8 @@
                     <tr>
                         <td>{{ $index + 1 }}</td>
                         <td style="text-align: right;">
-                            <div class="product-name">{{ $item->product->name ?? 'منتج محذوف' }}</div>
-                            <div class="product-code">{{ $item->product->sku ?? $item->product->code ?? '' }}</div>
+                            <div class="product-name">{{ optional($item->product)->name ?? 'منتج محذوف' }}</div>
+                            <div class="product-code">{{ optional($item->product)->sku ?? optional($item->product)->code ?? '' }}</div>
                         </td>
                         <td>{{ number_format($item->system_quantity, 2) }}</td>
                         <td style="font-weight: 900; color: #4f63d2;">
