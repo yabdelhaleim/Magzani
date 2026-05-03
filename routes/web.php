@@ -27,6 +27,7 @@ use App\Http\Controllers\InventoryMovementController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\ManufacturingCostController;
 use App\Http\Controllers\ManufacturingOrderController;
+use App\Http\Controllers\RawMaterialTemplateController;
 
 
 /*
@@ -213,6 +214,16 @@ Route::prefix('manufacturing-orders')->name('manufacturing-orders.')->middleware
     Route::get('/create', [ManufacturingOrderController::class, 'create'])->name('create');
     Route::post('/', [ManufacturingOrderController::class, 'store'])->name('store');
     Route::post('/calculate', [ManufacturingOrderController::class, 'calculateCosts'])->name('calculate');
+
+    // Raw Materials
+    Route::get('/raw-materials', [RawMaterialTemplateController::class, 'index'])->name('raw-materials.index');
+    Route::get('/raw-materials/create', [RawMaterialTemplateController::class, 'create'])->name('raw-materials.create');
+    Route::post('/raw-materials', [RawMaterialTemplateController::class, 'store'])->name('raw-materials.store');
+    Route::get('/raw-materials/{id}', [RawMaterialTemplateController::class, 'show'])->name('raw-materials.show');
+    Route::get('/raw-materials/{id}/edit', [RawMaterialTemplateController::class, 'edit'])->name('raw-materials.edit');
+    Route::put('/raw-materials/{id}', [RawMaterialTemplateController::class, 'update'])->name('raw-materials.update');
+    Route::delete('/raw-materials/{id}', [RawMaterialTemplateController::class, 'destroy'])->name('raw-materials.destroy');
+
     Route::get('/{manufacturingOrder}', [ManufacturingOrderController::class, 'show'])->name('show');
     Route::get('/{manufacturingOrder}/edit', [ManufacturingOrderController::class, 'edit'])->name('edit');
     Route::put('/{manufacturingOrder}', [ManufacturingOrderController::class, 'update'])->name('update');
