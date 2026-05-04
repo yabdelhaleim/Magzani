@@ -168,16 +168,103 @@ class WarehouseController extends Controller
     {
         try {
             $warehouse = Warehouse::findOrFail($id);
+            $productId = $request->input('product_id');
             $movements = $this->movementService->getWarehouseMovements(
                 $id,
-                $request->all()
+                $productId,
+                $request->except('product_id')
             );
+
+            $warehouses = Warehouse::active()->select('id', 'name', 'code')->get();
+            $products = Product::where('is_active', true)->select('id', 'name', 'sku', 'barcode')->orderBy('name')->get();
             
-            return view('warehouses.movements', compact('warehouse', 'movements'));
+            return view('warehouses.movements', compact('warehouse', 'warehouses', 'products', 'movements'));
 
         } catch (\Exception $e) {
             return redirect()
                 ->route('warehouses.index')
+                ->with('error', $e->getMessage());
+        }
+    }
+
+    /**
+     * ✅ إضافة منتج للمخزن - صفحة النموذج
+     */
+    public function createProduct($id)
+    {
+        try {
+            $warehouse = Warehouse::findOrFail($id);
+            $products = Product::where('is_active', true)
+                ->select('id', 'name', 'sku', 'barcode', 'code')
+                ->orderBy('name')
+                ->get();
+
+            return view('warehouses.add-product', compact('warehouse', 'products'));
+
+        } catch (\Exception $e) {
+            return redirect()
+                ->route('warehouses.index')
+                ->with('error', $e->getMessage());
+        }
+    }
+
+    /**
+     * ✅ إضافة منتج للمخزن - حفظ
+     */
+    public function addProduct(Request $request, $id)
+    {
+        try {
+            $request->validate([
+                'product_id' => 'required|exists:products,id',
+                'quantity' => 'required|numeric|min:0.001',
+                'cost_price' => 'nullable|numeric|min:0',
+                'min_stock' => 'nullable|numeric|min:0',
+            ]);
+
+            $warehouse = Warehouse::findOrFail($id);
+            $warehouse->products()->syncWithoutDetaching([
+                $request->product_id => [
+                    'quantity' => $request->quantity,
+                    'average_cost' => $request->cost_price ?? 0,
+                    'min_stock' => $request->min_stock ?? 0,
+                ],
+            ]);
+
+            return redirect()
+                ->route('warehouses.show', $id)
+                ->with('success', 'تم إضافة المنتج للمخزن بنجاح');
+
+        } catch (\Exception $e) {
+            return back()
+                ->with('error', $e->getMessage())
+                ->withInput();
+        }
+    }
+
+    /**
+     * ✅ البحث في المخزن
+     */
+    public function search(Request $request, $id)
+    {
+        try {
+            $warehouse = Warehouse::findOrFail($id);
+            $query = $warehouse->products();
+
+            if ($search = $request->input('q')) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('name', 'LIKE', "%{$search}%")
+                      ->orWhere('sku', 'LIKE', "%{$search}%")
+                      ->orWhere('barcode', 'LIKE', "%{$search}%");
+                });
+            }
+
+            $products = $query->paginate(20);
+
+            return view('warehouses.search', compact('warehouse', 'products'));
+
+        } catch (\Exception $e) {
+            return redirect()
+                ->route('warehouses.show', $id)
                 ->with('error', $e->getMessage());
         }
     }

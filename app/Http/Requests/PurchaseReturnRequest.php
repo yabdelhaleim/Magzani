@@ -105,7 +105,7 @@ class PurchaseReturnRequest extends FormRequest
     public function withValidator($validator)
     {
         $validator->after(function ($validator) {
-            if (!$this->has('items')) {
+            if (!$this->has('items') || !is_array($this->items)) {
                 return;
             }
 

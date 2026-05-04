@@ -65,7 +65,7 @@ class SupplierStatementExport implements
         }
         $payments = $payments->select(
             'id',
-            'payment_number as reference',
+            DB::raw("'PAY-' || id as reference"),
             'payment_date as date',
             'amount',
             DB::raw("'payment' as type"),
@@ -86,7 +86,7 @@ class SupplierStatementExport implements
             'id',
             'return_number as reference',
             'return_date as date',
-            'total_return_amount as amount',
+            'total as amount',
             DB::raw("'return' as type"),
             'notes',
             'created_at'

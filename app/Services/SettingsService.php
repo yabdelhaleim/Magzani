@@ -15,6 +15,12 @@ class SettingsService
     {
         $company = Company::first();
 
+        if (!$company) {
+            $company = Company::create([
+                'name' => $data['name'] ?? 'شركتي',
+            ]);
+        }
+
         if(isset($data['logo'])){
             $path = $data['logo']->store('company_logos', 'public');
             $data['logo'] = $path;

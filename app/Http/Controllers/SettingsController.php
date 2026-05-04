@@ -17,8 +17,8 @@ class SettingsController extends Controller
 
     public function index()
     {
-        $company = \App\Models\Company::first();
-        $system = \App\Models\SystemSetting::first();
+        $company = \App\Models\Company::first() ?? new \App\Models\Company();
+        $system = \App\Models\SystemSetting::first() ?? new \App\Models\SystemSetting();
         return view('settings.index', compact('company', 'system'));
     }
 

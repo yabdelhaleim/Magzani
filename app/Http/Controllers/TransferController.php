@@ -186,4 +186,23 @@ class TransferController extends Controller
             return back()->with('error', 'حدث خطأ في التصدير');
         }
     }
+
+    /**
+     * سجل تحويلات مخزن معين
+     */
+    public function warehouseHistory(Request $request, $warehouseId)
+    {
+        try {
+            $warehouse = Warehouse::findOrFail($warehouseId);
+            $transfers = $this->transferService->getWarehouseTransfers($warehouseId, $request->all());
+
+            return view('transfers.warehouse-history', compact('warehouse', 'transfers'));
+
+        } catch (\Exception $e) {
+            Log::error('❌ فشل عرض سجل تحويلات المخزن', ['error' => $e->getMessage()]);
+
+            return redirect()->route('transfers.index')
+                ->with('error', 'حدث خطأ في تحميل البيانات');
+        }
+    }
 }
