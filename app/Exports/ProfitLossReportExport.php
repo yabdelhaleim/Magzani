@@ -121,7 +121,7 @@ class ProfitLossReportExport implements
 
         return [
             $row['title'] ?? $row['label'] ?? '',
-            number_format($row['amount'] ?? 0, 2),
+            number_format(is_numeric($row['amount'] ?? null) ? $row['amount'] : 0, 2),
             $row['type'] !== 'header' && $row['type'] !== 'period' && $row['type'] !== 'section' 
                 ? number_format($percentage, 2) . '%' 
                 : '',

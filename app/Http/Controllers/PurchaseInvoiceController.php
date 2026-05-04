@@ -133,7 +133,7 @@ class PurchaseInvoiceController extends Controller
     {
         $invoice->load(['supplier', 'warehouse', 'items.product']);
         
-        return view('invoices.Print', compact('invoice'));
+        return view('invoices.purchases.print', compact('invoice'));
     }
 
     /**

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Services\AdvancedPricingService;
 use App\Traits\UnitsManagement;
+use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
@@ -322,6 +323,181 @@ class PriceUpdateController extends Controller
             && empty($data['activeUnits']) 
             && empty($data['mostUsedUnits']) 
             && empty($data['unitsByCategory']);
+    }
+
+    public function unitsStatistics()
+    {
+        try {
+            $stats = DB::table('products')
+                ->select('base_unit', DB::raw('COUNT(*) as product_count'), DB::raw('AVG(selling_price) as avg_price'), DB::raw('MIN(selling_price) as min_price'), DB::raw('MAX(selling_price) as max_price'))
+                ->where('is_active', true)
+                ->groupBy('base_unit')
+                ->orderByDesc('product_count')
+                ->get();
+
+            return response()->json([
+                'success' => true,
+                'statistics' => $stats,
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function convertUnitPrice(Request $request)
+    {
+        $request->validate([
+            'product_id' => 'required|exists:products,id',
+            'from_unit_id' => 'nullable|integer',
+            'to_unit_id' => 'nullable|integer',
+            'from_unit' => 'nullable|string',
+            'to_unit' => 'nullable|string',
+        ]);
+
+        try {
+            $product = Product::findOrFail($request->product_id);
+            $basePrice = $product->selling_price;
+
+            $fromUnit = $request->input('from_unit');
+            $toUnit = $request->input('to_unit');
+
+            $conversion = DB::table('unit_conversions')
+                ->where('from_unit', $fromUnit)
+                ->where('to_unit', $toUnit)
+                ->where('is_active', true)
+                ->first();
+
+            $convertedPrice = $conversion
+                ? $basePrice * $conversion->conversion_factor
+                : $basePrice;
+
+            return response()->json([
+                'success' => true,
+                'base_price' => $basePrice,
+                'converted_price' => round($convertedPrice, 2),
+                'conversion_factor' => $conversion ? $conversion->conversion_factor : 1,
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function getUnitDetails(Request $request)
+    {
+        $request->validate([
+            'product_id' => 'required|exists:products,id',
+        ]);
+
+        try {
+            $product = Product::findOrFail($request->product_id);
+            $sellingUnits = $product->sellingUnits()->where('is_active', true)->get();
+
+            $conversions = DB::table('unit_conversions')
+                ->where('is_active', true)
+                ->get();
+
+            return response()->json([
+                'success' => true,
+                'product' => [
+                    'id' => $product->id,
+                    'name' => $product->name,
+                    'base_unit' => $product->base_unit,
+                    'selling_price' => $product->selling_price,
+                    'purchase_price' => $product->purchase_price,
+                ],
+                'selling_units' => $sellingUnits,
+                'conversions' => $conversions,
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function getProductsByBaseUnit(Request $request)
+    {
+        $request->validate([
+            'base_unit_id' => 'nullable|integer',
+            'base_unit' => 'nullable|string',
+        ]);
+
+        try {
+            $unitId = $request->input('base_unit_id');
+            $unit = $request->input('base_unit');
+
+            $query = Product::where('is_active', true);
+
+            if ($unitId) {
+                $unitRecord = DB::table('product_base_units')->find($unitId);
+                if ($unitRecord) {
+                    $query->where('base_unit', $unitRecord->unit_name ?? '');
+                }
+            }
+
+            if ($unit) {
+                $query->where('base_unit', $unit);
+            }
+
+            $products = $query->select('id', 'name', 'code', 'sku', 'base_unit', 'selling_price', 'purchase_price')
+                ->orderBy('name')
+                ->limit(200)
+                ->get();
+
+            return response()->json([
+                'success' => true,
+                'products' => $products,
+                'count' => $products->count(),
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function previewBulkPriceUpdate(Request $request)
+    {
+        try {
+            $validated = $request->validate([
+                'base_unit' => 'required|string|max:50',
+                'category' => 'required|string|max:255',
+                'base_purchase_price' => 'required|numeric|min:0|max:999999.99',
+                'profit_value' => 'required|numeric|min:0|max:999999.99',
+                'profit_type' => ['required', Rule::in(['fixed', 'percentage'])],
+                'selected_products' => 'required|array|min:1|max:5000',
+                'selected_products.*' => 'integer|exists:products,id',
+            ]);
+
+            $result = $this->pricingService->previewBulkUpdate(
+                baseUnit: $validated['base_unit'],
+                category: $validated['category'],
+                purchasePrice: $validated['base_purchase_price'],
+                profitValue: $validated['profit_value'],
+                profitType: $validated['profit_type'],
+                selectedProductIds: $validated['selected_products']
+            );
+            
+            return response()->json($result);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 500);
+        }
     }
 
     /**

@@ -939,6 +939,8 @@
             <div class="sub-menu" :class="open ? 'open' : ''">
                 <a href="{{ route('manufacturing-orders.index') }}"  class="sub-item {{ request()->routeIs('manufacturing-orders.index')  ? 'active' : '' }}"><span class="dot"></span>أوامر التصنيع</a>
                 <a href="{{ route('manufacturing-orders.create') }}" class="sub-item {{ request()->routeIs('manufacturing-orders.create') ? 'active' : '' }}"><span class="dot"></span>إنشاء أمر تصنيع</a>
+                <a href="{{ route('manufacturing-orders.raw-materials.index') }}" class="sub-item {{ request()->routeIs('manufacturing-orders.raw-materials.index') ? 'active' : '' }}"><span class="dot"></span>الخامات</a>
+                <a href="{{ route('manufacturing-orders.raw-materials.create') }}" class="sub-item {{ request()->routeIs('manufacturing-orders.raw-materials.create') ? 'active' : '' }}"><span class="dot"></span>إنشاء خامة</a>
                 <div style="height:1px;background:rgba(255,255,255,0.08);margin:6px 0;"></div>
                 <a href="{{ route('manufacturing.index') }}"  class="sub-item {{ request()->routeIs('manufacturing.index')  ? 'active' : '' }}"><span class="dot"></span>حسابات التكلفة</a>
                 <a href="{{ route('manufacturing.create') }}" class="sub-item {{ request()->routeIs('manufacturing.create') ? 'active' : '' }}"><span class="dot"></span>حساب جديد</a>

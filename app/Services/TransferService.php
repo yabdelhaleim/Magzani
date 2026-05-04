@@ -84,6 +84,32 @@ class TransferService
         }
     }
 
+    public function getWarehouseTransfers(int $warehouseId, array $filters = [])
+    {
+        $query = WarehouseTransfer::query()
+            ->where('from_warehouse_id', $warehouseId)
+            ->orWhere('to_warehouse_id', $warehouseId);
+
+        if (!empty($filters['status'])) {
+            $query->where('status', $filters['status']);
+        }
+        if (!empty($filters['date_from'])) {
+            $query->whereDate('transfer_date', '>=', $filters['date_from']);
+        }
+        if (!empty($filters['date_to'])) {
+            $query->whereDate('transfer_date', '<=', $filters['date_to']);
+        }
+
+        $query->with([
+            'fromWarehouse:id,name,code',
+            'toWarehouse:id,name,code',
+            'items.product:id,name,code',
+            'createdBy:id,name',
+        ]);
+
+        return $query->orderByDesc('created_at')->paginate($filters['per_page'] ?? 20);
+    }
+
     /**
      * إنشاء وتنفيذ التحويل
      */

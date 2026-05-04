@@ -401,12 +401,10 @@ class ProductController extends Controller
     public function export(Request $request)
     {
         try {
-            // يمكنك استخدام Laravel Excel أو تصدير يدوي
             $products = Product::with(['sellingUnits', 'warehouses'])
                 ->select('id', 'name', 'code', 'sku', 'category', 'selling_price', 'purchase_price')
                 ->get();
 
-            // مثال بسيط لـ CSV
             $filename = 'products_' . date('Y-m-d_H-i-s') . '.csv';
             $headers = [
                 'Content-Type' => 'text/csv',
@@ -415,23 +413,14 @@ class ProductController extends Controller
 
             $callback = function() use ($products) {
                 $file = fopen('php://output', 'w');
-                
-                // Headers
                 fputcsv($file, ['الكود', 'الاسم', 'SKU', 'التصنيف', 'سعر البيع', 'سعر الشراء', 'المخزون']);
-                
-                // Data
                 foreach ($products as $product) {
                     fputcsv($file, [
-                        $product->code,
-                        $product->name,
-                        $product->sku,
-                        $product->category,
-                        $product->selling_price,
-                        $product->purchase_price,
-                        $product->total_stock ?? 0,
+                        $product->code, $product->name, $product->sku,
+                        $product->category, $product->selling_price,
+                        $product->purchase_price, $product->total_stock ?? 0,
                     ]);
                 }
-                
                 fclose($file);
             };
 
@@ -439,8 +428,79 @@ class ProductController extends Controller
 
         } catch (\Exception $e) {
             Log::error('Product export failed', ['error' => $e->getMessage()]);
-            
             return back()->with('error', '❌ فشل التصدير: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * ✅ سجل تغيرات سعر المنتج
+     */
+    public function priceHistory(Product $product)
+    {
+        $product->load(['priceHistory' => fn($q) => $q->orderBy('changed_at', 'desc')]);
+        return view('products.price-history', compact('product'));
+    }
+
+    /**
+     * ✅ صفحة طباعة الباركود
+     */
+    public function barcode(Request $request)
+    {
+        $query = Product::where('is_active', true);
+
+        if ($request->filled('category')) {
+            $query->where('category', $request->category);
+        }
+        if ($request->filled('warehouse_id')) {
+            $query->whereHas('warehouses', fn($q) => $q->where('warehouses.id', $request->warehouse_id));
+        }
+
+        $products = $query->select('id', 'name', 'sku', 'barcode', 'selling_price')
+            ->orderBy('name')
+            ->get();
+
+        return view('products.barcode', compact('products'));
+    }
+
+    /**
+     * ✅ تحديث سعر منتج واحد
+     */
+    public function updatePrice(Request $request, Product $product)
+    {
+        $request->validate([
+            'price' => 'required|numeric|min:0|max:999999.99',
+            'price_type' => 'nullable|in:selling,purchase',
+        ]);
+
+        try {
+            $priceType = $request->input('price_type', 'selling');
+            $oldPrice = $product->{$priceType . '_price'};
+            $newPrice = $request->price;
+
+            $product->update([$priceType . '_price' => $newPrice]);
+
+            $product->priceHistory()->create([
+                'base_unit' => $product->base_unit,
+                'old_purchase_price' => $priceType === 'purchase' ? $oldPrice : $product->purchase_price,
+                'new_purchase_price' => $priceType === 'purchase' ? $newPrice : $product->purchase_price,
+                'old_selling_price' => $priceType === 'selling' ? $oldPrice : $product->selling_price,
+                'new_selling_price' => $priceType === 'selling' ? $newPrice : $product->selling_price,
+                'change_reason' => 'تحديث يدوي',
+                'changed_by' => auth()->id(),
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'تم تحديث السعر بنجاح',
+                'old_price' => $oldPrice,
+                'new_price' => $newPrice,
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'حدث خطأ: ' . $e->getMessage(),
+            ], 500);
         }
     }
 }

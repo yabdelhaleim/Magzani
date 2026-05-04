@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\ManufacturingOrder;
 use App\Models\ManufacturingOrderComponent;
 use App\Models\Product;
+use App\Models\RawMaterialTemplate;
 use App\Models\InventoryMovement;
 use App\Models\ProductWarehouse;
 use Illuminate\Support\Facades\Auth;
@@ -37,6 +38,14 @@ class ManufacturingOrderService
                     $width = (float) ($componentData['width_cm'] ?? 0);
                     $length = (float) ($componentData['length_cm'] ?? 0);
                     $pricePerCubicMeter = (float) ($componentData['price_per_cubic_meter'] ?? 0);
+
+                    if ($pricePerCubicMeter == 0 && !empty($componentData['component_type'])) {
+                        $rawMaterial = RawMaterialTemplate::where('name', $componentData['component_type'])->first();
+                        if ($rawMaterial) {
+                            $pricePerCubicMeter = (float) $rawMaterial->buy_price;
+                        }
+                    }
+
                     $volumeCm3 = $quantity * $thickness * $width * $length;
                     $componentCost = ($volumeCm3 / 1000000) * $pricePerCubicMeter;
                     $componentsTotal += $componentCost;
@@ -94,6 +103,14 @@ class ManufacturingOrderService
             if (!empty($data['components'])) {
                 foreach ($data['components'] as $componentData) {
                     $this->addComponent($order, $componentData);
+                }
+
+                // Decrease raw material quantities
+                foreach ($data['components'] as $componentData) {
+                    $rawMaterial = RawMaterialTemplate::where('name', $componentData['component_type'])->first();
+                    if ($rawMaterial) {
+                        $rawMaterial->decrement('quantity', (float) ($componentData['quantity'] ?? 0));
+                    }
                 }
             }
 
@@ -198,6 +215,13 @@ class ManufacturingOrderService
         $width = (float) ($data['width_cm'] ?? 0);
         $length = (float) ($data['length_cm'] ?? 0);
         $pricePerCubicMeter = (float) ($data['price_per_cubic_meter'] ?? 0);
+
+        if ($pricePerCubicMeter == 0 && !empty($data['component_type'])) {
+            $rawMaterial = RawMaterialTemplate::where('name', $data['component_type'])->first();
+            if ($rawMaterial) {
+                $pricePerCubicMeter = (float) $rawMaterial->buy_price;
+            }
+        }
 
         $volumeCm3 = $quantity * $thickness * $width * $length;
 

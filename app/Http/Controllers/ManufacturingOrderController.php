@@ -71,7 +71,8 @@ class ManufacturingOrderController extends Controller
     public function create()
     {
         $warehouses = \App\Models\Warehouse::where('is_active', true)->get();
-        return view('manufacturing-orders.create', compact('warehouses'));
+        $rawMaterials = \App\Models\RawMaterialTemplate::latest()->get();
+        return view('manufacturing-orders.create', compact('warehouses', 'rawMaterials'));
     }
 
     /**
@@ -99,7 +100,7 @@ class ManufacturingOrderController extends Controller
             'components.*.thickness_cm' => 'required|numeric|min:0',
             'components.*.width_cm' => 'required|numeric|min:0',
             'components.*.length_cm' => 'required|numeric|min:0',
-            'components.*.price_per_cubic_meter' => 'required|numeric|min:0',
+            'components.*.price_per_cubic_meter' => 'nullable|numeric|min:0',
         ]);
 
         try {
@@ -143,7 +144,7 @@ class ManufacturingOrderController extends Controller
             'components.*.thickness_cm' => 'required|numeric|min:0',
             'components.*.width_cm' => 'required|numeric|min:0',
             'components.*.length_cm' => 'required|numeric|min:0',
-            'components.*.price_per_cubic_meter' => 'required|numeric|min:0',
+            'components.*.price_per_cubic_meter' => 'nullable|numeric|min:0',
         ]);
 
         try {
@@ -237,7 +238,7 @@ class ManufacturingOrderController extends Controller
             'components.*.thickness_cm' => 'required|numeric|min:0',
             'components.*.width_cm' => 'required|numeric|min:0',
             'components.*.length_cm' => 'required|numeric|min:0',
-            'components.*.price_per_cubic_meter' => 'required|numeric|min:0',
+            'components.*.price_per_cubic_meter' => 'nullable|numeric|min:0',
         ]);
 
         try {
@@ -282,7 +283,7 @@ class ManufacturingOrderController extends Controller
             'components.*.thickness_cm' => 'required|numeric|min:0',
             'components.*.width_cm' => 'required|numeric|min:0',
             'components.*.length_cm' => 'required|numeric|min:0',
-            'components.*.price_per_cubic_meter' => 'required|numeric|min:0',
+            'components.*.price_per_cubic_meter' => 'nullable|numeric|min:0',
         ]);
 
         try {
@@ -562,7 +563,7 @@ class ManufacturingOrderController extends Controller
             'components.*.thickness_cm' => 'required|numeric|min:0',
             'components.*.width_cm' => 'required|numeric|min:0',
             'components.*.length_cm' => 'required|numeric|min:0',
-            'components.*.price_per_cubic_meter' => 'required|numeric|min:0',
+            'components.*.price_per_cubic_meter' => 'nullable|numeric|min:0',
         ]);
 
         try {

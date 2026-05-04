@@ -520,7 +520,7 @@ public function profitLossReport($startDate, $endDate)
                 DB::raw('COALESCE(SUM(wood_dispensings.volume_cm3_taken), 0) as total_wood_cm3'),
                 DB::raw('COALESCE(SUM(wood_dispensings.volume_cm3_taken * wood_stocks.unit_cost / 1000000), 0) as total_wood_cost')
             )
-            ->groupBy('manufacturing_orders.id');
+            ->groupBy('manufacturing_orders.id', 'manufacturing_orders.order_number', 'manufacturing_orders.product_name', 'manufacturing_orders.quantity_produced', 'manufacturing_orders.total_cost');
 
         // Apply filters
         if (!empty($filters['date_from'])) {
