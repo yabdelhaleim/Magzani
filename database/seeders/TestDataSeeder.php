@@ -12,7 +12,9 @@ class TestDataSeeder extends Seeder
 {
     public function run(): void
     {
-        $this->command->info('Starting to seed test data...');
+        if ($this->command) {
+            $this->command->info('Starting to seed test data...');
+        }
 
         $this->seedRolesAndPermissions();
         $this->seedUsers();
@@ -24,7 +26,9 @@ class TestDataSeeder extends Seeder
         $this->seedSalesInvoices();
         $this->seedPurchaseInvoices();
 
-        $this->command->info('Test data seeding completed!');
+        if ($this->command) {
+            $this->command->info('Test data seeding completed!');
+        }
     }
 
     private function seedRolesAndPermissions(): void
@@ -187,7 +191,9 @@ class TestDataSeeder extends Seeder
     private function seedSalesInvoices(): void
     {
         if (DB::table('sales_invoices')->count() > 0) {
-            $this->command->info('Sales invoices already exist, skipping...');
+            if ($this->command) {
+                $this->command->info('Sales invoices already exist, skipping...');
+            }
             return;
         }
 
@@ -292,7 +298,9 @@ class TestDataSeeder extends Seeder
     private function seedPurchaseInvoices(): void
     {
         if (DB::table('purchase_invoices')->count() > 0) {
-            $this->command->info('Purchase invoices already exist, skipping...');
+            if ($this->command) {
+                $this->command->info('Purchase invoices already exist, skipping...');
+            }
             return;
         }
 

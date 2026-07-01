@@ -329,7 +329,15 @@
                     <p class="tf-title-sub">{{ $invoice->invoice_date->format('Y-m-d') }}</p>
                 </div>
             </div>
-            <div style="display: flex; gap: 10px;" class="no-print">
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;" class="no-print">
+                @if($invoice->status === 'draft')
+                <form action="{{ route('invoices.purchases.confirm', $invoice->id) }}" method="POST" onsubmit="return confirm('هل تريد اعتماد الفاتورة الآن؟')">
+                    @csrf
+                    <button type="submit" class="tf-btn tf-btn-primary" style="background: linear-gradient(135deg, var(--tf-green), #0d8a6e);">
+                        <i class="fas fa-check-circle"></i> اعتماد الفاتورة
+                    </button>
+                </form>
+                @endif
                 <a href="{{ route('invoices.purchases.edit', $invoice->id) }}" class="tf-btn tf-btn-primary">
                     <i class="fas fa-edit"></i> تعديل
                 </a>
@@ -363,12 +371,14 @@
         <div class="tf-card-body">
             <div style="margin-bottom: 16px;">
                 <span style="font-size: 14px; color: var(--tf-text-m); margin-left: 8px;">الحالة:</span>
-                @if($invoice->status == 'paid')
-                    <span class="tf-badge green"><i class="fas fa-check-circle"></i> مدفوعة</span>
-                @elseif($invoice->status == 'pending')
-                    <span class="tf-badge amber"><i class="fas fa-clock"></i> معلقة</span>
-                @else
+                @if($invoice->status === 'confirmed')
+                    <span class="tf-badge green"><i class="fas fa-check-circle"></i> مؤكدة</span>
+                @elseif($invoice->status === 'draft')
+                    <span class="tf-badge amber"><i class="fas fa-clock"></i> مسودة</span>
+                @elseif($invoice->status === 'cancelled')
                     <span class="tf-badge red"><i class="fas fa-times-circle"></i> ملغاة</span>
+                @else
+                    <span class="tf-badge amber"><i class="fas fa-info-circle"></i> {{ $invoice->status }}</span>
                 @endif
             </div>
 
@@ -379,6 +389,9 @@
                         <tr>
                             <th>#</th>
                             <th>الصنف</th>
+                            <th>نوع التخزين</th>
+                            <th>رقم التيلدا</th>
+                            <th>القياسات</th>
                             <th>الكمية</th>
                             <th>سعر الوحدة</th>
                             <th>الإجمالي</th>
@@ -389,8 +402,28 @@
                         <tr>
                             <td data-label="#">{{ $index + 1 }}</td>
                             <td data-label="الصنف" style="font-weight: 700;">{{ $item->product?->name ?? '[محذوف]' }}</td>
-                            <td data-label="الكمية">{{ number_format($item->qty, 2) }}</td>
-                            <td data-label="سعر الوحدة">{{ number_format($item->price, 2) }} ج.م</td>
+                            <td data-label="نوع التخزين">
+                                @php
+                                    $storageLabel = match($item->storage_type ?? 'general') {
+                                        'raw_material' => 'منتج خام',
+                                        'manufactured' => 'منتج تصنيع',
+                                        default => 'تخزين عام',
+                                    };
+                                @endphp
+                                {{ $storageLabel }}
+                            </td>
+                            <td data-label="رقم التيلدا">{{ $item->tilde_number ?: '—' }}</td>
+                            <td data-label="القياسات" style="font-size:12px;">
+                                @if(!empty($item->tilde_details) && is_array($item->tilde_details))
+                                    @foreach($item->tilde_details as $spec)
+                                        <div>ك: {{ $spec['quantity'] ?? 0 }} | ط: {{ $spec['length'] ?? 0 }} | ع: {{ $spec['width'] ?? 0 }} | س: {{ $spec['thickness'] ?? 0 }}</div>
+                                    @endforeach
+                                @else
+                                    —
+                                @endif
+                            </td>
+                            <td data-label="الكمية">{{ number_format($item->quantity ?? $item->qty ?? 0, 2) }}</td>
+                            <td data-label="سعر الوحدة">{{ number_format($item->unit_price ?? $item->price ?? 0, 2) }} ج.م</td>
                             <td data-label="الإجمالي" style="font-weight: 800;">{{ number_format($item->total, 2) }} ج.م</td>
                         </tr>
                         @endforeach

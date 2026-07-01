@@ -512,7 +512,7 @@ public function getShowData(int $countId, array $filters = []): array
      */
     public function getWarehouseProducts(int $warehouseId): array
     {
-        $products = DB::table('product_warehouses as pw')
+        $products = DB::table('product_warehouse as pw')
             ->join('products as p', 'pw.product_id', '=', 'p.id')
             ->where('pw.warehouse_id', $warehouseId)
             ->where('p.is_active', true)
@@ -600,7 +600,7 @@ public function getShowData(int $countId, array $filters = []): array
         ]);
 
         // تحديث ProductWarehouse
-        DB::table('product_warehouses')
+        DB::table('product_warehouse')
             ->where('product_id', $item->product_id)
             ->where('warehouse_id', $stockCount->warehouse_id)
             ->update([

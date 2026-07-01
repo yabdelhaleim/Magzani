@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\SalesReturn;
 use App\Models\SalesInvoice;
+use App\Models\SalesReturn;
 use App\Services\ReturnService;
 use Illuminate\Http\Request;
 
@@ -32,26 +32,44 @@ class SalesReturnsController extends Controller
             ->get();
 
         // تجهيز البيانات للـ Blade
-        $invoicesData = $invoices->map(function($inv) {
+        $invoicesData = $invoices->map(function ($inv) {
             return [
                 'id' => $inv->id,
                 'invoice_number' => $inv->invoice_number,
                 'invoice_date' => $inv->invoice_date->format('Y-m-d'),
                 'customer_name' => $inv->customer->name ?? '',
-                'items' => $inv->items->map(function($item) use ($inv) {
-                    $returnedQty = $inv->returns->flatMap(function($return) {
+                'items' => $inv->items->map(function ($item) use ($inv) {
+                    $duplicateProductLines = $inv->items->where('product_id', $item->product_id)->count() > 1;
+
+                    $returnedQty = (float) $inv->returns->flatMap(function ($return) {
                         return $return->items;
-                    })->where('product_id', $item->product_id)->sum('quantity_returned');
-                    
+                    })->sum(function ($ri) use ($item, $duplicateProductLines) {
+                        if ((int) $ri->sales_invoice_item_id === (int) $item->id) {
+                            return (float) $ri->quantity_returned;
+                        }
+                        if (! $ri->sales_invoice_item_id && ! $duplicateProductLines && (int) $ri->product_id === (int) $item->product_id) {
+                            return (float) $ri->quantity_returned;
+                        }
+
+                        return 0.0;
+                    });
+
+                    $lineLabel = $item->product->name ?? '';
+                    if ($duplicateProductLines) {
+                        $lineLabel .= ' — سطر #'.$item->id;
+                    }
+
                     return [
+                        'sales_invoice_item_id' => $item->id,
                         'product_id' => $item->product_id,
-                        'product_name' => $item->product->name ?? '',
-                        'original_quantity' => (float)$item->quantity,
-                        'returned_quantity' => (float)$returnedQty,
-                        'available_quantity' => (float)($item->quantity - $returnedQty),
-                        'price' => (float)$item->unit_price,
+                        'product_name' => $lineLabel,
+                        'conversion_factor' => (float) ($item->conversion_factor ?? 1),
+                        'original_quantity' => (float) $item->quantity,
+                        'returned_quantity' => $returnedQty,
+                        'available_quantity' => (float) $item->quantity - $returnedQty,
+                        'price' => (float) ($item->unit_price ?? $item->price ?? 0),
                     ];
-                })->values()->toArray()
+                })->values()->toArray(),
             ];
         })->values()->toArray();
 
@@ -64,6 +82,7 @@ class SalesReturnsController extends Controller
             'sales_invoice_id' => 'required|exists:sales_invoices,id',
             'return_date' => 'nullable|date',
             'items' => 'required|array|min:1',
+            'items.*.sales_invoice_item_id' => 'required|exists:sales_invoice_items,id',
             'items.*.product_id' => 'required|exists:products,id',
             'items.*.quantity' => 'required|numeric|min:0.001',
             'items.*.price' => 'required|numeric|min:0',

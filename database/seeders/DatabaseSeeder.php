@@ -12,16 +12,17 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // \App\Models\User::factory(10)->create();
-
-        // \App\Models\User::factory()->create([
-        //     'name' => 'Test User',
-        //     'email' => 'test@example.com',
-        // ]);
-
-        $this->call([
-            UserSeeder::class,
-            TestDataSeeder::class,
-        ]);
+        if (function_exists('tenant') && tenant()) {
+            // إذا كنا داخل قاعدة بيانات المستأجر (العميل): تلقيم المستخدمين والبيانات التجريبية
+            $this->call([
+                UserSeeder::class,
+                TestDataSeeder::class,
+            ]);
+        } else {
+            // إذا كنا في قاعدة البيانات المركزية (السوبر أدمن): تلقيم الباقات فقط
+            $this->call([
+                PlanSeeder::class,
+            ]);
+        }
     }
 }

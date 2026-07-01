@@ -151,18 +151,19 @@ class WarehouseOrderController extends Controller
                     'total_cost' => $totalCost > 0 ? $totalCost : null,
                     'notes' => $item['notes'] ?? null,
                 ]);
+            }
 
-                // تحديث كمية المنتج في المخزن
-                $warehouseProduct = \App\Models\ProductWarehouse::firstOrCreate(
-                    [
-                        'warehouse_id' => $request->warehouse_id,
-                        'product_id' => $item['product_id'],
-                    ],
-                    ['quantity' => 0]
+            // تحديث حركة المخزن والكمية لكل بند عبر StockService
+            $inboundOrder = $order->fresh(['items']);
+            foreach ($inboundOrder->items as $item) {
+                app(\App\Services\StockService::class)->adjust(
+                    warehouseId: $inboundOrder->warehouse_id,
+                    productId: $item->product_id,
+                    qty: $item->quantity,
+                    type: \App\Services\StockService::INBOUND,
+                    referenceId: $inboundOrder->id,
+                    unitCost: $item->unit_cost ?? null
                 );
-
-                $warehouseProduct->quantity += $item['quantity'];
-                $warehouseProduct->save();
             }
 
             DB::commit();
@@ -341,35 +342,18 @@ class WarehouseOrderController extends Controller
             $order->refresh();
             $order->load('items');
 
-            $movementService = app(InventoryMovementService::class);
-
-            foreach ($order->items as $item) {
-                $qty = (float) ($item->approved_quantity ?? $item->requested_quantity);
-                if ($qty <= 0) {
+            $outboundOrder = $order;
+            foreach ($outboundOrder->items as $item) {
+                if ($item->quantity <= 0) {
                     continue;
                 }
-
-                $movementType = match ($order->purpose) {
-                    'sale' => 'sale',
-                    'transfer' => 'transfer_out',
-                    'return' => 'return_out',
-                    'damage' => 'damage',
-                    'sample' => 'consumption',
-                    'other' => 'consumption',
-                    default => 'consumption',
-                };
-
-                $movementService->recordMovement([
-                    'warehouse_id' => $order->warehouse_id,
-                    'product_id' => $item->product_id,
-                    'quantity_change' => -abs($qty),
-                    'movement_type' => $movementType,
-                    'reference_type' => WarehouseOutboundOrder::class,
-                    'reference_id' => $order->id,
-                    'notes' => 'أذن إخراج بضاعة رقم: '.$order->order_number,
-                    'created_by' => auth()->id(),
-                    'unit_cost' => $item->unit_cost !== null ? (float) $item->unit_cost : 0,
-                ]);
+                app(\App\Services\StockService::class)->adjust(
+                    warehouseId: $outboundOrder->warehouse_id,
+                    productId: $item->product_id,
+                    qty: -$item->quantity,
+                    type: \App\Services\StockService::OUTBOUND,
+                    referenceId: $outboundOrder->id
+                );
             }
 
             $order->status = 'completed';

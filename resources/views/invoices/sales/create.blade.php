@@ -625,6 +625,31 @@ document.addEventListener('alpine:init', () => {
         remaining: 0,
         showConfigModal: false,
 
+        invoicePrefill: @json($invoicePrefill ?? []),
+
+        init() {
+            const p = this.invoicePrefill || {};
+            if (p.customer_id) {
+                this.customerId = String(p.customer_id);
+            }
+            if (p.warehouse_id) {
+                this.warehouseId = String(p.warehouse_id);
+            }
+            if (p.product_id) {
+                this.items[0].product_id = String(p.product_id);
+                if (p.quantity) {
+                    const q = parseFloat(p.quantity);
+                    if (! Number.isNaN(q) && q > 0) {
+                        this.items[0].quantity = q;
+                    }
+                }
+                this.$nextTick(() => {
+                    this.loadProductData(0);
+                    this.calculateTotals();
+                });
+            }
+        },
+
         // جلب المخزون المتاح للمنتج في المخزن المحدد
         getAvailableStock(productId) {
             if (!productId || !this.warehouseId || !this.productsData[productId]) {

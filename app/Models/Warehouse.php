@@ -2,19 +2,20 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Warehouse extends Model
 {
     use HasFactory, SoftDeletes;
 
     // ==================== Configuration ====================
-    
+
     protected $fillable = [
         'name',
         'code',
@@ -53,6 +54,28 @@ class Warehouse extends Model
         return $this->hasMany(ProductWarehouse::class, 'warehouse_id');
     }
 
+    public function products(): BelongsToMany
+    {
+        return $this->belongsToMany(Product::class, 'product_warehouse')
+            ->using(ProductWarehouse::class)
+            ->withPivot([
+                'quantity',
+                'reserved_quantity',
+                'available_quantity',
+                'min_stock',
+                'average_cost',
+                'last_count_quantity',
+                'last_count_date',
+                'adjustment_total',
+            ])
+            ->withTimestamps();
+    }
+
+    public function woodStocks(): HasMany
+    {
+        return $this->hasMany(WoodStock::class, 'warehouse_id');
+    }
+
     public function manager(): BelongsTo
     {
         return $this->belongsTo(User::class, 'manager_id');
@@ -83,7 +106,7 @@ class Warehouse extends Model
     public function scopeActive(Builder $query): Builder
     {
         return $query->where('is_active', true)
-                     ->where('status', 'active');
+            ->where('status', 'active');
     }
 
     public function scopeInactive(Builder $query): Builder
@@ -105,7 +128,7 @@ class Warehouse extends Model
     {
         return $query->where(function ($q) use ($search) {
             $q->where('name', 'like', "%{$search}%")
-              ->orWhere('code', 'like', "%{$search}%");
+                ->orWhere('code', 'like', "%{$search}%");
         });
     }
 
@@ -118,7 +141,7 @@ class Warehouse extends Model
             ->addSelect([
                 'total_quantity' => ProductWarehouse::selectRaw('COALESCE(SUM(quantity), 0)')
                     ->whereColumn('warehouse_id', 'warehouses.id'),
-                
+
                 'total_value' => ProductWarehouse::selectRaw('COALESCE(SUM(quantity * average_cost), 0)')
                     ->whereColumn('warehouse_id', 'warehouses.id'),
             ]);
@@ -156,7 +179,7 @@ class Warehouse extends Model
 
     public function getStatusLabelAttribute(): string
     {
-        return match($this->status) {
+        return match ($this->status) {
             'active' => 'نشط',
             'inactive' => 'متوقف',
             'maintenance' => 'صيانة',
@@ -182,6 +205,6 @@ class Warehouse extends Model
 
     public function hasManager(): bool
     {
-        return !is_null($this->manager_id);
+        return ! is_null($this->manager_id);
     }
 }

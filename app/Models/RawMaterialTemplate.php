@@ -12,6 +12,8 @@ class RawMaterialTemplate extends Model
 
     protected $fillable = [
         'name',
+        'warehouse_id',
+        'product_id',
         'quantity',
         'sale_price',
         'buy_price',
@@ -24,6 +26,16 @@ class RawMaterialTemplate extends Model
         'sale_price' => 'decimal:4',
         'buy_price' => 'decimal:4',
     ];
+
+    public function warehouse()
+    {
+        return $this->belongsTo(Warehouse::class);
+    }
+
+    public function product()
+    {
+        return $this->belongsTo(Product::class);
+    }
 
     public function creator()
     {

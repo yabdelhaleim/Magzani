@@ -10,11 +10,22 @@ class PurchaseReturn extends Model
     use HasFactory;
 
     protected $fillable = [
+        'return_number',
         'purchase_invoice_id',
+        'supplier_id',
+        'warehouse_id',
         'return_date',
-        'reason',
+        'subtotal',
+        'discount_amount',
+        'tax_amount',
         'total',
+        'status',
+        'return_reason',
+        'notes',
         'created_by',
+        'updated_by',
+        'confirmed_by',
+        'confirmed_at',
     ];
 
     protected $casts = [

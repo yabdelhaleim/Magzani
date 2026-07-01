@@ -392,7 +392,13 @@
 
                     <div>
                         <label class="tf-label">التصنيف <span class="req">*</span></label>
-                        <input type="text" name="category" value="{{ old('category') }}" x-model="category" @input="loadPricingSuggestions()" class="tf-input" placeholder="مثال: أسمنت، حديد، رمل" required>
+                        <select name="category_id" x-model="categoryId" @change="category = $el.options[$el.selectedIndex].text; loadPricingSuggestions()" class="tf-select" required>
+                            <option value="">-- اختر التصنيف --</option>
+                            @foreach($categories ?? [] as $cat)
+                                <option value="{{ $cat->id }}" {{ old('category_id') == $cat->id ? 'selected' : '' }}>{{ $cat->name }}</option>
+                            @endforeach
+                        </select>
+                        <input type="hidden" name="category" :value="category">
                     </div>
 
                     <div>
@@ -601,6 +607,7 @@ function productCreateApp() {
         baseUnit: '{{ old("base_unit", "") }}',
         baseUnitLabel: '',
         category: '{{ old("category", "") }}',
+        categoryId: '{{ old("category_id", "") }}',
         purchasePrice: {{ old('purchase_price', 0) }},
         sellingPrice: {{ old('selling_price', 0) }},
         profit: 0,

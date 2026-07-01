@@ -119,7 +119,7 @@ class PurchaseReturnController extends Controller
                 $availableItems[] = [
                     'purchase_invoice_item_id' => $returnItem->purchase_invoice_item_id,
                     'product' => $returnItem->purchaseInvoiceItem->product,
-                    'original_qty' => $returnItem->purchaseInvoiceItem->qty,
+                    'original_qty' => $returnItem->purchaseInvoiceItem->quantity,
                     'returned_qty' => 0,
                     'available_qty' => $returnItem->quantity_returned,
                     'unit_price' => $returnItem->unit_price,

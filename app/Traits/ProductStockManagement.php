@@ -303,7 +303,6 @@ trait ProductStockManagement
             ->where('warehouse_id', $warehouseId)
             ->update([
                 'reserved_quantity' => DB::raw('COALESCE(reserved_quantity, 0) + ' . $quantity),
-                'available_quantity' => DB::raw('GREATEST(0, quantity - COALESCE(reserved_quantity, 0) - ' . $quantity . ')'),
                 'updated_at' => now(),
             ]) > 0;
     }
@@ -319,7 +318,6 @@ trait ProductStockManagement
             ->where('reserved_quantity', '>=', $quantity)
             ->update([
                 'reserved_quantity' => DB::raw('GREATEST(0, COALESCE(reserved_quantity, 0) - ' . $quantity . ')'),
-                'available_quantity' => DB::raw('quantity - GREATEST(0, COALESCE(reserved_quantity, 0) - ' . $quantity . ')'),
                 'updated_at' => now(),
             ]) > 0;
     }
@@ -334,7 +332,6 @@ trait ProductStockManagement
             ->where('warehouse_id', $warehouseId)
             ->update([
                 'quantity' => $newQuantity,
-                'available_quantity' => DB::raw('GREATEST(0, ' . $newQuantity . ' - COALESCE(reserved_quantity, 0))'),
                 'updated_at' => now(),
             ]) > 0;
     }
@@ -349,7 +346,6 @@ trait ProductStockManagement
             ->where('warehouse_id', $warehouseId)
             ->update([
                 'quantity' => DB::raw('quantity + ' . $quantity),
-                'available_quantity' => DB::raw('quantity + ' . $quantity . ' - COALESCE(reserved_quantity, 0)'),
                 'updated_at' => now(),
             ]) > 0;
     }
@@ -368,7 +364,6 @@ trait ProductStockManagement
             ->where('warehouse_id', $warehouseId)
             ->update([
                 'quantity' => DB::raw('GREATEST(0, quantity - ' . $quantity . ')'),
-                'available_quantity' => DB::raw('GREATEST(0, quantity - ' . $quantity . ' - COALESCE(reserved_quantity, 0))'),
                 'updated_at' => now(),
             ]) > 0;
     }

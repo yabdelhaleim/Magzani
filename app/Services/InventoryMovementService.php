@@ -4,9 +4,9 @@ namespace App\Services;
 
 use App\Models\InventoryMovement;
 use App\Models\ProductWarehouse;
+use Exception;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Exception;
 
 class InventoryMovementService
 {
@@ -19,7 +19,7 @@ class InventoryMovementService
         $this->validateMovementData($data);
 
         return DB::transaction(function () use ($data) {
-            
+
             // الحصول على الرصيد الحالي
             $currentStock = ProductWarehouse::where('warehouse_id', $data['warehouse_id'])
                 ->where('product_id', $data['product_id'])
@@ -27,10 +27,11 @@ class InventoryMovementService
                 ->first();
 
             $quantityBefore = $currentStock ? $currentStock->quantity : 0;
-            
+            $currentAverageCost = $currentStock ? (float) $currentStock->average_cost : 0;
+
             // حساب الكمية المحولة (+ للإدخال، - للإخراج)
             $quantityChange = $data['quantity_change'] ?? $data['quantity'] ?? 0;
-            
+
             // حساب الرصيد الجديد
             $quantityAfter = $quantityBefore + $quantityChange;
 
@@ -50,19 +51,20 @@ class InventoryMovementService
                 'movement_type' => $data['movement_type'],
                 'from_warehouse_id' => $data['from_warehouse_id'] ?? null,
                 'to_warehouse_id' => $data['to_warehouse_id'] ?? null,
-                
+
                 // الكميات الأربعة
                 'quantity' => abs($quantityChange),
                 'quantity_change' => $quantityChange,
                 'quantity_before' => $quantityBefore,
                 'quantity_after' => $quantityAfter,
-                
+
                 // التكاليف والأسعار
                 'unit_cost' => $data['unit_cost'] ?? 0,
+                'unit_cost_snapshot' => $currentAverageCost,
                 'unit_price' => $data['unit_price'] ?? 0,
                 'total_cost' => ($data['unit_cost'] ?? 0) * abs($quantityChange),
                 'total_price' => ($data['unit_price'] ?? 0) * abs($quantityChange),
-                
+
                 // معلومات إضافية
                 'movement_date' => $data['movement_date'] ?? now(),
                 'reference_type' => $data['reference_type'] ?? null,
@@ -95,6 +97,7 @@ class InventoryMovementService
 
             // مسح الكاش للمخزن
             \Illuminate\Support\Facades\Cache::forget("warehouse_details_{$data['warehouse_id']}");
+            \Illuminate\Support\Facades\Cache::forget("warehouse_details_v2_{$data['warehouse_id']}");
             \Illuminate\Support\Facades\Cache::forget("warehouse_products_stock_{$data['warehouse_id']}");
 
             return $movement->fresh(['warehouse', 'product', 'creator']);
@@ -118,23 +121,23 @@ class InventoryMovementService
                     $errors[] = [
                         'index' => $index,
                         'movement' => $movement,
-                        'error' => $e->getMessage()
+                        'error' => $e->getMessage(),
                     ];
-                    
+
                     Log::error('❌ فشل تسجيل الحركة', [
                         'index' => $index,
                         'movement' => $movement,
-                        'error' => $e->getMessage()
+                        'error' => $e->getMessage(),
                     ]);
                 }
             }
         });
 
-        if (!empty($errors)) {
+        if (! empty($errors)) {
             Log::warning('⚠️ بعض الحركات فشلت', [
                 'total' => count($movements),
                 'success' => count($results),
-                'failed' => count($errors)
+                'failed' => count($errors),
             ]);
         }
 
@@ -143,7 +146,7 @@ class InventoryMovementService
             'errors' => $errors,
             'total' => count($movements),
             'success_count' => count($results),
-            'error_count' => count($errors)
+            'error_count' => count($errors),
         ];
     }
 
@@ -153,9 +156,9 @@ class InventoryMovementService
     private function validateMovementData(array $data): void
     {
         $requiredFields = ['warehouse_id', 'product_id', 'movement_type'];
-        
+
         foreach ($requiredFields as $field) {
-            if (!isset($data[$field]) || $data[$field] === null) {
+            if (! isset($data[$field]) || $data[$field] === null) {
                 throw new Exception("الحقل المطلوب مفقود: {$field}");
             }
         }
@@ -165,16 +168,17 @@ class InventoryMovementService
             'purchase', 'sale', 'return_in', 'return_out',
             'transfer_in', 'transfer_out', 'adjustment',
             'damage', 'expired', 'production', 'consumption',
-            'wood_stock_in', 'wood_stock_out'
+            'wood_stock_in', 'wood_stock_out',
+            'adjustment_in', 'adjustment_out',
         ];
 
-        if (!in_array($data['movement_type'], $validTypes)) {
+        if (! in_array($data['movement_type'], $validTypes)) {
             throw new Exception("نوع الحركة غير صالح: {$data['movement_type']}");
         }
 
         // التحقق من الكمية
-        if (!isset($data['quantity_change']) && !isset($data['quantity'])) {
-            throw new Exception("يجب تحديد الكمية (quantity_change أو quantity)");
+        if (! isset($data['quantity_change']) && ! isset($data['quantity'])) {
+            throw new Exception('يجب تحديد الكمية (quantity_change أو quantity)');
         }
     }
 
@@ -183,7 +187,7 @@ class InventoryMovementService
      */
     private function generateMovementNumber(string $type): string
     {
-        $prefix = match($type) {
+        $prefix = match ($type) {
             'purchase' => 'PUR',
             'sale' => 'SAL',
             'return_in' => 'RIN',
@@ -191,6 +195,8 @@ class InventoryMovementService
             'transfer_in' => 'TIN',
             'transfer_out' => 'TOUT',
             'adjustment' => 'ADJ',
+            'adjustment_in' => 'ADJ',
+            'adjustment_out' => 'ADJ',
             'damage' => 'DMG',
             'expired' => 'EXP',
             'production' => 'PRD',
@@ -201,11 +207,11 @@ class InventoryMovementService
         };
 
         $date = now()->format('Ymd');
-        
+
         // استخدام timestamp لضمان التفرّد
         $timestamp = now()->format('His');
         $random = str_pad(rand(0, 999), 3, '0', STR_PAD_LEFT);
-        
+
         return sprintf('%s-%s-%s-%s', $prefix, $date, $timestamp, $random);
     }
 
@@ -213,7 +219,7 @@ class InventoryMovementService
      * ✅ الحصول على حركات منتج معين - محسّن
      */
     public function getProductMovements(
-        int $productId, 
+        int $productId,
         ?int $warehouseId = null,
         array $filters = []
     ) {
@@ -227,15 +233,15 @@ class InventoryMovementService
         }
 
         // فلاتر إضافية
-        if (!empty($filters['movement_type'])) {
+        if (! empty($filters['movement_type'])) {
             $query->where('movement_type', $filters['movement_type']);
         }
 
-        if (!empty($filters['date_from'])) {
+        if (! empty($filters['date_from'])) {
             $query->whereDate('movement_date', '>=', $filters['date_from']);
         }
 
-        if (!empty($filters['date_to'])) {
+        if (! empty($filters['date_to'])) {
             $query->whereDate('movement_date', '<=', $filters['date_to']);
         }
 
@@ -247,7 +253,7 @@ class InventoryMovementService
      * ✅ الحصول على حركات مخزن معين - محسّن
      */
     public function getWarehouseMovements(
-        int $warehouseId, 
+        int $warehouseId,
         ?int $productId = null,
         array $filters = []
     ) {
@@ -261,15 +267,15 @@ class InventoryMovementService
         }
 
         // فلاتر إضافية
-        if (!empty($filters['movement_type'])) {
+        if (! empty($filters['movement_type'])) {
             $query->where('movement_type', $filters['movement_type']);
         }
 
-        if (!empty($filters['date_from'])) {
+        if (! empty($filters['date_from'])) {
             $query->whereDate('movement_date', '>=', $filters['date_from']);
         }
 
-        if (!empty($filters['date_to'])) {
+        if (! empty($filters['date_to'])) {
             $query->whereDate('movement_date', '<=', $filters['date_to']);
         }
 
@@ -279,13 +285,13 @@ class InventoryMovementService
     /**
      * ✅ إلغاء حركة مخزنية
      */
-    public function reverseMovement(int $movementId, string $reason = null): InventoryMovement
+    public function reverseMovement(int $movementId, ?string $reason = null): InventoryMovement
     {
         return DB::transaction(function () use ($movementId, $reason) {
             $originalMovement = InventoryMovement::findOrFail($movementId);
 
             // التحقق من عدم عكس حركة معكوسة
-            if ($originalMovement->movement_type === 'adjustment' && 
+            if ($originalMovement->movement_type === 'adjustment' &&
                 str_contains($originalMovement->notes ?? '', 'عكس حركة')) {
                 throw new Exception('لا يمكن عكس حركة معكوسة مسبقاً');
             }
@@ -353,8 +359,8 @@ class InventoryMovementService
             SUM(total_price) as total_price
         ')->first();
 
-        $currentBalance = $warehouseId 
-            ? $this->getProductBalance($productId, $warehouseId) 
+        $currentBalance = $warehouseId
+            ? $this->getProductBalance($productId, $warehouseId)
             : 0;
 
         return [
@@ -376,11 +382,11 @@ class InventoryMovementService
         $query = InventoryMovement::where('warehouse_id', $warehouseId);
 
         // فلاتر التاريخ
-        if (!empty($filters['date_from'])) {
+        if (! empty($filters['date_from'])) {
             $query->whereDate('movement_date', '>=', $filters['date_from']);
         }
 
-        if (!empty($filters['date_to'])) {
+        if (! empty($filters['date_to'])) {
             $query->whereDate('movement_date', '<=', $filters['date_to']);
         }
 
@@ -421,7 +427,7 @@ class InventoryMovementService
     public function archiveOldMovements(int $daysOld = 365): int
     {
         $cutoffDate = now()->subDays($daysOld);
-        
+
         return DB::transaction(function () use ($cutoffDate) {
             // يمكن نقلها إلى جدول أرشيف
             $count = InventoryMovement::where('movement_date', '<', $cutoffDate)
@@ -429,7 +435,7 @@ class InventoryMovementService
                 ->update(['archived' => true]);
 
             Log::info("✅ تم أرشفة {$count} حركة مخزنية");
-            
+
             return $count;
         });
     }

@@ -159,7 +159,7 @@ class PurchaseReturnService
             $originalItem = \App\Models\PurchaseInvoiceItem::findOrFail($item['purchase_invoice_item_id']);
 
             $qty = $item['quantity_returned'];
-            $price = $originalItem->price;
+            $price = $originalItem->unit_price;
             $itemTotal = $qty * $price;
 
             PurchaseReturnItem::create([
@@ -201,12 +201,15 @@ class PurchaseReturnService
      */
     private function updateInventory(PurchaseReturn $return, PurchaseInvoice $invoice): void
     {
-        foreach ($return->items as $item) {
-            // تقليل الكمية من المخزن
-            DB::table('product_warehouse')
-                ->where('product_id', $item->product_id)
-                ->where('warehouse_id', $invoice->warehouse_id)
-                ->decrement('qty', $item->quantity_returned);
+        $purchaseReturn = $return;
+        foreach ($purchaseReturn->items as $item) {
+            app(\App\Services\StockService::class)->adjust(
+                warehouseId: $purchaseReturn->warehouse_id,
+                productId: $item->product_id,
+                qty: -$item->quantity,
+                type: \App\Services\StockService::PURCHASE_RETURN,
+                referenceId: $purchaseReturn->id
+            );
         }
     }
 
@@ -215,12 +218,15 @@ class PurchaseReturnService
      */
     private function reverseInventory(PurchaseReturn $return, PurchaseInvoice $invoice): void
     {
-        foreach ($return->items as $item) {
-            // إرجاع الكمية للمخزن
-            DB::table('product_warehouse')
-                ->where('product_id', $item->product_id)
-                ->where('warehouse_id', $invoice->warehouse_id)
-                ->increment('qty', $item->quantity_returned);
+        $purchaseReturn = $return;
+        foreach ($purchaseReturn->items as $item) {
+            app(\App\Services\StockService::class)->adjust(
+                warehouseId: $purchaseReturn->warehouse_id,
+                productId: $item->product_id,
+                qty: $item->quantity,
+                type: \App\Services\StockService::PURCHASE_RETURN,
+                referenceId: $purchaseReturn->id
+            );
         }
     }
 
@@ -305,16 +311,16 @@ class PurchaseReturnService
             // حساب الكمية المرتجعة سابقاً
             $returnedQty = PurchaseReturnItem::where('purchase_invoice_item_id', $item->id)->sum('quantity_returned');
             
-            $availableQty = $item->qty - $returnedQty;
+            $availableQty = $item->quantity - $returnedQty;
             
             if ($availableQty > 0) {
                 $availableItems[] = [
                     'purchase_invoice_item_id' => $item->id,
                     'product' => $item->product,
-                    'original_qty' => $item->qty,
+                    'original_qty' => $item->quantity,
                     'returned_qty' => $returnedQty,
                     'available_qty' => $availableQty,
-                    'unit_price' => $item->price,
+                    'unit_price' => $item->unit_price,
                 ];
             }
         }

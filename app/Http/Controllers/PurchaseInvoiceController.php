@@ -65,6 +65,28 @@ class PurchaseInvoiceController extends Controller
     }
 
     /**
+     * اعتماد فاتورة شراء (من مسودة إلى مؤكدة)
+     */
+    public function confirm(PurchaseInvoice $invoice)
+    {
+        if ($invoice->status === 'cancelled') {
+            return back()->with('error', 'لا يمكن اعتماد فاتورة ملغاة');
+        }
+
+        if ($invoice->status === 'confirmed') {
+            return back()->with('info', 'الفاتورة معتمدة بالفعل');
+        }
+
+        $invoice->update([
+            'status' => 'confirmed',
+            'confirmed_by' => auth()->id(),
+            'confirmed_at' => now(),
+        ]);
+
+        return back()->with('success', 'تم اعتماد الفاتورة بنجاح');
+    }
+
+    /**
      * عرض تفاصيل فاتورة شراء
      */
     public function show(PurchaseInvoice $invoice)

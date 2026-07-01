@@ -28,6 +28,7 @@ class SalesReturn extends Model
         'updated_by',
         'confirmed_by',
         'confirmed_at',
+        'shift_id',
     ];
 
     protected $casts = [
@@ -41,6 +42,11 @@ class SalesReturn extends Model
     ];
 
     // العلاقات
+    public function shift(): BelongsTo
+    {
+        return $this->belongsTo(PosShift::class, 'shift_id');
+    }
+
     public function salesInvoice(): BelongsTo
     {
         return $this->belongsTo(SalesInvoice::class);

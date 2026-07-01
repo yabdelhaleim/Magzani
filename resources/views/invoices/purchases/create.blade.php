@@ -213,6 +213,7 @@
         }
         .tf-item-row > div:first-child { grid-column: span 2; }
         .tf-item-row > button { grid-column: span 2; width: 100% !important; margin-top: 10px; }
+        .tilda-detail-row { grid-template-columns: 1fr 1fr !important; }
     }
 
     .tf-btn-secondary {
@@ -249,7 +250,7 @@
     @media (max-width: 600px) { .tf-grid-3 { grid-template-columns: 1fr; } }
 
     .tf-item-row {
-        display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 50px;
+        display: grid; grid-template-columns: 2fr 1.2fr 1fr 1fr 1fr 50px;
         gap: 12px; align-items: center;
         padding: 16px; border-radius: 14px; background: var(--tf-surface2);
         border: 1px solid var(--tf-border); margin-bottom: 12px;
@@ -282,11 +283,28 @@ function addItem() {
         if (field.type !== 'button') {
             field.value = '';
         }
+        if (field.name && field.name.includes('[storage_type]')) {
+            field.value = 'general';
+        }
     });
-    
+
+    const detailsContainer = newItem.querySelector('.tilda-details-container');
+    if (detailsContainer) {
+        detailsContainer.innerHTML = `
+            <div class="tilda-detail-row" style="display:grid; grid-template-columns:repeat(4,1fr) 40px; gap:8px; margin-bottom:8px;">
+                <input type="number" step="0.001" min="0.001" name="items[${itemIndex}][tilde_details][0][quantity]" class="tf-input" placeholder="كمية" required>
+                <input type="number" step="0.01" min="0" name="items[${itemIndex}][tilde_details][0][length]" class="tf-input" placeholder="طول" required>
+                <input type="number" step="0.01" min="0" name="items[${itemIndex}][tilde_details][0][width]" class="tf-input" placeholder="عرض" required>
+                <input type="number" step="0.01" min="0" name="items[${itemIndex}][tilde_details][0][thickness]" class="tf-input" placeholder="سمك" required>
+                <button type="button" class="tf-action-btn del" onclick="removeTildaRow(this)" title="حذف"><i class="fas fa-trash"></i></button>
+            </div>
+        `;
+    }
+
     newItem.querySelector('.item-total').value = '0';
     
     container.appendChild(newItem);
+    recalcItemQtyFromTilda(newItem);
     itemIndex++;
 }
 
@@ -309,6 +327,63 @@ function calculateItemTotal(input) {
     
     row.querySelector('.item-total').value = total.toFixed(2);
 }
+
+function recalcItemQtyFromTilda(itemRow) {
+    let sum = 0;
+    itemRow.querySelectorAll('input[name*="[tilde_details]"][name*="[quantity]"]').forEach((el) => {
+        const v = parseFloat(el.value);
+        if (!Number.isNaN(v) && v > 0) {
+            sum += v;
+        }
+    });
+
+    const qtyInput = itemRow.querySelector('.item-qty');
+    if (qtyInput) {
+        qtyInput.value = sum > 0 ? sum.toFixed(3) : '';
+        calculateItemTotal(qtyInput);
+    }
+}
+
+function addTildaRow(button) {
+    const itemRow = button.closest('.tf-item-row');
+    const container = itemRow.querySelector('.tilda-details-container');
+    const itemMatch = container.querySelector('input[name*="items["]')?.name.match(/items\[(\d+)\]/);
+    const itemNo = itemMatch ? parseInt(itemMatch[1], 10) : 0;
+    const rowCount = container.querySelectorAll('.tilda-detail-row').length;
+
+    const row = document.createElement('div');
+    row.className = 'tilda-detail-row';
+    row.style.cssText = 'display:grid; grid-template-columns:repeat(4,1fr) 40px; gap:8px; margin-bottom:8px;';
+    row.innerHTML = `
+        <input type="number" step="0.001" min="0.001" name="items[${itemNo}][tilde_details][${rowCount}][quantity]" class="tf-input" placeholder="كمية" required>
+        <input type="number" step="0.01" min="0" name="items[${itemNo}][tilde_details][${rowCount}][length]" class="tf-input" placeholder="طول" required>
+        <input type="number" step="0.01" min="0" name="items[${itemNo}][tilde_details][${rowCount}][width]" class="tf-input" placeholder="عرض" required>
+        <input type="number" step="0.01" min="0" name="items[${itemNo}][tilde_details][${rowCount}][thickness]" class="tf-input" placeholder="سمك" required>
+        <button type="button" class="tf-action-btn del" onclick="removeTildaRow(this)" title="حذف"><i class="fas fa-trash"></i></button>
+    `;
+    container.appendChild(row);
+    recalcItemQtyFromTilda(itemRow);
+}
+
+function removeTildaRow(button) {
+    const container = button.closest('.tilda-details-container');
+    const itemRow = button.closest('.tf-item-row');
+    const rows = container.querySelectorAll('.tilda-detail-row');
+    if (rows.length <= 1) {
+        return;
+    }
+    button.closest('.tilda-detail-row').remove();
+    recalcItemQtyFromTilda(itemRow);
+}
+
+document.addEventListener('input', function (e) {
+    if (e.target.matches('input[name*="[tilde_details]"][name*="[quantity]"]')) {
+        const row = e.target.closest('.tf-item-row');
+        if (row) {
+            recalcItemQtyFromTilda(row);
+        }
+    }
+});
 </script>
 @endpush
 
@@ -424,8 +499,16 @@ function calculateItemTotal(input) {
                                 </select>
                             </div>
                             <div>
-                                <label class="tf-label">الكمية <span style="color: var(--tf-red);">*</span></label>
-                                <input type="number" name="items[0][qty]" step="0.01" min="0.01" placeholder="0" class="item-qty tf-input" onchange="calculateItemTotal(this)" required>
+                                <label class="tf-label">نوع التخزين <span style="color: var(--tf-red);">*</span></label>
+                                <select name="items[0][storage_type]" class="tf-select" required>
+                                    <option value="general">تخزين عام</option>
+                                    <option value="raw_material">منتج خام</option>
+                                    <option value="manufactured">منتج تصنيع</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="tf-label">إجمالي الكمية (تلقائي من التيلدا)</label>
+                                <input type="number" name="items[0][qty]" step="0.01" min="0.01" placeholder="0" class="item-qty tf-input" onchange="calculateItemTotal(this)" required readonly>
                             </div>
                             <div>
                                 <label class="tf-label">سعر الوحدة <span style="color: var(--tf-red);">*</span></label>
@@ -438,6 +521,27 @@ function calculateItemTotal(input) {
                             <button type="button" onclick="removeItem(this)" class="tf-action-btn del" title="حذف" style="align-self: flex-end; width: 40px; height: 40px;">
                                 <i class="fas fa-trash"></i>
                             </button>
+                            <div style="grid-column: 1/-1;">
+                                <label class="tf-label">رقم التيلدا</label>
+                                <input type="text" name="items[0][tilde_number]" class="tf-input" placeholder="مثال: TLD-001" required>
+                            </div>
+                            <div style="grid-column: 1/-1; border:1px dashed var(--tf-border); border-radius:12px; padding:12px;">
+                                <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
+                                    <label class="tf-label" style="margin:0;">تفاصيل التيلدا (كمية - طول - عرض - سمك)</label>
+                                    <button type="button" class="tf-btn tf-btn-secondary" style="padding:6px 12px; font-size:12px;" onclick="addTildaRow(this)">
+                                        <i class="fas fa-plus"></i> إضافة قياس
+                                    </button>
+                                </div>
+                                <div class="tilda-details-container">
+                                    <div class="tilda-detail-row" style="display:grid; grid-template-columns:repeat(4,1fr) 40px; gap:8px; margin-bottom:8px;">
+                                        <input type="number" step="0.001" min="0.001" name="items[0][tilde_details][0][quantity]" class="tf-input" placeholder="كمية" required>
+                                        <input type="number" step="0.01" min="0" name="items[0][tilde_details][0][length]" class="tf-input" placeholder="طول" required>
+                                        <input type="number" step="0.01" min="0" name="items[0][tilde_details][0][width]" class="tf-input" placeholder="عرض" required>
+                                        <input type="number" step="0.01" min="0" name="items[0][tilde_details][0][thickness]" class="tf-input" placeholder="سمك" required>
+                                        <button type="button" class="tf-action-btn del" onclick="removeTildaRow(this)" title="حذف"><i class="fas fa-trash"></i></button>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>

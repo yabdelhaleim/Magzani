@@ -3,8 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Services\ManufacturingOrderService;
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
 
 class ManufacturingOrderController extends Controller
@@ -37,7 +38,7 @@ class ManufacturingOrderController extends Controller
         if ($search = $request->input('search')) {
             $query->where(function ($q) use ($search) {
                 $q->where('order_number', 'like', "%{$search}%")
-                  ->orWhere('product_name', 'like', "%{$search}%");
+                    ->orWhere('product_name', 'like', "%{$search}%");
             });
         }
 
@@ -61,7 +62,7 @@ class ManufacturingOrderController extends Controller
 
         return response()->json([
             'success' => true,
-            'data' => $orders
+            'data' => $orders,
         ]);
     }
 
@@ -71,8 +72,11 @@ class ManufacturingOrderController extends Controller
     public function create()
     {
         $warehouses = \App\Models\Warehouse::where('is_active', true)->get();
-        $rawMaterials = \App\Models\RawMaterialTemplate::latest()->get();
-        return view('manufacturing-orders.create', compact('warehouses', 'rawMaterials'));
+        $rawMaterials = \App\Models\RawMaterialTemplate::with('warehouse:id,name')->latest()->get();
+        $customers = \App\Models\Customer::where('is_active', true)->orderBy('name')->get(['id', 'name', 'phone']);
+        $woodLots = $this->woodLotsForManufacturingForm();
+
+        return view('manufacturing-orders.create', compact('warehouses', 'rawMaterials', 'woodLots', 'customers'));
     }
 
     /**
@@ -84,6 +88,7 @@ class ManufacturingOrderController extends Controller
             'product_id' => 'nullable|exists:products,id',
             'product_name' => 'required|string|max:255',
             'warehouse_id' => 'nullable|exists:warehouses,id',
+            'customer_id' => 'nullable|exists:customers,id',
             'quantity_produced' => 'required|numeric|min:0.01',
             'waste_cost' => 'required|numeric|min:0',
             'labor_cost' => 'required|numeric|min:0',
@@ -96,6 +101,7 @@ class ManufacturingOrderController extends Controller
             'notes' => 'nullable|string',
             'components' => 'required|array|min:1',
             'components.*.component_type' => 'required|string|max:50',
+            'components.*.wood_stock_id' => 'nullable|exists:wood_stocks,id',
             'components.*.quantity' => 'required|numeric|min:0.0001',
             'components.*.thickness_cm' => 'required|numeric|min:0',
             'components.*.width_cm' => 'required|numeric|min:0',
@@ -112,11 +118,11 @@ class ManufacturingOrderController extends Controller
         } catch (\Exception $e) {
             Log::error('Manufacturing order creation failed', [
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
 
             return back()
-                ->with('error', 'فشل إنشاء أمر التصنيع: ' . $e->getMessage())
+                ->with('error', 'فشل إنشاء أمر التصنيع: '.$e->getMessage())
                 ->withInput();
         }
     }
@@ -129,6 +135,8 @@ class ManufacturingOrderController extends Controller
         $validated = $request->validate([
             'product_id' => 'nullable|exists:products,id',
             'product_name' => 'required|string|max:255',
+            'warehouse_id' => 'nullable|exists:warehouses,id',
+            'customer_id' => 'nullable|exists:customers,id',
             'quantity_produced' => 'required|numeric|min:0.01',
             'waste_cost' => 'required|numeric|min:0',
             'labor_cost' => 'required|numeric|min:0',
@@ -140,6 +148,7 @@ class ManufacturingOrderController extends Controller
             'notes' => 'nullable|string',
             'components' => 'required|array|min:1',
             'components.*.component_type' => 'required|string|max:50',
+            'components.*.wood_stock_id' => 'nullable|exists:wood_stocks,id',
             'components.*.quantity' => 'required|numeric|min:0.0001',
             'components.*.thickness_cm' => 'required|numeric|min:0',
             'components.*.width_cm' => 'required|numeric|min:0',
@@ -153,17 +162,17 @@ class ManufacturingOrderController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Manufacturing order created successfully',
-                'data' => $order->load(['components', 'product', 'creator'])
+                'data' => $order->load(['components', 'product', 'creator']),
             ], 201);
         } catch (\Exception $e) {
             Log::error('Manufacturing order creation failed', [
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
 
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to create manufacturing order: ' . $e->getMessage()
+                'message' => 'Failed to create manufacturing order: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -175,8 +184,10 @@ class ManufacturingOrderController extends Controller
     {
         $manufacturingOrder = \App\Models\ManufacturingOrder::with([
             'components',
-            'components.woodStock',
+            'components.woodStock.supplier',
+            'components.woodStock.warehouse',
             'product',
+            'customer',
             'creator',
             'updater',
             'completer',
@@ -184,7 +195,7 @@ class ManufacturingOrderController extends Controller
             'woodDispensings',
             'woodDispensings.woodStock',
             'woodDispensings.user',
-            'woodDispensings.client'
+            'woodDispensings.client',
         ])->findOrFail($id);
 
         $warehouses = \App\Models\Warehouse::where('is_active', true)->get();
@@ -202,7 +213,7 @@ class ManufacturingOrderController extends Controller
 
         return response()->json([
             'success' => true,
-            'data' => $order
+            'data' => $order,
         ]);
     }
 
@@ -211,8 +222,13 @@ class ManufacturingOrderController extends Controller
      */
     public function edit(string $id)
     {
-        $order = \App\Models\ManufacturingOrder::with(['components', 'product'])->findOrFail($id);
-        return view('manufacturing-orders.edit', compact('order'));
+        $order = \App\Models\ManufacturingOrder::with(['components.woodStock', 'product', 'warehouse', 'customer'])->findOrFail($id);
+        $warehouses = \App\Models\Warehouse::where('is_active', true)->get();
+        $rawMaterials = \App\Models\RawMaterialTemplate::with('warehouse:id,name')->latest()->get();
+        $customers = \App\Models\Customer::where('is_active', true)->orderBy('name')->get(['id', 'name', 'phone']);
+        $woodLots = $this->woodLotsForManufacturingForm();
+
+        return view('manufacturing-orders.edit', compact('order', 'warehouses', 'rawMaterials', 'woodLots', 'customers'));
     }
 
     /**
@@ -220,9 +236,18 @@ class ManufacturingOrderController extends Controller
      */
     public function update(Request $request, string $id)
     {
+        $order = \App\Models\ManufacturingOrder::findOrFail($id);
+        if (! $order->can_edit) {
+            return redirect()
+                ->route('manufacturing-orders.edit', $order->id)
+                ->with('error', 'لا يمكن تعديل هذا الأمر في حالته الحالية.');
+        }
+
         $validated = $request->validate([
             'product_id' => 'nullable|exists:products,id',
             'product_name' => 'sometimes|required|string|max:255',
+            'warehouse_id' => 'nullable|exists:warehouses,id',
+            'customer_id' => 'nullable|exists:customers,id',
             'quantity_produced' => 'sometimes|required|numeric|min:0.01',
             'waste_cost' => 'sometimes|required|numeric|min:0',
             'labor_cost' => 'sometimes|required|numeric|min:0',
@@ -234,6 +259,7 @@ class ManufacturingOrderController extends Controller
             'notes' => 'nullable|string',
             'components' => 'sometimes|array|min:1',
             'components.*.component_type' => 'required|string|max:50',
+            'components.*.wood_stock_id' => 'nullable|exists:wood_stocks,id',
             'components.*.quantity' => 'required|numeric|min:0.0001',
             'components.*.thickness_cm' => 'required|numeric|min:0',
             'components.*.width_cm' => 'required|numeric|min:0',
@@ -242,7 +268,6 @@ class ManufacturingOrderController extends Controller
         ]);
 
         try {
-            $order = \App\Models\ManufacturingOrder::findOrFail($id);
             $updatedOrder = $this->orderService->updateOrder($order, $validated);
 
             return redirect()
@@ -251,11 +276,11 @@ class ManufacturingOrderController extends Controller
         } catch (\Exception $e) {
             Log::error('Manufacturing order update failed', [
                 'id' => $id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             return back()
-                ->with('error', 'فشل تحديث أمر التصنيع: ' . $e->getMessage())
+                ->with('error', 'فشل تحديث أمر التصنيع: '.$e->getMessage())
                 ->withInput();
         }
     }
@@ -265,9 +290,19 @@ class ManufacturingOrderController extends Controller
      */
     public function updateApi(Request $request, string $id): JsonResponse
     {
+        $order = \App\Models\ManufacturingOrder::findOrFail($id);
+        if (! $order->can_edit) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Cannot update order in current status: '.$order->status,
+            ], 422);
+        }
+
         $validated = $request->validate([
             'product_id' => 'nullable|exists:products,id',
             'product_name' => 'sometimes|required|string|max:255',
+            'warehouse_id' => 'nullable|exists:warehouses,id',
+            'customer_id' => 'nullable|exists:customers,id',
             'quantity_produced' => 'sometimes|required|numeric|min:0.01',
             'waste_cost' => 'sometimes|required|numeric|min:0',
             'labor_cost' => 'sometimes|required|numeric|min:0',
@@ -279,6 +314,7 @@ class ManufacturingOrderController extends Controller
             'notes' => 'nullable|string',
             'components' => 'sometimes|array|min:1',
             'components.*.component_type' => 'required|string|max:50',
+            'components.*.wood_stock_id' => 'nullable|exists:wood_stocks,id',
             'components.*.quantity' => 'required|numeric|min:0.0001',
             'components.*.thickness_cm' => 'required|numeric|min:0',
             'components.*.width_cm' => 'required|numeric|min:0',
@@ -287,23 +323,22 @@ class ManufacturingOrderController extends Controller
         ]);
 
         try {
-            $order = \App\Models\ManufacturingOrder::findOrFail($id);
             $updatedOrder = $this->orderService->updateOrder($order, $validated);
 
             return response()->json([
                 'success' => true,
                 'message' => 'Manufacturing order updated successfully',
-                'data' => $updatedOrder->load(['components', 'product', 'creator'])
+                'data' => $updatedOrder->load(['components', 'product', 'creator']),
             ]);
         } catch (\Exception $e) {
             Log::error('Manufacturing order update failed', [
                 'id' => $id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to update manufacturing order: ' . $e->getMessage()
+                'message' => 'Failed to update manufacturing order: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -323,11 +358,11 @@ class ManufacturingOrderController extends Controller
         } catch (\Exception $e) {
             Log::error('Manufacturing order confirmation failed', [
                 'id' => $id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             return back()
-                ->with('error', 'فشل تأكيد الأمر: ' . $e->getMessage());
+                ->with('error', 'فشل تأكيد الأمر: '.$e->getMessage());
         }
     }
 
@@ -343,17 +378,17 @@ class ManufacturingOrderController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Manufacturing order confirmed successfully',
-                'data' => $confirmedOrder
+                'data' => $confirmedOrder,
             ]);
         } catch (\Exception $e) {
             Log::error('Manufacturing order confirmation failed', [
                 'id' => $id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to confirm order: ' . $e->getMessage()
+                'message' => 'Failed to confirm order: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -382,11 +417,11 @@ class ManufacturingOrderController extends Controller
         } catch (\Exception $e) {
             Log::error('Manufacturing order completion failed', [
                 'id' => $id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             return back()
-                ->with('error', 'فشل إكمال الأمر: ' . $e->getMessage())
+                ->with('error', 'فشل إكمال الأمر: '.$e->getMessage())
                 ->withInput();
         }
     }
@@ -412,17 +447,17 @@ class ManufacturingOrderController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Manufacturing order completed and inventory updated successfully',
-                'data' => $completedOrder->load(['components', 'product', 'inventoryMovements'])
+                'data' => $completedOrder->load(['components', 'product', 'inventoryMovements']),
             ]);
         } catch (\Exception $e) {
             Log::error('Manufacturing order completion failed', [
                 'id' => $id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to complete order: ' . $e->getMessage()
+                'message' => 'Failed to complete order: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -446,11 +481,11 @@ class ManufacturingOrderController extends Controller
         } catch (\Exception $e) {
             Log::error('Manufacturing order cancellation failed', [
                 'id' => $id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             return back()
-                ->with('error', 'فشل إلغاء الأمر: ' . $e->getMessage());
+                ->with('error', 'فشل إلغاء الأمر: '.$e->getMessage());
         }
     }
 
@@ -470,17 +505,17 @@ class ManufacturingOrderController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Manufacturing order cancelled successfully',
-                'data' => $cancelledOrder
+                'data' => $cancelledOrder,
             ]);
         } catch (\Exception $e) {
             Log::error('Manufacturing order cancellation failed', [
                 'id' => $id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to cancel order: ' . $e->getMessage()
+                'message' => 'Failed to cancel order: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -500,11 +535,11 @@ class ManufacturingOrderController extends Controller
         } catch (\Exception $e) {
             Log::error('Manufacturing order deletion failed', [
                 'id' => $id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             return back()
-                ->with('error', 'فشل حذف الأمر: ' . $e->getMessage());
+                ->with('error', 'فشل حذف الأمر: '.$e->getMessage());
         }
     }
 
@@ -519,17 +554,17 @@ class ManufacturingOrderController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Manufacturing order deleted successfully'
+                'message' => 'Manufacturing order deleted successfully',
             ]);
         } catch (\Exception $e) {
             Log::error('Manufacturing order deletion failed', [
                 'id' => $id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to delete order: ' . $e->getMessage()
+                'message' => 'Failed to delete order: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -548,7 +583,7 @@ class ManufacturingOrderController extends Controller
 
         return response()->json([
             'success' => true,
-            'data' => $stats
+            'data' => $stats,
         ]);
     }
 
@@ -559,6 +594,7 @@ class ManufacturingOrderController extends Controller
     {
         $validated = $request->validate([
             'components' => 'required|array|min:1',
+            'components.*.wood_stock_id' => 'nullable|exists:wood_stocks,id',
             'components.*.quantity' => 'required|numeric|min:0.0001',
             'components.*.thickness_cm' => 'required|numeric|min:0',
             'components.*.width_cm' => 'required|numeric|min:0',
@@ -571,13 +607,43 @@ class ManufacturingOrderController extends Controller
 
             return response()->json([
                 'success' => true,
-                'data' => $result
+                'data' => $result,
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to calculate costs: ' . $e->getMessage()
+                'message' => 'Failed to calculate costs: '.$e->getMessage(),
             ], 500);
         }
+    }
+
+    /**
+     * دفعات خشب متاحة لنماذج إنشاء/تعديل أمر التصنيع (مع ربط المستودع للتصفية في الواجهة)
+     */
+    private function woodLotsForManufacturingForm(): Collection
+    {
+        return \App\Models\WoodStock::query()
+            ->with(['supplier:id,name', 'warehouse:id,name', 'product:id,name'])
+            ->orderByDesc('id')
+            ->get()
+            ->filter(fn (\App\Models\WoodStock $w) => $w->remaining_cm3 > 0.0001)
+            ->values()
+            ->map(function (\App\Models\WoodStock $w) {
+                return [
+                    'id' => $w->id,
+                    'warehouse_id' => $w->warehouse_id,
+                    'unit_cost' => (float) $w->unit_cost,
+                    'remaining_m3' => round($w->remaining_cm3 / 1_000_000, 4),
+                    'remaining_m2' => round((float) $w->remaining_m2, 4),
+                    'supplier_name' => $w->supplier?->name,
+                    'warehouse_name' => $w->warehouse?->name,
+                    'purchase_reference' => $w->purchase_reference,
+                    'product_name' => $w->product?->name,
+                    'label' => '#'.$w->id.' — '.($w->warehouse?->name ?? 'مخزن')
+                        .' — '.($w->supplier?->name ?? 'بدون مورد')
+                        .' — متبقي '.round($w->remaining_cm3 / 1_000_000, 3).' م³'
+                        .($w->purchase_reference ? ' — '.$w->purchase_reference : ''),
+                ];
+            });
     }
 }

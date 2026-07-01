@@ -76,6 +76,18 @@
                     <span class="detail-value">{{ $template->name }}</span>
                 </div>
                 <div class="detail-row">
+                    <span class="detail-label">المخزن</span>
+                    <span class="detail-value">
+                        @if($template->warehouse)
+                            <a href="{{ route('warehouses.show', $template->warehouse_id) }}" style="color:var(--tf-indigo);">
+                                {{ $template->warehouse->name }}
+                            </a>
+                        @else
+                            —
+                        @endif
+                    </span>
+                </div>
+                <div class="detail-row">
                     <span class="detail-label">الكمية</span>
                     <span class="detail-value">{{ number_format($template->quantity) }}</span>
                 </div>

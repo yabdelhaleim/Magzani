@@ -4,8 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Customer;
 use App\Models\Product;
-use App\Models\Warehouse;
 use App\Models\SalesInvoice;
+use App\Models\Warehouse;
 use App\Services\InvoiceService;
 use Illuminate\Http\Request;
 
@@ -26,18 +26,18 @@ class SalesController extends Controller
         // 🔍 البحث الذكي - يبحث في عدة حقول
         if ($request->filled('search')) {
             $search = $request->search;
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('invoice_number', 'like', "%{$search}%")
-                  ->orWhereHas('customer', function($q2) use ($search) {
-                      $q2->where('name', 'like', "%{$search}%")
-                         ->orWhere('phone', 'like', "%{$search}%");
-                  });
+                    ->orWhereHas('customer', function ($q2) use ($search) {
+                        $q2->where('name', 'like', "%{$search}%")
+                            ->orWhere('phone', 'like', "%{$search}%");
+                    });
             });
         }
 
         // فلتر رقم الفاتورة
         if ($request->filled('invoice_number')) {
-            $query->where('invoice_number', 'like', '%' . $request->invoice_number . '%');
+            $query->where('invoice_number', 'like', '%'.$request->invoice_number.'%');
         }
 
         // فلتر العميل
@@ -53,13 +53,13 @@ class SalesController extends Controller
         // فلتر الحالة
         if ($request->filled('status')) {
             $status = $request->status;
-            
+
             if ($status === 'paid') {
                 $query->where('payment_status', 'paid')
-                      ->where('status', '!=', 'cancelled');
+                    ->where('status', '!=', 'cancelled');
             } elseif ($status === 'pending') {
                 $query->whereIn('payment_status', ['unpaid', 'partial'])
-                      ->where('status', '!=', 'cancelled');
+                    ->where('status', '!=', 'cancelled');
             } elseif ($status === 'cancelled') {
                 $query->where('status', 'cancelled');
             }
@@ -117,12 +117,12 @@ class SalesController extends Controller
         // تطبيق نفس الفلاتر
         if ($request->filled('search')) {
             $search = $request->search;
-            $baseQuery->where(function($q) use ($search) {
+            $baseQuery->where(function ($q) use ($search) {
                 $q->where('invoice_number', 'like', "%{$search}%")
-                  ->orWhereHas('customer', function($q2) use ($search) {
-                      $q2->where('name', 'like', "%{$search}%")
-                         ->orWhere('phone', 'like', "%{$search}%");
-                  });
+                    ->orWhereHas('customer', function ($q2) use ($search) {
+                        $q2->where('name', 'like', "%{$search}%")
+                            ->orWhere('phone', 'like', "%{$search}%");
+                    });
             });
         }
 
@@ -143,7 +143,7 @@ class SalesController extends Controller
         }
 
         $allInvoices = (clone $baseQuery)->with('items')->get();
-        
+
         $stats = [
             'total_count' => 0,
             'paid_count' => 0,
@@ -160,7 +160,7 @@ class SalesController extends Controller
 
         foreach ($allInvoices as $invoice) {
             $details = $this->invoiceService->calculateInvoiceDetails($invoice);
-            
+
             if ($invoice->status === 'cancelled') {
                 $stats['cancelled_count']++;
             } else {
@@ -168,7 +168,7 @@ class SalesController extends Controller
                 $stats['total_amount'] += $details['net_total'];
                 $stats['paid_amount'] += $details['paid'];
                 $stats['remaining_amount'] += $details['remaining'];
-                
+
                 if ($invoice->payment_status === 'paid') {
                     $stats['paid_count']++;
                 } else {
@@ -192,7 +192,7 @@ class SalesController extends Controller
         // تطبيق فلتر الحالة على الإحصائيات
         if ($request->filled('status')) {
             $statusFilter = $request->status;
-            
+
             if ($statusFilter === 'cancelled') {
                 $stats['total_count'] = $stats['cancelled_count'];
                 $stats['paid_count'] = 0;
@@ -218,30 +218,47 @@ class SalesController extends Controller
 
     /**
      * ✅ عرض صفحة إنشاء فاتورة - FIXED
+     * Query (اختياري): customer_id, warehouse_id, product_id, quantity — مثلاً بعد أمر تصنيع
      */
-    public function create()
+    public function create(Request $request)
     {
         $customers = Customer::where('is_active', 1)->get();
         $warehouses = Warehouse::where('is_active', 1)->get();
-        
+
         // جلب بيانات الشركة
         $company = \App\Models\Company::first();
-        
-        // ✅ جلب المنتجات مع الوحدات والمخزون والوحدة الأساسية - متوافق مع Product Model
-        $products = Product::active()
+
+        // ✅ جلب المنتجات المعروضة في الفاتورة:
+        // - المنتجات النشطة بالنظام الجديد (is_active)
+        // - والمنتجات النشطة بالنظام القديم (status = active)
+        // - وأي منتج تصنيع حتى لو لم يُحدَّث علم is_active بعد
+        $products = Product::query()
+            ->where(function ($q) {
+                $q->where('is_active', true)
+                    ->orWhere('status', 'active')
+                    ->orWhere('is_manufactured', true)
+                    ->orWhere('product_type', 'manufactured');
+            })
             ->with([
                 'baseunit',
                 'basePricing', // جلب السعر الحالي
-                'activeSellingUnits' => function($q) {
+                'activeSellingUnits' => function ($q) {
                     $q->ordered(); // مرتبة حسب display_order
                 },
-                'warehouses' => function($q) {
+                'warehouses' => function ($q) {
                     $q->where('warehouses.is_active', true);
-                }
+                },
             ])
             ->get();
-        
-        return view('invoices.sales.create', compact('customers', 'warehouses', 'products', 'company'));
+
+        $invoicePrefill = array_filter([
+            'customer_id' => $request->query('customer_id'),
+            'warehouse_id' => $request->query('warehouse_id'),
+            'product_id' => $request->query('product_id'),
+            'quantity' => $request->query('quantity'),
+        ], fn ($v) => $v !== null && $v !== '');
+
+        return view('invoices.sales.create', compact('customers', 'warehouses', 'products', 'company', 'invoicePrefill'));
     }
 
     /**
@@ -271,7 +288,7 @@ class SalesController extends Controller
 
             // ✅ استخدام InvoiceService لإنشاء الفاتورة
             $invoice = $this->invoiceService->createSalesInvoice($validated);
-            
+
             return redirect()
                 ->route('invoices.sales.show', $invoice->id)
                 ->with('success', '✅ تم إنشاء فاتورة المبيعات بنجاح');
@@ -283,7 +300,7 @@ class SalesController extends Controller
 
         } catch (\Exception $e) {
             return back()
-                ->with('error', '❌ حدث خطأ: ' . $e->getMessage())
+                ->with('error', '❌ حدث خطأ: '.$e->getMessage())
                 ->withInput();
         }
     }
@@ -294,12 +311,12 @@ class SalesController extends Controller
     public function show($id)
     {
         $invoice = SalesInvoice::with([
-                'customer',
-                'warehouse',
-                'items.product',
-                'items.sellingUnit',
-                'payments'
-            ])
+            'customer',
+            'warehouse',
+            'items.product',
+            'items.sellingUnit',
+            'payments',
+        ])
             ->findOrFail($id); // ← هينا المشكلة، خلصها كده:
 
         $invoice->calculated_details = $this->invoiceService->calculateInvoiceDetails($invoice);
@@ -316,7 +333,7 @@ class SalesController extends Controller
     public function edit($id)
     {
         $invoice = SalesInvoice::with(['items.product', 'items.sellingUnit'])->findOrFail($id);
-        
+
         // منع التعديل للفواتير الملغاة أو المكتملة
         if ($invoice->status === 'cancelled') {
             return redirect()
@@ -329,28 +346,28 @@ class SalesController extends Controller
                 ->route('invoices.sales.show', $invoice->id)
                 ->with('error', '❌ لا يمكن تعديل فاتورة مكتملة (مدفوعة بالكامل)');
         }
-        
+
         $invoice->calculated_details = $this->invoiceService->calculateInvoiceDetails($invoice);
-        
+
         $customers = Customer::where('is_active', 1)->get();
         $warehouses = Warehouse::where('is_active', 1)->get();
-        
+
         // ✅ جلب المنتجات - نفس طريقة create
         $products = Product::active()
             ->with([
                 'baseunit',
                 'basePricing',
-                'activeSellingUnits' => function($q) {
+                'activeSellingUnits' => function ($q) {
                     $q->ordered();
                 },
-                'warehouses' => function($q) {
+                'warehouses' => function ($q) {
                     $q->where('warehouses.is_active', true);
-                }
+                },
             ])
             ->get();
-        
+
         $company = \App\Models\Company::first();
-        
+
         return view('invoices.sales.edit', compact('invoice', 'customers', 'warehouses', 'products', 'company'));
     }
 
@@ -380,7 +397,7 @@ class SalesController extends Controller
             ]);
 
             $invoice = $this->invoiceService->updateSalesInvoice($id, $validated);
-            
+
             return redirect()
                 ->route('invoices.sales.show', $invoice->id)
                 ->with('success', '✅ تم تحديث الفاتورة بنجاح');
@@ -392,7 +409,7 @@ class SalesController extends Controller
 
         } catch (\Exception $e) {
             return back()
-                ->with('error', '❌ حدث خطأ: ' . $e->getMessage())
+                ->with('error', '❌ حدث خطأ: '.$e->getMessage())
                 ->withInput();
         }
     }
@@ -404,14 +421,14 @@ class SalesController extends Controller
     {
         try {
             $this->invoiceService->cancelSalesInvoice($id);
-            
+
             return redirect()
                 ->route('invoices.sales.index')
                 ->with('success', '⚠️ تم إلغاء الفاتورة بنجاح');
 
         } catch (\Exception $e) {
             return back()
-                ->with('error', '❌ حدث خطأ: ' . $e->getMessage());
+                ->with('error', '❌ حدث خطأ: '.$e->getMessage());
         }
     }
 
@@ -426,15 +443,15 @@ class SalesController extends Controller
         $products = Product::active()
             ->with(['activeSellingUnits', 'warehouses', 'basePricing'])
             ->where(function ($query) use ($search) {
-                $query->where('name', 'like', '%' . $search . '%')
-                      ->orWhere('code', 'like', '%' . $search . '%')
-                      ->orWhere('sku', 'like', '%' . $search . '%');
+                $query->where('name', 'like', '%'.$search.'%')
+                    ->orWhere('code', 'like', '%'.$search.'%')
+                    ->orWhere('sku', 'like', '%'.$search.'%');
             })
             ->limit(20)
             ->get()
             ->map(function ($product) use ($warehouseId) {
                 $stock = 0;
-                
+
                 if ($warehouseId) {
                     $productWarehouse = $product->warehouses->firstWhere('id', $warehouseId);
                     $stock = $productWarehouse ? $productWarehouse->pivot->quantity : 0;
@@ -447,7 +464,7 @@ class SalesController extends Controller
                     'base_price' => $product->base_selling_price,
                     'stock' => $stock,
                     'base_unit' => $product->base_unit_label ?? 'قطعة',
-                    'selling_units' => $product->activeSellingUnits->map(function($unit) use ($product) {
+                    'selling_units' => $product->activeSellingUnits->map(function ($unit) use ($product) {
                         return [
                             'id' => $unit->id,
                             'unit_name' => $unit->unit_name,
@@ -463,5 +480,24 @@ class SalesController extends Controller
             'success' => true,
             'data' => $products,
         ]);
+    }
+
+    /**
+     * طباعة الفاتورة الحرارية (Receipt) للـ POS
+     */
+    public function printReceipt($id)
+    {
+        $invoice = SalesInvoice::with([
+            'customer',
+            'warehouse',
+            'items.product',
+            'items.sellingUnit',
+            'payments',
+        ])->findOrFail($id);
+
+        $invoice->calculated_details = $this->invoiceService->calculateInvoiceDetails($invoice);
+        $company = \App\Models\Company::first();
+
+        return view('invoices.sales.thermal_receipt', compact('invoice', 'company'));
     }
 }

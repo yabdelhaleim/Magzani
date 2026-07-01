@@ -65,12 +65,16 @@ public function profitLossReport($startDate, $endDate)
     $salesReturns = 0;
     $netSales = $totalSales;
 
-    // تكلفة المبيعات
-    $costOfSales = DB::table('sales_invoice_items')
-        ->join('sales_invoices', 'sales_invoices.id', '=', 'sales_invoice_items.sales_invoice_id')
-        ->join('products', 'products.id', '=', 'sales_invoice_items.product_id')
+    // تكلفة المبيعات (COGS) - معدلة لتقرأ متوسط التكلفة التاريخية من حركات المخزن
+    $costOfSales = DB::table('inventory_movements')
+        ->join('sales_invoices', function ($join) {
+            $join->on('sales_invoices.id', '=', 'inventory_movements.reference_id')
+                 ->where('inventory_movements.reference_type', '=', SalesInvoice::class);
+        })
+        ->join('products', 'products.id', '=', 'inventory_movements.product_id')
         ->whereBetween('sales_invoices.invoice_date', [$startDate, $endDate])
-        ->sum(DB::raw('sales_invoice_items.quantity * products.purchase_price')) ?? 0;
+        ->where('inventory_movements.movement_type', '=', 'sale')
+        ->sum(DB::raw('ABS(inventory_movements.quantity_change) * COALESCE(inventory_movements.unit_cost_snapshot, products.purchase_price)')) ?? 0;
 
     // إجمالي المشتريات
     $totalPurchases = PurchaseInvoice::whereBetween('invoice_date', [$startDate, $endDate])

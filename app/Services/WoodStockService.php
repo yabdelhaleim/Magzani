@@ -112,6 +112,7 @@ class WoodStockService
             'name' => $productName,
             'code' => 'WOOD-' . $stock->id,
             'product_type' => 'raw_material',
+            'category' => 'Raw Materials',
             'base_unit' => 'm3',
             'base_unit_label' => 'متر مكعب',
             'purchase_price' => $stock->unit_cost,

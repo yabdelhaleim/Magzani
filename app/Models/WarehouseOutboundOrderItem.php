@@ -36,4 +36,9 @@ class WarehouseOutboundOrderItem extends Model
     {
         return $this->belongsTo(Product::class);
     }
+
+    public function getQuantityAttribute()
+    {
+        return $this->approved_quantity ?? $this->requested_quantity;
+    }
 }

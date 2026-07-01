@@ -2,25 +2,51 @@
 
 namespace Tests\Unit;
 
-use Tests\TestCase;
 use App\Models\ManufacturingOrder;
 use App\Models\Product;
+use App\Models\User;
 use App\Models\Warehouse;
+use App\Models\Tenant;
 use App\Services\ManufacturingOrderService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Auth;
+use Tests\TestCase;
 
 class ManufacturingOrderCompletionTest extends TestCase
 {
     use RefreshDatabase;
 
     private ManufacturingOrderService $service;
+    protected $tenant;
 
     protected function setUp(): void
     {
         parent::setUp();
+
+        // إنشاء مستأجر عشوائي وتهيئة بيئة العمل للـ Unit Test
+        $tenantId = 'unit-' . uniqid();
+        $this->tenant = Tenant::create([
+            'id' => $tenantId,
+            'plan_id' => 'basic',
+        ]);
+        tenancy()->initialize($this->tenant);
+
         $this->service = app(ManufacturingOrderService::class);
-        Auth::setId(1); // Simulate authenticated user
+        $this->actingAs(User::factory()->create([
+            'is_active' => true,
+            'role' => 'admin',
+        ]));
+    }
+
+    protected function tearDown(): void
+    {
+        if ($this->tenant) {
+            try {
+                $this->tenant->delete();
+            } catch (\Exception $e) {
+                // تجاهل أخطاء الحذف التلقائي
+            }
+        }
+        parent::tearDown();
     }
 
     /**
@@ -36,12 +62,14 @@ class ManufacturingOrderCompletionTest extends TestCase
             'product_id' => null, // No existing product
             'quantity_produced' => 100,
             'cost_per_unit' => 50.00,
+            'total_cost' => 5000.00,
             'selling_price_per_unit' => 75.00,
             'status' => 'confirmed',
         ]);
 
         // Act: Complete the order (should create product automatically)
         $completedOrder = $this->service->completeOrder($order, $warehouse->id);
+        $completedOrder->load('inventoryMovements');
 
         // Assert: Product was created automatically
         $product = Product::where('name', 'Test Product 123')->first();
@@ -81,6 +109,7 @@ class ManufacturingOrderCompletionTest extends TestCase
             'product_name' => 'Existing Product',
             'quantity_produced' => 50,
             'cost_per_unit' => 55.00,
+            'total_cost' => 2750.00,
             'selling_price_per_unit' => 80.00,
             'status' => 'confirmed',
         ]);
@@ -107,6 +136,7 @@ class ManufacturingOrderCompletionTest extends TestCase
             'product_name' => 'Sellable Product',
             'quantity_produced' => 25,
             'cost_per_unit' => 100.00,
+            'total_cost' => 2500.00,
             'selling_price_per_unit' => 150.00,
             'status' => 'confirmed',
         ]);
@@ -129,6 +159,10 @@ class ManufacturingOrderCompletionTest extends TestCase
         // Arrange
         $order = ManufacturingOrder::factory()->create([
             'product_name' => 'Test Product',
+            'quantity_produced' => 10,
+            'cost_per_unit' => 5.00,
+            'total_cost' => 50.00,
+            'selling_price_per_unit' => 8.00,
             'status' => 'confirmed',
         ]);
 
@@ -158,6 +192,9 @@ class ManufacturingOrderCompletionTest extends TestCase
         $order = ManufacturingOrder::factory()->create([
             'product_name' => 'Stocked Product',
             'quantity_produced' => 75,
+            'cost_per_unit' => 10.00,
+            'total_cost' => 750.00,
+            'selling_price_per_unit' => 15.00,
             'status' => 'confirmed',
         ]);
 

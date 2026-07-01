@@ -268,7 +268,7 @@
         <div class="flex items-center gap-3">
             <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
             <div>
-                <div class="stat-val">{{ $products->where('is_active', true)->count() }}</div>
+                <div class="stat-val">{{ number_format($productStats['active'] ?? 0) }}</div>
                 <div class="stat-lbl">نشط</div>
             </div>
         </div>
@@ -278,7 +278,7 @@
         <div class="flex items-center gap-3">
             <div class="stat-icon"><i class="fas fa-exclamation-triangle"></i></div>
             <div>
-                <div class="stat-val">{{ $products->where('stock_status', 'منخفض')->count() + $products->where('stock_status', 'نفذ')->count() }}</div>
+                <div class="stat-val">{{ number_format(($productStats['low_stock'] ?? 0) + ($productStats['out_of_stock'] ?? 0)) }}</div>
                 <div class="stat-lbl">مخزون منخفض</div>
             </div>
         </div>
@@ -288,7 +288,7 @@
         <div class="flex items-center gap-3">
             <div class="stat-icon"><i class="fas fa-layer-group"></i></div>
             <div>
-                <div class="stat-val">{{ $products->pluck('category')->unique()->filter()->count() }}</div>
+                <div class="stat-val">{{ number_format($productStats['distinct_categories'] ?? 0) }}</div>
                 <div class="stat-lbl">تصنيف</div>
             </div>
         </div>
@@ -384,9 +384,12 @@
                         </div>
                     </td>
 
-                    {{-- التصنيف --}}
+                    {{-- التصنيف: عمود نصي أو جدول التصنيفات --}}
                     <td>
-                        <span class="badge badge-purple">{{ $product->category }}</span>
+                        @php
+                            $catLabel = filled($product->category) ? $product->category : ($product->productCategory->name ?? null);
+                        @endphp
+                        <span class="badge badge-purple">{{ $catLabel ?: '—' }}</span>
                     </td>
 
                     {{-- سعر الشراء --}}

@@ -4,9 +4,9 @@ namespace App\Services;
 
 use App\Models\PurchaseInvoice;
 use App\Models\PurchaseInvoiceItem;
+use Exception;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Exception;
 
 class PurchaseInvoiceService
 {
@@ -33,13 +33,13 @@ class PurchaseInvoiceService
                 Log::info('تم إنشاء فاتورة شراء', [
                     'invoice_id' => $invoice->id,
                     'invoice_number' => $invoice->invoice_number,
-                    'total' => $invoice->total
+                    'total' => $invoice->total,
                 ]);
 
                 return $invoice->fresh(['items.product', 'supplier', 'warehouse']);
 
             } catch (Exception $e) {
-                Log::error('خطأ في إنشاء فاتورة الشراء: ' . $e->getMessage());
+                Log::error('خطأ في إنشاء فاتورة الشراء: '.$e->getMessage());
                 throw $e;
             }
         });
@@ -79,13 +79,13 @@ class PurchaseInvoiceService
 
                 Log::info('تم تحديث فاتورة الشراء', [
                     'invoice_id' => $invoice->id,
-                    'invoice_number' => $invoice->invoice_number
+                    'invoice_number' => $invoice->invoice_number,
                 ]);
 
                 return $invoice->fresh(['items.product', 'supplier', 'warehouse']);
 
             } catch (Exception $e) {
-                Log::error('خطأ في تحديث فاتورة الشراء: ' . $e->getMessage());
+                Log::error('خطأ في تحديث فاتورة الشراء: '.$e->getMessage());
                 throw $e;
             }
         });
@@ -106,13 +106,13 @@ class PurchaseInvoiceService
 
                 Log::info('تم حذف فاتورة الشراء', [
                     'invoice_id' => $invoice->id,
-                    'invoice_number' => $invoice->invoice_number
+                    'invoice_number' => $invoice->invoice_number,
                 ]);
 
                 return true;
 
             } catch (Exception $e) {
-                Log::error('خطأ في حذف فاتورة الشراء: ' . $e->getMessage());
+                Log::error('خطأ في حذف فاتورة الشراء: '.$e->getMessage());
                 throw $e;
             }
         });
@@ -145,10 +145,15 @@ class PurchaseInvoiceService
         foreach ($items as $item) {
             $quantity = $item['qty'];
             $cost = $item['price'];
+            $storageType = $item['storage_type'] ?? 'general';
+            $tildeDetails = $this->normalizeTildeDetails($item['tilde_details'] ?? []);
 
             PurchaseInvoiceItem::create([
                 'purchase_invoice_id' => $invoice->id,
                 'product_id' => $item['product_id'],
+                'storage_type' => $storageType,
+                'tilde_number' => $item['tilde_number'] ?? null,
+                'tilde_details' => $tildeDetails ?: null,
                 'quantity' => $quantity,
                 'base_quantity' => $quantity,
                 'unit_price' => $cost,
@@ -156,6 +161,8 @@ class PurchaseInvoiceService
                 'subtotal' => round($quantity * $cost, 2),
                 'total' => round($quantity * $cost, 2),
             ]);
+
+            $this->syncProductTypeFromStorage((int) $item['product_id'], $storageType);
         }
     }
 
@@ -182,18 +189,14 @@ class PurchaseInvoiceService
     private function updateInventory(PurchaseInvoice $invoice): void
     {
         foreach ($invoice->items as $item) {
-            // تحديث رصيد المنتج في المخزن
-            DB::table('product_warehouse')
-                ->updateOrInsert(
-                    [
-                        'product_id' => $item->product_id,
-                        'warehouse_id' => $invoice->warehouse_id,
-                    ],
-                    [
-                        'quantity' => DB::raw('quantity + ' . $item->quantity),
-                        'updated_at' => now(),
-                    ]
-                );
+            app(\App\Services\StockService::class)->adjust(
+                warehouseId: $invoice->warehouse_id,
+                productId: $item->product_id,
+                qty: $item->quantity,
+                type: \App\Services\StockService::PURCHASE,
+                referenceId: $invoice->id,
+                unitCost: $item->unit_cost
+            );
         }
     }
 
@@ -203,11 +206,14 @@ class PurchaseInvoiceService
     private function reverseInventory(PurchaseInvoice $invoice): void
     {
         foreach ($invoice->items as $item) {
-            // إرجاع الكمية من المخزن
-            DB::table('product_warehouse')
-                ->where('product_id', $item->product_id)
-                ->where('warehouse_id', $invoice->warehouse_id)
-                ->decrement('quantity', $item->quantity);
+            app(\App\Services\StockService::class)->adjust(
+                warehouseId: $invoice->warehouse_id,
+                productId: $item->product_id,
+                qty: -$item->quantity,
+                type: \App\Services\StockService::PURCHASE,
+                referenceId: $invoice->id,
+                unitCost: null
+            );
         }
     }
 
@@ -222,8 +228,47 @@ class PurchaseInvoiceService
             ->first();
 
         $number = $lastInvoice ? $lastInvoice->id + 1 : 1;
-        
+
         return sprintf('PUR-%s-%03d', $year, $number);
+    }
+
+    private function syncProductTypeFromStorage(int $productId, string $storageType): void
+    {
+        $map = [
+            'general' => ['product_type' => 'standard', 'is_manufactured' => false],
+            'manufactured' => ['product_type' => 'manufactured', 'is_manufactured' => true],
+            'raw_material' => ['product_type' => 'raw_material', 'is_manufactured' => false],
+        ];
+
+        $payload = $map[$storageType] ?? $map['general'];
+
+        DB::table('products')
+            ->where('id', $productId)
+            ->update(array_merge($payload, ['updated_at' => now()]));
+    }
+
+    private function normalizeTildeDetails(array $rows): array
+    {
+        $out = [];
+        foreach ($rows as $row) {
+            $quantity = (float) ($row['quantity'] ?? 0);
+            $length = (float) ($row['length'] ?? 0);
+            $width = (float) ($row['width'] ?? 0);
+            $thickness = (float) ($row['thickness'] ?? 0);
+
+            if ($quantity <= 0 && $length <= 0 && $width <= 0 && $thickness <= 0) {
+                continue;
+            }
+
+            $out[] = [
+                'quantity' => $quantity,
+                'length' => $length,
+                'width' => $width,
+                'thickness' => $thickness,
+            ];
+        }
+
+        return $out;
     }
 
     /**
@@ -235,31 +280,31 @@ class PurchaseInvoiceService
             ->orderBy('invoice_date', 'desc');
 
         // فلتر بالمورد
-        if (!empty($filters['supplier_id'])) {
+        if (! empty($filters['supplier_id'])) {
             $query->where('supplier_id', $filters['supplier_id']);
         }
 
         // فلتر بالمخزن
-        if (!empty($filters['warehouse_id'])) {
+        if (! empty($filters['warehouse_id'])) {
             $query->where('warehouse_id', $filters['warehouse_id']);
         }
 
         // فلتر بالحالة
-        if (!empty($filters['status'])) {
+        if (! empty($filters['status'])) {
             $query->where('status', $filters['status']);
         }
 
         // فلتر بالتاريخ من - إلى
-        if (!empty($filters['date_from'])) {
+        if (! empty($filters['date_from'])) {
             $query->whereDate('invoice_date', '>=', $filters['date_from']);
         }
-        if (!empty($filters['date_to'])) {
+        if (! empty($filters['date_to'])) {
             $query->whereDate('invoice_date', '<=', $filters['date_to']);
         }
 
         // بحث برقم الفاتورة
-        if (!empty($filters['search'])) {
-            $query->where('invoice_number', 'like', '%' . $filters['search'] . '%');
+        if (! empty($filters['search'])) {
+            $query->where('invoice_number', 'like', '%'.$filters['search'].'%');
         }
 
         return $query->paginate($filters['per_page'] ?? 15);

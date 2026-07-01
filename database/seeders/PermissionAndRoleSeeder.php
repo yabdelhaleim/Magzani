@@ -515,14 +515,16 @@ class PermissionAndRoleSeeder extends Seeder
 
         $employeeRole->syncPermissions($employeePermissionIds);
 
-        $this->command->info('✅ تم إنشاء الصلاحيات والأدوار بنجاح!');
-        $this->command->newLine();
-        $this->command->info('📊 عدد الصلاحيات المُنشأة: ' . count($allPermissions));
-        $this->command->info('👥 عدد الأدوار المُنشأة: 2 (مدير، موظف)');
-        $this->command->newLine();
-        $this->command->info('🔑 الصلاحيات الافتراضية للموظف:');
-        foreach ($employeeDefaultPermissions as $perm) {
-            $this->command->info('  - ' . $perm);
+        if ($this->command) {
+            $this->command->info('✅ تم إنشاء الصلاحيات والأدوار بنجاح!');
+            $this->command->newLine();
+            $this->command->info('📊 عدد الصلاحيات المُنشأة: ' . count($allPermissions));
+            $this->command->info('👥 عدد الأدوار المُنشأة: 2 (مدير، موظف)');
+            $this->command->newLine();
+            $this->command->info('🔑 الصلاحيات الافتراضية للموظف:');
+            foreach ($employeeDefaultPermissions as $perm) {
+                $this->command->info('  - ' . $perm);
+            }
         }
     }
 }

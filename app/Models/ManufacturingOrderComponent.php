@@ -77,4 +77,24 @@ class ManufacturingOrderComponent extends Model
     {
         $this->total_cost = $this->quantity * $this->unit_cost;
     }
+
+    /* ===========================
+     * 🔄 DYNAMIC ACCESSOR FOR STOCK SERVICE
+     * =========================== */
+
+    public function getProductIdAttribute(): ?int
+    {
+        if ($this->wood_stock_id) {
+            $woodStock = $this->woodStock ?: \App\Models\WoodStock::find($this->wood_stock_id);
+            return $woodStock ? $woodStock->product_id : null;
+        }
+
+        $typeName = $this->component_type ?: $this->component_name;
+        $raw = \App\Models\RawMaterialTemplate::where('name', $typeName)->first();
+        if ($raw) {
+            return $raw->product_id;
+        }
+
+        return null;
+    }
 }

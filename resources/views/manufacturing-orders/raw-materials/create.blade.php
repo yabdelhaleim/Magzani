@@ -115,9 +115,24 @@
                 <h3 class="mfg-card-title">بيانات الخامة</h3>
             </div>
             <div class="mfg-card-body">
+                <p style="font-size:12px;color:var(--tf-text-m);margin:0 0 16px;line-height:1.5;">
+                    بعد الحفظ تُنشأ صنف خام في المنتجات وتُربط كمية المخزن المختار — ستظهر الخامة في صفحة المخزن ضمن «خامات التصنيع».
+                </p>
                 <div class="form-group">
                     <label class="form-label">اسم الخامة</label>
                     <input type="text" name="name" class="form-control" required placeholder="مثال: فرش، روباط، شاسية، دكم" value="{{ old('name') }}">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">المخزن</label>
+                    <select name="warehouse_id" class="form-control" required>
+                        <option value="">— اختر المخزن —</option>
+                        @foreach($warehouses as $wh)
+                            <option value="{{ $wh->id }}" @selected(old('warehouse_id') == $wh->id)>
+                                {{ $wh->name }}@if($wh->code) ({{ $wh->code }})@endif
+                            </option>
+                        @endforeach
+                    </select>
                 </div>
 
                 <div class="grid-2">

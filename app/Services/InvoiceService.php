@@ -463,6 +463,9 @@ class InvoiceService
                 'created_by'      => auth()->id(),
                 'confirmed_by'    => auth()->id(),
                 'confirmed_at'    => now(),
+                'shift_id'        => $data['shift_id'] ?? null,
+                'source'          => $data['source'] ?? 'sales',
+                'payment_method'  => $data['payment_method'] ?? 'cash',
             ]);
             
             // ==================== 8️⃣ إضافة الأصناف والتحقق من المخزون ====================
@@ -541,10 +544,13 @@ class InvoiceService
             
             // ==================== 🔟 تحديث المخزون دفعة واحدة ====================
             foreach ($stockUpdates as $update) {
-                DB::table('product_warehouse')
-                    ->where('product_id', $update['product_id'])
-                    ->where('warehouse_id', $data['warehouse_id'])
-                    ->decrement('quantity', $update['quantity']);
+                app(\App\Services\StockService::class)->adjust(
+                    warehouseId: (int) $data['warehouse_id'],
+                    productId: (int) $update['product_id'],
+                    qty: -((float) $update['quantity']),
+                    type: \App\Services\StockService::SALE,
+                    referenceId: (int) $invoice->id
+                );
             }
             
             // ==================== 1️⃣1️⃣ تحديث رصيد العميل ====================
@@ -719,10 +725,13 @@ class InvoiceService
             
             // تحديث المخزون دفعة واحدة
             foreach ($stockUpdates as $update) {
-                DB::table('product_warehouse')
-                    ->where('product_id', $update['product_id'])
-                    ->where('warehouse_id', $invoice->warehouse_id)
-                    ->increment('quantity', $update['quantity']);
+                app(\App\Services\StockService::class)->adjust(
+                    warehouseId: (int) $invoice->warehouse_id,
+                    productId: (int) $update['product_id'],
+                    qty: (float) $update['quantity'],
+                    type: \App\Services\StockService::RETURN_IN,
+                    referenceId: (int) $invoice->id
+                );
             }
             
             // ==================== معالجة رصيد العميل ====================
@@ -1076,27 +1085,15 @@ class InvoiceService
             DB::table('purchase_invoice_items')->insert($invoiceItems);
             
             // تحديث المخزون (إضافة)
-            foreach ($stockUpdates as $update) {
-                $exists = DB::table('product_warehouse')
-                    ->where('product_id', $update['product_id'])
-                    ->where('warehouse_id', $data['warehouse_id'])
-                    ->exists();
-                
-                if ($exists) {
-                    DB::table('product_warehouse')
-                        ->where('product_id', $update['product_id'])
-                        ->where('warehouse_id', $data['warehouse_id'])
-                        ->increment('quantity', $update['quantity']);
-                } else {
-                    DB::table('product_warehouse')->insert([
-                        'product_id' => $update['product_id'],
-                        'warehouse_id' => $data['warehouse_id'],
-                        'quantity' => $update['quantity'],
-                        'reserved_quantity' => 0,
-                        'created_at' => now(),
-                        'updated_at' => now(),
-                    ]);
-                }
+            foreach ($invoiceItems as $item) {
+                app(\App\Services\StockService::class)->adjust(
+                    warehouseId: $data['warehouse_id'],
+                    productId: $item['product_id'],
+                    qty: $item['base_quantity'],
+                    type: \App\Services\StockService::PURCHASE,
+                    referenceId: $invoice->id,
+                    unitCost: $item['unit_cost']
+                );
             }
             
             // تحديث رصيد المورد
@@ -1165,10 +1162,14 @@ class InvoiceService
             foreach ($invoice->items as $item) {
                 $baseQuantity = $item->base_quantity ?? $item->quantity;
                 
-                DB::table('product_warehouse')
-                    ->where('product_id', $item->product_id)
-                    ->where('warehouse_id', $invoice->warehouse_id)
-                    ->decrement('quantity', $baseQuantity);
+                app(\App\Services\StockService::class)->adjust(
+                    warehouseId: $invoice->warehouse_id,
+                    productId: $item->product_id,
+                    qty: -$baseQuantity,
+                    type: \App\Services\StockService::PURCHASE,
+                    referenceId: $invoice->id,
+                    unitCost: null
+                );
             }
             
             // تحديث رصيد المورد
@@ -1312,10 +1313,13 @@ class InvoiceService
 
             // إرجاع المخزون القديم أولاً
             foreach ($invoice->items as $oldItem) {
-                DB::table('product_warehouse')
-                    ->where('product_id', $oldItem->product_id)
-                    ->where('warehouse_id', $invoice->warehouse_id)
-                    ->increment('quantity', $oldItem->base_quantity);
+                app(\App\Services\StockService::class)->adjust(
+                    warehouseId: (int) $invoice->warehouse_id,
+                    productId: (int) $oldItem->product_id,
+                    qty: (float) $oldItem->base_quantity,
+                    type: \App\Services\StockService::RETURN_IN,
+                    referenceId: (int) $invoice->id
+                );
             }
 
             // حذف الأصناف القديمة
@@ -1506,10 +1510,13 @@ class InvoiceService
 
             // خصم المخزون الجديد
             foreach ($stockUpdates as $update) {
-                DB::table('product_warehouse')
-                    ->where('product_id', $update['product_id'])
-                    ->where('warehouse_id', $data['warehouse_id'])
-                    ->decrement('quantity', $update['quantity']);
+                app(\App\Services\StockService::class)->adjust(
+                    warehouseId: (int) $data['warehouse_id'],
+                    productId: (int) $update['product_id'],
+                    qty: -((float) $update['quantity']),
+                    type: \App\Services\StockService::SALE,
+                    referenceId: (int) $invoice->id
+                );
             }
 
             // مسح الـ Cache

@@ -211,28 +211,34 @@ class TransferService
     private function validateStockAvailability(array $data): void
     {
         $fromWarehouseId = $data['from_warehouse_id'];
-        $errors          = [];
+        $posSetting = \App\Models\PosSetting::where('default_warehouse_id', $fromWarehouseId)->first()
+            ?? \App\Models\PosSetting::first()
+            ?? \App\Models\PosSetting::getSolo();
 
-        foreach ($data['items'] as $item) {
-            $productId    = $item['product_id'];
-            $requestedQty = floatval($item['quantity']);
+        if (!$posSetting->allow_negative_stock) {
+            $errors          = [];
 
-            $stock = ProductWarehouse::where('warehouse_id', $fromWarehouseId)
-                ->where('product_id', $productId)
-                ->first();
+            foreach ($data['items'] as $item) {
+                $productId    = $item['product_id'];
+                $requestedQty = floatval($item['quantity']);
 
-            if (!$stock) {
-                $errors[] = "المنتج #{$productId} غير موجود في المخزن المصدر";
-                continue;
+                $stock = ProductWarehouse::where('warehouse_id', $fromWarehouseId)
+                    ->where('product_id', $productId)
+                    ->first();
+
+                if (!$stock) {
+                    $errors[] = "المنتج #{$productId} غير موجود في المخزن المصدر";
+                    continue;
+                }
+
+                if (floatval($stock->quantity) < $requestedQty) {
+                    $errors[] = "المنتج #{$productId}: المخزون غير كافي (متوفر: {$stock->quantity}, مطلوب: {$requestedQty})";
+                }
             }
 
-            if (floatval($stock->quantity) < $requestedQty) {
-                $errors[] = "المنتج #{$productId}: المخزون غير كافي (متوفر: {$stock->quantity}, مطلوب: {$requestedQty})";
+            if (!empty($errors)) {
+                throw new \App\Exceptions\InsufficientStockException("❌ أخطاء في المخزون:\n" . implode("\n", $errors));
             }
-        }
-
-        if (!empty($errors)) {
-            throw new Exception("❌ أخطاء في المخزون:\n" . implode("\n", $errors));
         }
     }
 
@@ -274,72 +280,32 @@ class TransferService
         DB::beginTransaction();
 
         try {
+            // 1. Source Warehouse: Deduct Stock
+            app(\App\Services\StockService::class)->adjust(
+                warehouseId: $transfer->from_warehouse_id,
+                productId: $productId,
+                qty: -$quantity,
+                type: \App\Services\StockService::TRANSFER_OUT,
+                referenceId: $transfer->id
+            );
+
+            // 2. Calculate source average cost to pass to target warehouse
             $sourceStock = ProductWarehouse::where('warehouse_id', $transfer->from_warehouse_id)
                 ->where('product_id', $productId)
-                ->lockForUpdate()
                 ->first();
-
-            if (!$sourceStock) {
-                throw new Exception("❌ المنتج #{$productId} غير موجود في المخزن المصدر");
+            $sourceAvgCost = $sourceStock ? (float) $sourceStock->average_cost : 0.0;
+            if ($sourceAvgCost <= 0.0 && $item->product) {
+                $sourceAvgCost = (float) ($item->product->purchase_price ?? 0.0);
             }
 
-            if (floatval($sourceStock->quantity) < $quantity) {
-                throw new Exception(
-                    "❌ المخزون غير كافي للمنتج #{$productId} - " .
-                    "متوفر: " . number_format(floatval($sourceStock->quantity), 2) . ", " .
-                    "مطلوب: " . number_format($quantity, 2)
-                );
-            }
-
-            $sourceQuantityBefore = floatval($sourceStock->quantity);
-
-            $destinationStock   = ProductWarehouse::where('warehouse_id', $transfer->to_warehouse_id)
-                ->where('product_id', $productId)
-                ->lockForUpdate()
-                ->first();
-
-            $destQuantityBefore = $destinationStock ? floatval($destinationStock->quantity) : 0;
-
-            $sourceStock->quantity = floatval($sourceStock->quantity) - $quantity;
-            if ($sourceStock->quantity < 0) {
-                throw new Exception("❌ خطأ في الحساب: الكمية الناتجة سالبة");
-            }
-            $sourceStock->save();
-            $sourceStock->refresh();
-            $sourceQuantityAfter = floatval($sourceStock->quantity);
-
-            if ($destinationStock) {
-                $destinationStock->quantity = floatval($destinationStock->quantity) + $quantity;
-                $destinationStock->save();
-                $destinationStock->refresh();
-                $destQuantityAfter = floatval($destinationStock->quantity);
-            } else {
-                $destinationStock = ProductWarehouse::create([
-                    'warehouse_id'  => $transfer->to_warehouse_id,
-                    'product_id'    => $productId,
-                    'quantity'      => $quantity,
-                    'min_stock'     => 0,
-                    'max_stock'     => 0,
-                    'reorder_level' => 0,
-                ]);
-                $destinationStock->refresh();
-                $destQuantityAfter = floatval($quantity);
-            }
-
-            $purchasePrice = $item->product ? floatval($item->product->purchase_price ?? 0) : 0;
-
-            if (abs($sourceQuantityAfter - ($sourceQuantityBefore - $quantity)) > 0.001) {
-                throw new Exception("❌ خطأ في حساب المخزن المصدر");
-            }
-            if (abs($destQuantityAfter - ($destQuantityBefore + $quantity)) > 0.001) {
-                throw new Exception("❌ خطأ في حساب المخزن الوجهة");
-            }
-
-            $this->recordStockMovements(
-                $transfer, $productId, $quantity,
-                $sourceQuantityBefore, $sourceQuantityAfter,
-                $destQuantityBefore, $destQuantityAfter,
-                $purchasePrice
+            // 3. Target Warehouse: Add Stock
+            app(\App\Services\StockService::class)->adjust(
+                warehouseId: $transfer->to_warehouse_id,
+                productId: $productId,
+                qty: $quantity,
+                type: \App\Services\StockService::TRANSFER_IN,
+                referenceId: $transfer->id,
+                unitCost: $sourceAvgCost
             );
 
             DB::commit();
@@ -349,108 +315,6 @@ class TransferService
             Log::error('❌ فشل نقل منتج واحد', ['product_id' => $productId, 'error' => $e->getMessage()]);
             throw $e;
         }
-    }
-
-    /**
-     * تسجيل حركات المخزون
-     */
-    private function recordStockMovements(
-        WarehouseTransfer $transfer,
-        int $productId,
-        float $quantity,
-        float $sourceQuantityBefore,
-        float $sourceQuantityAfter,
-        float $destQuantityBefore,
-        float $destQuantityAfter,
-        float $purchasePrice
-    ): void {
-        $timestamp = now()->format('YmdHis');
-        $uniqueId  = $timestamp . str_pad(mt_rand(1, 9999), 4, '0', STR_PAD_LEFT);
-        $totalCost = $quantity * $purchasePrice;
-
-        try {
-            InventoryMovement::create([
-                'warehouse_id'    => $transfer->from_warehouse_id,
-                'product_id'      => $productId,
-                'movement_type'   => 'transfer_out',
-                'quantity'        => $quantity,
-                'quantity_change' => -$quantity,
-                'quantity_before' => $sourceQuantityBefore,
-                'quantity_after'  => $sourceQuantityAfter,
-                'unit_cost'       => $purchasePrice,
-                'unit_price'      => 0,
-                'total_cost'      => $totalCost,
-                'total_price'     => 0,
-                'movement_date'   => $transfer->transfer_date,
-                'reference_type'  => WarehouseTransfer::class,
-                'reference_id'    => $transfer->id,
-                'notes'           => "تحويل صادر #{$transfer->transfer_number} إلى {$transfer->toWarehouse->name}",
-                'movement_number' => "TOUT-{$uniqueId}",
-                'created_by'      => null,
-            ]);
-
-            InventoryMovement::create([
-                'warehouse_id'    => $transfer->to_warehouse_id,
-                'product_id'      => $productId,
-                'movement_type'   => 'transfer_in',
-                'quantity'        => $quantity,
-                'quantity_change' => $quantity,
-                'quantity_before' => $destQuantityBefore,
-                'quantity_after'  => $destQuantityAfter,
-                'unit_cost'       => $purchasePrice,
-                'unit_price'      => 0,
-                'total_cost'      => $totalCost,
-                'total_price'     => 0,
-                'movement_date'   => $transfer->transfer_date,
-                'reference_type'  => WarehouseTransfer::class,
-                'reference_id'    => $transfer->id,
-                'notes'           => "تحويل وارد #{$transfer->transfer_number} من {$transfer->fromWarehouse->name}",
-                'movement_number' => "TIN-{$uniqueId}",
-                'created_by'      => null,
-            ]);
-
-        } catch (Exception $e) {
-            throw new Exception("❌ فشل تسجيل حركات المخزون: " . $e->getMessage());
-        }
-    }
-
-    /**
-     * عكس التحويل
-     */
-    public function reverseTransfer(int $transferId): WarehouseTransfer
-    {
-        return DB::transaction(function () use ($transferId) {
-            try {
-                $transfer = WarehouseTransfer::with(['items.product', 'fromWarehouse', 'toWarehouse'])
-                    ->lockForUpdate()
-                    ->findOrFail($transferId);
-
-                $this->validateReversal($transfer);
-
-                foreach ($transfer->items as $item) {
-                    $this->reverseSingleProduct($transfer, $item);
-                }
-
-                $transfer->update([
-                    'status'      => 'reversed',
-                    'reversed_at' => now(),
-                    'reversed_by' => null,
-                ]);
-
-                $this->clearWarehousesCache([
-                    $transfer->from_warehouse_id,
-                    $transfer->to_warehouse_id,
-                ]);
-
-                Log::info('✅ تم عكس التحويل بنجاح', ['transfer_id' => $transferId]);
-
-                return $transfer->fresh();
-
-            } catch (Exception $e) {
-                Log::error('❌ فشل عكس التحويل', ['transfer_id' => $transferId, 'error' => $e->getMessage()]);
-                throw $e;
-            }
-        });
     }
 
     /**
@@ -466,139 +330,37 @@ class TransferService
         }
 
         try {
-            $sourceStock = ProductWarehouse::where('warehouse_id', $transfer->from_warehouse_id)
-                ->where('product_id', $productId)
-                ->lockForUpdate()
-                ->first();
+            // 1. Destination Warehouse: Deduct Stock
+            app(\App\Services\StockService::class)->adjust(
+                warehouseId: $transfer->to_warehouse_id,
+                productId: $productId,
+                qty: -$quantity,
+                type: \App\Services\StockService::TRANSFER_OUT,
+                referenceId: $transfer->id
+            );
 
+            // 2. Calculate destination average cost
             $destStock = ProductWarehouse::where('warehouse_id', $transfer->to_warehouse_id)
                 ->where('product_id', $productId)
-                ->lockForUpdate()
                 ->first();
-
-            if (!$destStock) {
-                throw new Exception("❌ المنتج غير موجود في المخزن الوجهة");
+            $destAvgCost = $destStock ? (float) $destStock->average_cost : 0.0;
+            if ($destAvgCost <= 0.0 && $item->product) {
+                $destAvgCost = (float) ($item->product->purchase_price ?? 0.0);
             }
 
-            if (floatval($destStock->quantity) < $quantity) {
-                throw new Exception(
-                    "❌ لا يمكن عكس التحويل - مخزون غير كافي في المخزن الوجهة - " .
-                    "متوفر: " . number_format(floatval($destStock->quantity), 2) . ", " .
-                    "مطلوب: " . number_format($quantity, 2)
-                );
-            }
-
-            $sourceQuantityBefore = $sourceStock ? floatval($sourceStock->quantity) : 0;
-            $destQuantityBefore   = floatval($destStock->quantity);
-
-            if (!$sourceStock) {
-                $sourceStock = ProductWarehouse::create([
-                    'warehouse_id'  => $transfer->from_warehouse_id,
-                    'product_id'    => $productId,
-                    'quantity'      => 0,
-                    'min_stock'     => 0,
-                    'max_stock'     => 0,
-                    'reorder_level' => 0,
-                ]);
-                $sourceQuantityBefore = 0;
-            }
-
-            $sourceStock->quantity = floatval($sourceStock->quantity) + $quantity;
-            $sourceStock->save();
-            $sourceStock->refresh();
-
-            $destStock->quantity = floatval($destStock->quantity) - $quantity;
-            if ($destStock->quantity < 0) {
-                throw new Exception("❌ خطأ في الحساب: الكمية الناتجة سالبة");
-            }
-            $destStock->save();
-            $destStock->refresh();
-
-            $sourceQuantityAfter = floatval($sourceStock->quantity);
-            $destQuantityAfter   = floatval($destStock->quantity);
-
-            $purchasePrice = $item->product ? floatval($item->product->purchase_price ?? 0) : 0;
-
-            if (abs($sourceQuantityAfter - ($sourceQuantityBefore + $quantity)) > 0.001) {
-                throw new Exception("❌ خطأ في حساب المخزن المصدر عند العكس");
-            }
-            if (abs($destQuantityAfter - ($destQuantityBefore - $quantity)) > 0.001) {
-                throw new Exception("❌ خطأ في حساب المخزن الوجهة عند العكس");
-            }
-
-            $this->recordReversalMovements(
-                $transfer, $productId, $quantity,
-                $sourceQuantityBefore, $sourceQuantityAfter,
-                $destQuantityBefore, $destQuantityAfter,
-                $purchasePrice
+            // 3. Source Warehouse: Re-add Stock
+            app(\App\Services\StockService::class)->adjust(
+                warehouseId: $transfer->from_warehouse_id,
+                productId: $productId,
+                qty: $quantity,
+                type: \App\Services\StockService::TRANSFER_IN,
+                referenceId: $transfer->id,
+                unitCost: $destAvgCost
             );
 
         } catch (Exception $e) {
             Log::error('❌ فشل عكس منتج واحد', ['product_id' => $productId, 'error' => $e->getMessage()]);
             throw $e;
-        }
-    }
-
-    /**
-     * تسجيل حركات العكس
-     */
-    private function recordReversalMovements(
-        WarehouseTransfer $transfer,
-        int $productId,
-        float $quantity,
-        float $sourceQuantityBefore,
-        float $sourceQuantityAfter,
-        float $destQuantityBefore,
-        float $destQuantityAfter,
-        float $purchasePrice
-    ): void {
-        $timestamp = now()->format('YmdHis');
-        $uniqueId  = $timestamp . str_pad(mt_rand(1, 9999), 4, '0', STR_PAD_LEFT);
-        $totalCost = $quantity * $purchasePrice;
-
-        try {
-            InventoryMovement::create([
-                'warehouse_id'    => $transfer->from_warehouse_id,
-                'product_id'      => $productId,
-                'movement_type'   => 'return_from_transfer',
-                'quantity'        => $quantity,
-                'quantity_change' => $quantity,
-                'quantity_before' => $sourceQuantityBefore,
-                'quantity_after'  => $sourceQuantityAfter,
-                'unit_cost'       => $purchasePrice,
-                'unit_price'      => 0,
-                'total_cost'      => $totalCost,
-                'total_price'     => 0,
-                'movement_date'   => now()->toDateString(),
-                'reference_type'  => WarehouseTransfer::class,
-                'reference_id'    => $transfer->id,
-                'notes'           => "عكس تحويل #{$transfer->transfer_number}",
-                'movement_number' => "RTF-{$uniqueId}",
-                'created_by'      => null,
-            ]);
-
-            InventoryMovement::create([
-                'warehouse_id'    => $transfer->to_warehouse_id,
-                'product_id'      => $productId,
-                'movement_type'   => 'transfer_reversed',
-                'quantity'        => $quantity,
-                'quantity_change' => -$quantity,
-                'quantity_before' => $destQuantityBefore,
-                'quantity_after'  => $destQuantityAfter,
-                'unit_cost'       => $purchasePrice,
-                'unit_price'      => 0,
-                'total_cost'      => $totalCost,
-                'total_price'     => 0,
-                'movement_date'   => now()->toDateString(),
-                'reference_type'  => WarehouseTransfer::class,
-                'reference_id'    => $transfer->id,
-                'notes'           => "عكس تحويل #{$transfer->transfer_number}",
-                'movement_number' => "TRV-{$uniqueId}",
-                'created_by'      => null,
-            ]);
-
-        } catch (Exception $e) {
-            throw new Exception("❌ فشل تسجيل حركات العكس: " . $e->getMessage());
         }
     }
 

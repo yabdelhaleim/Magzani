@@ -3,14 +3,14 @@
 namespace App\Models;
 
 use App\Traits\ProductStockManagement;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 
 class Product extends Model
@@ -132,6 +132,14 @@ class Product extends Model
         return $this->belongsTo(Category::class);
     }
 
+    /**
+     * علاقة التصنيف باسم مختلف لتفادي التداخل مع عمود `category` النصي.
+     */
+    public function productCategory(): BelongsTo
+    {
+        return $this->belongsTo(Category::class, 'category_id');
+    }
+
     public function warehouses(): BelongsToMany
     {
         return $this->belongsToMany(Warehouse::class, 'product_warehouse')
@@ -178,6 +186,7 @@ class Product extends Model
     {
         return $this->hasMany(StockCountItem::class);
     }
+
     public function baseunit(): HasOne
     {
         return $this->hasOne(ProductBaseUnit::class, 'product_id');
@@ -200,7 +209,7 @@ class Product extends Model
         if ($this->relationLoaded('warehouses')) {
             return (float) $this->warehouses->sum('pivot.quantity');
         }
-        
+
         return (float) DB::table('product_warehouse')
             ->where('product_id', $this->id)
             ->sum('quantity');
@@ -214,7 +223,7 @@ class Product extends Model
         if ($this->relationLoaded('warehouses')) {
             return (float) $this->warehouses->sum('pivot.available_quantity');
         }
-        
+
         return (float) DB::table('product_warehouse')
             ->where('product_id', $this->id)
             ->sum(DB::raw('GREATEST(0, quantity - COALESCE(reserved_quantity, 0))'));
@@ -228,7 +237,7 @@ class Product extends Model
         if ($this->relationLoaded('warehouses')) {
             return (float) $this->warehouses->sum('pivot.reserved_quantity');
         }
-        
+
         return (float) DB::table('product_warehouse')
             ->where('product_id', $this->id)
             ->sum('reserved_quantity');
@@ -241,9 +250,14 @@ class Product extends Model
     {
         $total = $this->total_stock;
         $alert = $this->stock_alert_quantity ?? 10;
-        
-        if ($total == 0) return 'نفذ';
-        if ($total <= $alert) return 'منخفض';
+
+        if ($total == 0) {
+            return 'نفذ';
+        }
+        if ($total <= $alert) {
+            return 'منخفض';
+        }
+
         return 'متوفر';
     }
 
@@ -252,7 +266,7 @@ class Product extends Model
      */
     public function getStockStatusColorAttribute(): string
     {
-        return match($this->stock_status) {
+        return match ($this->stock_status) {
             'نفذ' => 'red',
             'منخفض' => 'yellow',
             'متوفر' => 'green',
@@ -267,6 +281,7 @@ class Product extends Model
     {
         $total = $this->total_stock;
         $alert = $this->stock_alert_quantity ?? 10;
+
         return $total > 0 && $total <= $alert;
     }
 
@@ -290,7 +305,7 @@ class Product extends Model
         if ($this->relationLoaded('basePricing') && $this->basePricing) {
             return (float) $this->basePricing->base_selling_price;
         }
-        
+
         if ($this->relationLoaded('baseunit') && $this->baseunit) {
             return (float) $this->baseunit->base_selling_price;
         }
@@ -306,7 +321,7 @@ class Product extends Model
         if ($this->relationLoaded('basePricing') && $this->basePricing) {
             return (float) $this->basePricing->base_purchase_price;
         }
-        
+
         if ($this->relationLoaded('baseunit') && $this->baseunit) {
             return (float) $this->baseunit->base_purchase_price;
         }
@@ -320,7 +335,7 @@ class Product extends Model
 
     public function getSellingUnitsWithPricesAttribute(): array
     {
-        if (!$this->relationLoaded('sellingUnits')) {
+        if (! $this->relationLoaded('sellingUnits')) {
             return [];
         }
 
@@ -331,8 +346,8 @@ class Product extends Model
                 'code' => $unit->unit_code,
                 'label' => $unit->label,
                 'conversion_factor' => $unit->conversion_factor,
-                    'selling_price' => $unit->selling_price,
-                    'purchase_price' => $unit->purchase_price,
+                'selling_price' => $unit->selling_price,
+                'purchase_price' => $unit->purchase_price,
                 'is_default' => $unit->is_default,
                 'is_base' => $unit->is_base,
                 'is_active' => $unit->is_active,
@@ -362,10 +377,10 @@ class Product extends Model
 
         return $query->where(function ($q) use ($search) {
             $q->where('name', 'like', "%{$search}%")
-              ->orWhere('code', 'like', "%{$search}%")
-              ->orWhere('sku', 'like', "%{$search}%")
-              ->orWhere('barcode', 'like', "%{$search}%")
-              ->orWhere('description', 'like', "%{$search}%");
+                ->orWhere('code', 'like', "%{$search}%")
+                ->orWhere('sku', 'like', "%{$search}%")
+                ->orWhere('barcode', 'like', "%{$search}%")
+                ->orWhere('description', 'like', "%{$search}%");
         });
     }
 
@@ -384,9 +399,9 @@ class Product extends Model
      */
     public function scopeLowStock(Builder $query): Builder
     {
-        return $query->whereHas('warehouses', function($q) {
+        return $query->whereHas('warehouses', function ($q) {
             $q->whereRaw('product_warehouse.quantity <= product_warehouse.min_stock')
-              ->whereRaw('product_warehouse.quantity > 0');
+                ->whereRaw('product_warehouse.quantity > 0');
         });
     }
 
@@ -395,7 +410,7 @@ class Product extends Model
      */
     public function scopeOutOfStock(Builder $query): Builder
     {
-        return $query->whereDoesntHave('warehouses', function($q) {
+        return $query->whereDoesntHave('warehouses', function ($q) {
             $q->where('product_warehouse.quantity', '>', 0);
         });
     }
@@ -444,6 +459,7 @@ class Product extends Model
     {
         if ($this->relationLoaded('warehouses')) {
             $warehouse = $this->warehouses->firstWhere('id', $warehouseId);
+
             return $warehouse ? (float) $warehouse->pivot->quantity : 0;
         }
 
@@ -460,6 +476,7 @@ class Product extends Model
     {
         if ($this->relationLoaded('warehouses')) {
             $warehouse = $this->warehouses->firstWhere('id', $warehouseId);
+
             return $warehouse ? (float) $warehouse->pivot->available_quantity : 0;
         }
 
@@ -481,7 +498,7 @@ class Product extends Model
         static::deleting(function ($product) {
             // حذف الوحدات
             $product->sellingUnits()->delete();
-            
+
             // حذف علاقات المخازن
             $product->warehouses()->detach();
         });

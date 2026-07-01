@@ -32,6 +32,17 @@
       0 => 'Laravel\\Tinker\\TinkerServiceProvider',
     ),
   ),
+  'livewire/livewire' => 
+  array (
+    'aliases' => 
+    array (
+      'Livewire' => 'Livewire\\Livewire',
+    ),
+    'providers' => 
+    array (
+      0 => 'Livewire\\LivewireServiceProvider',
+    ),
+  ),
   'maatwebsite/excel' => 
   array (
     'aliases' => 
@@ -91,6 +102,18 @@
     'providers' => 
     array (
       0 => 'Spatie\\SignalAwareCommand\\SignalAwareCommandServiceProvider',
+    ),
+  ),
+  'stancl/tenancy' => 
+  array (
+    'aliases' => 
+    array (
+      'Tenancy' => 'Stancl\\Tenancy\\Facades\\Tenancy',
+      'GlobalCache' => 'Stancl\\Tenancy\\Facades\\GlobalCache',
+    ),
+    'providers' => 
+    array (
+      0 => 'Stancl\\Tenancy\\TenancyServiceProvider',
     ),
   ),
 );

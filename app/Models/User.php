@@ -26,8 +26,7 @@ class User extends Authenticatable
     ];
 
     protected $casts = [
-        'email_verified_at' => 'datetime',
-        'is_active'         => 'boolean',
+        'is_active' => 'boolean',
     ];
 
     // ==================== Role Methods ====================
@@ -53,7 +52,7 @@ class User extends Authenticatable
      */
     public function getRoleNameAttribute(): string
     {
-        return match($this->role) {
+        return match ($this->role) {
             'admin' => 'مدير النظام',
             'employee' => 'موظف',
             default => 'غير معروف',
@@ -120,7 +119,7 @@ class User extends Authenticatable
             return true;
         }
 
-        return !empty(array_intersect($permissions, $this->allPermissions()));
+        return ! empty(array_intersect($permissions, $this->allPermissions()));
     }
 
     /**
@@ -143,6 +142,7 @@ class User extends Authenticatable
     public function givePermissionTo(Permission $permission)
     {
         $this->permissions()->attach($permission->id);
+
         return $this;
     }
 
@@ -152,6 +152,7 @@ class User extends Authenticatable
     public function revokePermissionFrom(Permission $permission)
     {
         $this->permissions()->detach($permission->id);
+
         return $this;
     }
 
@@ -161,6 +162,7 @@ class User extends Authenticatable
     public function syncPermissions(array $permissions)
     {
         $this->permissions()->sync($permissions);
+
         return $this;
     }
 
@@ -170,6 +172,7 @@ class User extends Authenticatable
     public function assignRole(Role $role)
     {
         $this->roles()->attach($role->id);
+
         return $this;
     }
 
@@ -179,6 +182,7 @@ class User extends Authenticatable
     public function removeRole(Role $role)
     {
         $this->roles()->detach($role->id);
+
         return $this;
     }
 
@@ -188,6 +192,7 @@ class User extends Authenticatable
     public function syncRoles(array $roleIds)
     {
         $this->roles()->sync($roleIds);
+
         return $this;
     }
 
@@ -281,5 +286,3 @@ class User extends Authenticatable
         return $query->where('is_active', true);
     }
 }
-
-

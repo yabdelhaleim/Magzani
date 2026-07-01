@@ -2,15 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\BulkPriceUpdateRequest;
+use App\Http\Requests\StoreProductRequest;
+use App\Http\Requests\UpdateProductRequest;
 use App\Models\Product;
 use App\Models\Warehouse;
 use App\Services\ProductService;
-use App\Http\Requests\StoreProductRequest;
-use App\Http\Requests\UpdateProductRequest;
-use App\Http\Requests\BulkPriceUpdateRequest;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 
 class ProductController extends Controller
 {
@@ -25,21 +25,22 @@ class ProductController extends Controller
     {
         $query = Product::query()
             ->with([
-                'sellingUnits' => fn($q) => $q->select('id', 'product_id', 'unit_name', 'unit_code', 'is_default')
+                'productCategory:id,name',
+                'sellingUnits' => fn ($q) => $q->select('id', 'product_id', 'unit_name', 'unit_code', 'is_default')
                     ->where('is_active', true)
                     ->orderBy('display_order'),
-                'warehouses' => fn($q) => $q->select(
-                    'warehouses.id', 
+                'warehouses' => fn ($q) => $q->select(
+                    'warehouses.id',
                     'warehouses.name',
                     'product_warehouse.quantity',
                     'product_warehouse.reserved_quantity',
                     'product_warehouse.available_quantity'
-                )
+                ),
             ])
             ->select([
-                'id', 'name', 'code', 'sku', 'barcode', 'category', 
-                'base_unit', 'base_unit_label', 'selling_price', 
-                'purchase_price', 'is_active', 'image', 'stock_alert_quantity'
+                'id', 'name', 'code', 'sku', 'barcode', 'category', 'category_id',
+                'base_unit', 'base_unit_label', 'selling_price',
+                'purchase_price', 'is_active', 'image', 'stock_alert_quantity',
             ]);
 
         // الفلاتر
@@ -62,7 +63,7 @@ class ProductController extends Controller
 
         // ✅ فلتر المخزون المنخفض
         if ($request->input('low_stock')) {
-            $query->whereHas('warehouses', function($q) {
+            $query->whereHas('warehouses', function ($q) {
                 $q->whereRaw('product_warehouse.quantity <= product_warehouse.min_stock');
             });
         }
@@ -71,10 +72,31 @@ class ProductController extends Controller
         $sortDirection = $request->input('sort_direction', 'desc');
         $query->orderBy($sortBy, $sortDirection);
 
+        // إحصائيات على المجموعة المفلترة: فرعية بمعرفات المنتجات لتجنب إعادة تنفيذ الفلاتر الثقيلة خمس مرات
+        $idSubquery = $query->clone()->select('products.id')->reorder();
+        $statsBase = Product::query()->whereIn('products.id', $idSubquery);
+        $categoryIdKey = $query->getConnection()->getDriverName() === 'sqlite'
+            ? "('id:' || products.category_id)"
+            : 'CONCAT("id:", products.category_id)';
+        $productStats = [
+            'total' => (clone $statsBase)->count(),
+            'active' => (clone $statsBase)->where('products.is_active', true)->count(),
+            'low_stock' => (clone $statsBase)->lowStock()->count(),
+            'out_of_stock' => (clone $statsBase)->outOfStock()->count(),
+            'distinct_categories' => (int) (clone $statsBase)
+                ->selectRaw(
+                    "COUNT(DISTINCT CASE
+                        WHEN products.category IS NOT NULL AND TRIM(products.category) != '' THEN TRIM(products.category)
+                        WHEN products.category_id IS NOT NULL THEN {$categoryIdKey}
+                        ELSE NULL
+                    END) as c"
+                )->value('c'),
+        ];
+
         $perPage = min($request->input('per_page', 20), 100);
         $products = $query->paginate($perPage)->withQueryString();
 
-        return view('products.index', compact('products'));
+        return view('products.index', compact('products', 'productStats'));
     }
 
     /**
@@ -89,10 +111,11 @@ class ProductController extends Controller
                 ->orderBy('name')
                 ->get();
         });
-        
-        $unitsByCategory = $this->productService->getUnitsByCategory();
 
-        return view('products.create', compact('warehouses', 'unitsByCategory'));
+        $unitsByCategory = $this->productService->getUnitsByCategory();
+        $categories = \App\Models\Category::active()->ordered()->get(['id', 'name', 'color', 'icon']);
+
+        return view('products.create', compact('warehouses', 'unitsByCategory', 'categories'));
     }
 
     /**
@@ -112,12 +135,12 @@ class ProductController extends Controller
             Log::error('Product creation failed', [
                 'error' => $e->getMessage(),
                 'data' => $request->validated(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
-            
+
             return back()
                 ->withInput()
-                ->with('error', '❌ حدث خطأ: ' . $e->getMessage());
+                ->with('error', '❌ حدث خطأ: '.$e->getMessage());
         }
     }
 
@@ -128,14 +151,14 @@ class ProductController extends Controller
     {
         // ✅ Eager loading محسّن
         $product->load([
-            'sellingUnits' => fn($q) => $q->ordered(),
-            'warehouses' => fn($q) => $q->select('warehouses.id', 'warehouses.name'),
-            'priceHistory' => fn($q) => $q->orderBy('changed_at', 'desc')->limit(10),
+            'sellingUnits' => fn ($q) => $q->ordered(),
+            'warehouses' => fn ($q) => $q->select('warehouses.id', 'warehouses.name'),
+            'priceHistory' => fn ($q) => $q->orderBy('changed_at', 'desc')->limit(10),
         ]);
 
         // ✅ إحصائيات المخزون
         $stockStats = $this->productService->getStockStatistics($product);
-        
+
         return view('products.show', compact('product', 'stockStats'));
     }
 
@@ -150,10 +173,11 @@ class ProductController extends Controller
                 ->orderBy('name')
                 ->get();
         });
-        
-        $unitsByCategory = $this->productService->getUnitsByCategory();
 
-        return view('products.edit', compact('product', 'warehouses', 'unitsByCategory'));
+        $unitsByCategory = $this->productService->getUnitsByCategory();
+        $categories = \App\Models\Category::active()->ordered()->get(['id', 'name', 'color', 'icon']);
+
+        return view('products.edit', compact('product', 'warehouses', 'unitsByCategory', 'categories'));
     }
 
     /**
@@ -174,10 +198,10 @@ class ProductController extends Controller
                 'error' => $e->getMessage(),
                 'data' => $request->validated(),
             ]);
-            
+
             return back()
                 ->withInput()
-                ->with('error', '❌ حدث خطأ: ' . $e->getMessage());
+                ->with('error', '❌ حدث خطأ: '.$e->getMessage());
         }
     }
 
@@ -191,7 +215,7 @@ class ProductController extends Controller
         try {
             $productName = $product->name;
             $this->productService->deleteProduct($product);
-            
+
             return redirect()
                 ->route('products.index')
                 ->with('success', "✅ تم حذف المنتج '{$productName}' بنجاح!");
@@ -199,10 +223,10 @@ class ProductController extends Controller
         } catch (\Exception $e) {
             Log::error('Product deletion failed', [
                 'product_id' => $product->id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
-            
-            return back()->with('error', '❌ ' . $e->getMessage());
+
+            return back()->with('error', '❌ '.$e->getMessage());
         }
     }
 
@@ -227,7 +251,7 @@ class ProductController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => "✅ تم تحديث {$result['updated_count']} منتج بنجاح!",
-                'data' => $result
+                'data' => $result,
             ]);
 
         } catch (\Exception $e) {
@@ -235,10 +259,10 @@ class ProductController extends Controller
                 'error' => $e->getMessage(),
                 'data' => $request->validated(),
             ]);
-            
+
             return response()->json([
                 'success' => false,
-                'message' => '❌ حدث خطأ: ' . $e->getMessage()
+                'message' => '❌ حدث خطأ: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -249,7 +273,7 @@ class ProductController extends Controller
     public function getCategoriesByUnit(Request $request)
     {
         $request->validate([
-            'base_unit' => 'required|string|max:50'
+            'base_unit' => 'required|string|max:50',
         ]);
 
         try {
@@ -257,13 +281,13 @@ class ProductController extends Controller
 
             return response()->json([
                 'success' => true,
-                'categories' => $categories
+                'categories' => $categories,
             ]);
 
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => $e->getMessage()
+                'message' => $e->getMessage(),
             ], 400);
         }
     }
@@ -275,7 +299,7 @@ class ProductController extends Controller
     {
         $request->validate([
             'base_unit' => 'required|string|max:50',
-            'category' => 'required|string|max:255'
+            'category' => 'required|string|max:255',
         ]);
 
         try {
@@ -287,13 +311,13 @@ class ProductController extends Controller
             return response()->json([
                 'success' => true,
                 'products' => $products,
-                'count' => count($products)
+                'count' => count($products),
             ]);
 
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => $e->getMessage()
+                'message' => $e->getMessage(),
             ], 400);
         }
     }
@@ -305,7 +329,7 @@ class ProductController extends Controller
     {
         $request->validate([
             'base_unit' => 'required|string|max:50',
-            'category' => 'nullable|string|max:255'
+            'category' => 'nullable|string|max:255',
         ]);
 
         try {
@@ -316,13 +340,13 @@ class ProductController extends Controller
 
             return response()->json([
                 'success' => true,
-                'suggestions' => $suggestions
+                'suggestions' => $suggestions,
             ]);
 
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => $e->getMessage()
+                'message' => $e->getMessage(),
             ], 400);
         }
     }
@@ -333,25 +357,30 @@ class ProductController extends Controller
     public function quickSearch(Request $request)
     {
         $request->validate([
-            'q' => 'required|string|min:2|max:100'
+            'q' => 'required|string|min:2|max:100',
         ]);
 
         try {
             $products = Product::search($request->q)
                 ->select('id', 'name', 'code', 'sku', 'barcode', 'selling_price')
-                ->active()
+                ->where(function ($q) {
+                    $q->where('is_active', true)
+                        ->orWhere('status', 'active')
+                        ->orWhere('is_manufactured', true)
+                        ->orWhere('product_type', 'manufactured');
+                })
                 ->limit(10)
                 ->get();
 
             return response()->json([
                 'success' => true,
-                'products' => $products
+                'products' => $products,
             ]);
 
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => $e->getMessage()
+                'message' => $e->getMessage(),
             ], 400);
         }
     }
@@ -365,7 +394,7 @@ class ProductController extends Controller
             'from_warehouse_id' => 'required|exists:warehouses,id',
             'to_warehouse_id' => 'required|exists:warehouses,id|different:from_warehouse_id',
             'quantity' => 'required|numeric|min:0.001',
-            'notes' => 'nullable|string|max:500'
+            'notes' => 'nullable|string|max:500',
         ]);
 
         try {
@@ -379,18 +408,18 @@ class ProductController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => "✅ تم نقل {$request->quantity} من المنتج بنجاح!"
+                'message' => "✅ تم نقل {$request->quantity} من المنتج بنجاح!",
             ]);
 
         } catch (\Exception $e) {
             Log::error('Stock transfer failed', [
                 'product_id' => $product->id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             return response()->json([
                 'success' => false,
-                'message' => '❌ ' . $e->getMessage()
+                'message' => '❌ '.$e->getMessage(),
             ], 400);
         }
     }
@@ -405,13 +434,13 @@ class ProductController extends Controller
                 ->select('id', 'name', 'code', 'sku', 'category', 'selling_price', 'purchase_price')
                 ->get();
 
-            $filename = 'products_' . date('Y-m-d_H-i-s') . '.csv';
+            $filename = 'products_'.date('Y-m-d_H-i-s').'.csv';
             $headers = [
                 'Content-Type' => 'text/csv',
                 'Content-Disposition' => "attachment; filename=\"{$filename}\"",
             ];
 
-            $callback = function() use ($products) {
+            $callback = function () use ($products) {
                 $file = fopen('php://output', 'w');
                 fputcsv($file, ['الكود', 'الاسم', 'SKU', 'التصنيف', 'سعر البيع', 'سعر الشراء', 'المخزون']);
                 foreach ($products as $product) {
@@ -428,7 +457,8 @@ class ProductController extends Controller
 
         } catch (\Exception $e) {
             Log::error('Product export failed', ['error' => $e->getMessage()]);
-            return back()->with('error', '❌ فشل التصدير: ' . $e->getMessage());
+
+            return back()->with('error', '❌ فشل التصدير: '.$e->getMessage());
         }
     }
 
@@ -437,7 +467,8 @@ class ProductController extends Controller
      */
     public function priceHistory(Product $product)
     {
-        $product->load(['priceHistory' => fn($q) => $q->orderBy('changed_at', 'desc')]);
+        $product->load(['priceHistory' => fn ($q) => $q->orderBy('changed_at', 'desc')]);
+
         return view('products.price-history', compact('product'));
     }
 
@@ -452,7 +483,7 @@ class ProductController extends Controller
             $query->where('category', $request->category);
         }
         if ($request->filled('warehouse_id')) {
-            $query->whereHas('warehouses', fn($q) => $q->where('warehouses.id', $request->warehouse_id));
+            $query->whereHas('warehouses', fn ($q) => $q->where('warehouses.id', $request->warehouse_id));
         }
 
         $products = $query->select('id', 'name', 'sku', 'barcode', 'selling_price')
@@ -474,10 +505,10 @@ class ProductController extends Controller
 
         try {
             $priceType = $request->input('price_type', 'selling');
-            $oldPrice = $product->{$priceType . '_price'};
+            $oldPrice = $product->{$priceType.'_price'};
             $newPrice = $request->price;
 
-            $product->update([$priceType . '_price' => $newPrice]);
+            $product->update([$priceType.'_price' => $newPrice]);
 
             $product->priceHistory()->create([
                 'base_unit' => $product->base_unit,
@@ -499,7 +530,7 @@ class ProductController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'حدث خطأ: ' . $e->getMessage(),
+                'message' => 'حدث خطأ: '.$e->getMessage(),
             ], 500);
         }
     }

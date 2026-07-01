@@ -2,12 +2,12 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Database\Eloquent\Builder;
 
 class ManufacturingOrder extends Model
 {
@@ -32,6 +32,7 @@ class ManufacturingOrder extends Model
         'profit_amount',
         'status',
         'warehouse_id',
+        'customer_id',
         'notes',
         'produced_at',
         'created_by',
@@ -67,6 +68,11 @@ class ManufacturingOrder extends Model
     public function warehouse(): BelongsTo
     {
         return $this->belongsTo(Warehouse::class);
+    }
+
+    public function customer(): BelongsTo
+    {
+        return $this->belongsTo(Customer::class);
     }
 
     public function components(): HasMany
@@ -181,7 +187,7 @@ class ManufacturingOrder extends Model
 
         return $query->where(function ($q) use ($search) {
             $q->where('order_number', 'like', "%{$search}%")
-              ->orWhere('product_name', 'like', "%{$search}%");
+                ->orWhere('product_name', 'like', "%{$search}%");
         });
     }
 
@@ -207,7 +213,7 @@ class ManufacturingOrder extends Model
             ->orderBy('id', 'desc')
             ->first();
 
-        if ($lastOrder && preg_match('/MO-' . $year . '-(\d+)/', $lastOrder->order_number, $matches)) {
+        if ($lastOrder && preg_match('/MO-'.$year.'-(\d+)/', $lastOrder->order_number, $matches)) {
             $lastNumber = (int) $matches[1];
             $newNumber = $lastNumber + 1;
         } else {
@@ -244,5 +250,24 @@ class ManufacturingOrder extends Model
     {
         return $this->status === 'confirmed'
             && $this->quantity_produced > 0;
+    }
+
+    /* ===========================
+     * 🔄 DYNAMIC ACCESSORS FOR STOCK SERVICE
+     * =========================== */
+
+    public function getSourceWarehouseIdAttribute(): ?int
+    {
+        return $this->warehouse_id;
+    }
+
+    public function getDestinationWarehouseIdAttribute(): ?int
+    {
+        return $this->warehouse_id;
+    }
+
+    public function getQuantityAttribute(): float
+    {
+        return (float) $this->quantity_produced;
     }
 }

@@ -22,17 +22,23 @@ trait TransferValidationTrait
         }
 
         // التحقق من المخزون لكل منتج
-        foreach ($data['items'] as $item) {
-            $stock = ProductWarehouse::where('warehouse_id', $data['from_warehouse_id'])
-                ->where('product_id', $item['product_id'])
-                ->first();
+        $posSetting = \App\Models\PosSetting::where('default_warehouse_id', $data['from_warehouse_id'])->first()
+            ?? \App\Models\PosSetting::first()
+            ?? \App\Models\PosSetting::getSolo();
 
-            if (!$stock) {
-                throw new Exception("❌ المنتج غير موجود في المخزن المصدر");
-            }
+        if (!$posSetting->allow_negative_stock) {
+            foreach ($data['items'] as $item) {
+                $stock = ProductWarehouse::where('warehouse_id', $data['from_warehouse_id'])
+                    ->where('product_id', $item['product_id'])
+                    ->first();
 
-            if ($stock->quantity < $item['quantity']) {
-                throw new Exception("❌ المخزون غير كافي للمنتج");
+                if (!$stock) {
+                    throw new Exception("❌ المنتج غير موجود في المخزن المصدر");
+                }
+
+                if ($stock->quantity < $item['quantity']) {
+                    throw new \App\Exceptions\InsufficientStockException("❌ المخزون غير كافي للمنتج");
+                }
             }
         }
     }
@@ -55,13 +61,19 @@ trait TransferValidationTrait
         }
 
         // التحقق من المخزون في المخزن الوجهة
-        foreach ($transfer->items as $item) {
-            $stock = ProductWarehouse::where('warehouse_id', $transfer->to_warehouse_id)
-                ->where('product_id', $item->product_id)
-                ->first();
+        $posSetting = \App\Models\PosSetting::where('default_warehouse_id', $transfer->to_warehouse_id)->first()
+            ?? \App\Models\PosSetting::first()
+            ?? \App\Models\PosSetting::getSolo();
 
-            if (!$stock || $stock->quantity < $item->quantity_sent) {
-                throw new Exception("❌ لا يمكن عكس التحويل - مخزون غير كافي في المخزن الوجهة");
+        if (!$posSetting->allow_negative_stock) {
+            foreach ($transfer->items as $item) {
+                $stock = ProductWarehouse::where('warehouse_id', $transfer->to_warehouse_id)
+                    ->where('product_id', $item->product_id)
+                    ->first();
+
+                if (!$stock || $stock->quantity < $item->quantity_sent) {
+                    throw new \App\Exceptions\InsufficientStockException("❌ لا يمكن عكس التحويل - مخزون غير كافي في المخزن الوجهة");
+                }
             }
         }
     }

@@ -870,109 +870,109 @@
         </div>
     </div>
 
-    <!-- ══ Products Table ══ -->
-    <div class="table-card">
+    @php
+        $productsManufactured = $productsManufactured ?? collect();
+        $productsRawMaterial = $productsRawMaterial ?? collect();
+        $productsGeneral = $productsGeneral ?? collect();
+        $woodStocks = $woodStocks ?? collect();
+    @endphp
+
+    <!-- ══ منتجات التصنيع التامة ══ -->
+    @include('warehouses.partials.product-stock-section', [
+        'sectionTitle' => 'منتجات التصنيع التامة',
+        'sectionHint' => 'أصناف جاهزة من التصنيع (منتج مصنع)',
+        'rows' => $productsManufactured,
+        'emptyText' => 'لا توجد منتجات تصنيع في هذا المخزن',
+    ])
+
+    <!-- ══ خامات التصنيع ══ -->
+    @include('warehouses.partials.product-stock-section', [
+        'sectionTitle' => 'منتج خام خامات التصنيع',
+        'sectionHint' => 'خامات مسجلة ومستخدمة في أوامر التصنيع',
+        'rows' => $productsRawMaterial,
+        'emptyText' => 'لا توجد خامات تصنيع في هذا المخزن',
+    ])
+
+    <!-- ══ مخزون الخشب (دفعات) ══ -->
+    <div class="table-card" style="margin-bottom:1.25rem;">
         <div class="table-head">
             <div class="table-head-left">
-                <div class="card-ico purple" style="width:38px;height:38px;border-radius:9px">
+                <div class="card-ico blue" style="width:38px;height:38px;border-radius:9px;background:#eff6ff;color:#1d4ed8;">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width:17px;height:17px">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                              d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+                              d="M4 6a2 2 0 012-2h2l2 4h8a2 2 0 012 2v10a2 2 0 01-2 2H6a2 2 0 01-2-2V6z"/>
                     </svg>
                 </div>
                 <div>
-                    <h3>المنتجات بالمخزن</h3>
+                    <h3>مخزون الخشب</h3>
+                    <p style="font-size:.78rem;color:var(--text-muted);margin-top:4px;">دفعات الخشب المسجلة في هذا المخزن</p>
                 </div>
             </div>
-            <span class="count-pill">{{ $products->count() }} منتج</span>
+            <span class="count-pill">{{ $woodStocks->count() }} دفعة</span>
         </div>
-
         <div class="table-wrap">
             <table>
                 <thead>
                     <tr>
                         <th style="width:48px">#</th>
-                        <th>اسم المنتج</th>
-                        <th>كود المنتج</th>
+                        <th>الصنف</th>
+                        <th>المورد</th>
+                        <th>الأبعاد (سم)</th>
+                        <th>الحجم (م³)</th>
                         <th>الكمية</th>
-                        <th>متوسط التكلفة</th>
-                        <th>القيمة الإجمالية</th>
-                        <th>الحد الأدنى</th>
-                        <th>الحالة</th>
+                        <th>المتبقي (م³)</th>
+                        <th>التكلفة</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @forelse($products as $index => $item)
-                    <tr>
-                        <td style="color:var(--text-muted);font-size:.78rem;font-weight:600">
-                            {{ $index + 1 }}
-                        </td>
-                        <td>
-                            <p class="product-name">{{ $item->product?->name ?? '[محذوف]' }}</p>
-                            @if($item->product && $item->product->category)
-                                <p class="product-cat">{{ $item->product->category }}</p>
-                            @endif
-                        </td>
-                        <td>
-                            <span class="sku-badge">
-                                {{ ($item->product?->code ?? $item->product?->sku) ?? 'N/A' }}
-                            </span>
-                        </td>
-                        <td>
-                            @php
-                                $qtyClass = $item->quantity <= 0
-                                    ? 'zero'
-                                    : ($item->quantity <= ($item->min_stock ?? 0) ? 'low' : 'ok');
-                            @endphp
-                            <span class="qty {{ $qtyClass }}">{{ number_format($item->quantity) }}</span>
-                        </td>
-                        <td style="font-weight:500">
-                            {{ number_format($item->average_cost, 2) }}
-                            <small style="color:var(--text-muted)">ج.م</small>
-                        </td>
-                        <td style="font-weight:700;color:var(--text-primary)">
-                            {{ number_format($item->quantity * $item->average_cost, 2) }}
-                            <small style="color:var(--text-muted)">ج.م</small>
-                        </td>
-                        <td style="font-weight:500">
-                            {{ $item->min_stock ?? '—' }}
-                        </td>
-                        <td>
-                            @if($item->quantity <= 0)
-                                <span class="pill out-of-stock">
-                                    <span class="pdot"></span> غير متوفر
-                                </span>
-                            @elseif($item->quantity <= ($item->min_stock ?? 0))
-                                <span class="pill low-stock">
-                                    <span class="pdot"></span> قريب من النفاد
-                                </span>
-                            @else
-                                <span class="pill available">
-                                    <span class="pdot"></span> متوفر
-                                </span>
-                            @endif
-                        </td>
-                    </tr>
+                    @forelse($woodStocks as $index => $ws)
+                        <tr>
+                            <td style="color:var(--text-muted);font-size:.78rem;font-weight:600">{{ $index + 1 }}</td>
+                            <td>
+                                <p class="product-name">{{ $ws->product?->name ?? '—' }}</p>
+                                @if($ws->purchase_reference)
+                                    <p class="product-cat">مرجع: {{ $ws->purchase_reference }}</p>
+                                @endif
+                            </td>
+                            <td>{{ $ws->supplier?->name ?? '—' }}</td>
+                            <td style="font-weight:600;white-space:nowrap;">
+                                {{ number_format($ws->length_cm, 0) }}×{{ number_format($ws->width_cm, 0) }}×{{ number_format($ws->thickness_cm, 1) }}
+                            </td>
+                            <td>{{ number_format($ws->volume_m3_total, 4) }}</td>
+                            <td><span class="qty ok">{{ number_format($ws->quantity) }}</span></td>
+                            <td><span class="qty {{ $ws->remaining_m3 > 0 ? 'ok' : 'zero' }}">{{ number_format($ws->remaining_m3, 4) }}</span></td>
+                            <td style="font-weight:700">{{ number_format($ws->total_cost, 2) }} <small style="color:var(--text-muted)">ج.م</small></td>
+                        </tr>
                     @empty
-                    <tr>
-                        <td colspan="8">
-                            <div class="empty-state">
-                                <div class="empty-circle">
-                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                                              d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
-                                    </svg>
+                        <tr>
+                            <td colspan="8">
+                                <div class="empty-state">
+                                    <div class="empty-circle">
+                                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                                  d="M4 6a2 2 0 012-2h2l2 4h8a2 2 0 012 2v10a2 2 0 01-2 2H6a2 2 0 01-2-2V6z"/>
+                                        </svg>
+                                    </div>
+                                    <h4>لا يوجد مخزون خشب في هذا المخزن</h4>
+                                    <p>لم تُسجَّل دفعات خشب مرتبطة بهذا الموقع</p>
                                 </div>
-                                <h4>لا توجد منتجات في هذا المخزن</h4>
-                                <p>لم يتم إضافة أي منتجات بعد</p>
-                            </div>
-                        </td>
-                    </tr>
+                            </td>
+                        </tr>
                     @endforelse
                 </tbody>
             </table>
         </div>
     </div>
+
+    @if($productsGeneral->isNotEmpty())
+    <!-- ══ منتجات تجارية وقياسية ══ -->
+    @include('warehouses.partials.product-stock-section', [
+        'sectionTitle' => 'منتجات تجارية وقياسية',
+        'sectionHint' => 'أصناف غير خامات تصنيع وغير منتجات تصنيع تامة',
+        'rows' => $productsGeneral,
+        'emptyText' => 'لا توجد منتجات في هذه الفئة',
+    ])
+    @endif
 
 </div>
 

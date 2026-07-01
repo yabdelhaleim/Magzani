@@ -34,6 +34,9 @@ class SalesInvoice extends Model
         'updated_by',
         'confirmed_by',
         'confirmed_at',
+        'shift_id',
+        'source',
+        'payment_method',
     ];
 
     protected $casts = [
@@ -54,6 +57,11 @@ class SalesInvoice extends Model
     protected $appends = ['remaining'];
 
     // ==================== Relationships ====================
+
+    public function shift()
+    {
+        return $this->belongsTo(PosShift::class, 'shift_id');
+    }
 
     public function customer()
     {

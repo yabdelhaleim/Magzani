@@ -6,19 +6,56 @@ use App\Models\ManufacturingOrder;
 use App\Models\ManufacturingOrderComponent;
 use App\Models\Product;
 use App\Models\RawMaterialTemplate;
-use App\Models\InventoryMovement;
-use App\Models\ProductWarehouse;
+use App\Models\WoodStock;
+use Exception;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Exception;
 
 class ManufacturingOrderService
 {
     public function __construct(
         private InventoryMovementService $inventoryService,
-        private ProductService $productService
+        private ProductService $productService,
+        private WoodStockService $woodStockService
     ) {}
+
+    /**
+     * حجم المكوّن بالسم³: العدد × سمك × عرض × طول (كلها بالسنتيمتر)
+     */
+    private function componentVolumeCm3(array $data): float
+    {
+        return (float) ($data['quantity'] ?? 0)
+            * (float) ($data['thickness_cm'] ?? 0)
+            * (float) ($data['width_cm'] ?? 0)
+            * (float) ($data['length_cm'] ?? 0);
+    }
+
+    /**
+     * سعر المتر المكعب للمكوّن: من الحقل، أو من دفعة الخشب، أو من قالب الخامة بالاسم
+     */
+    private function resolveComponentPricePerM3(array $data): float
+    {
+        $price = (float) ($data['price_per_cubic_meter'] ?? 0);
+        if ($price > 0) {
+            return $price;
+        }
+
+        if (! empty($data['wood_stock_id'])) {
+            $stock = WoodStock::query()->find((int) $data['wood_stock_id']);
+            if ($stock && (float) $stock->unit_cost > 0) {
+                return (float) $stock->unit_cost;
+            }
+        }
+
+        if (! empty($data['component_type'])) {
+            $raw = RawMaterialTemplate::where('name', $data['component_type'])->first();
+
+            return $raw ? (float) $raw->buy_price : 0;
+        }
+
+        return 0;
+    }
 
     /**
      * Create a new manufacturing order
@@ -29,26 +66,13 @@ class ManufacturingOrderService
         return DB::transaction(function () use ($data) {
             $userId = Auth::id();
 
-            // Calculate components total
+            // Calculate components total (م³ × سعر المتر المكعب)
             $componentsTotal = 0;
-            if (!empty($data['components'])) {
+            if (! empty($data['components'])) {
                 foreach ($data['components'] as $componentData) {
-                    $quantity = (float) ($componentData['quantity'] ?? 0);
-                    $thickness = (float) ($componentData['thickness_cm'] ?? 0);
-                    $width = (float) ($componentData['width_cm'] ?? 0);
-                    $length = (float) ($componentData['length_cm'] ?? 0);
-                    $pricePerCubicMeter = (float) ($componentData['price_per_cubic_meter'] ?? 0);
-
-                    if ($pricePerCubicMeter == 0 && !empty($componentData['component_type'])) {
-                        $rawMaterial = RawMaterialTemplate::where('name', $componentData['component_type'])->first();
-                        if ($rawMaterial) {
-                            $pricePerCubicMeter = (float) $rawMaterial->buy_price;
-                        }
-                    }
-
-                    $volumeCm3 = $quantity * $thickness * $width * $length;
-                    $componentCost = ($volumeCm3 / 1000000) * $pricePerCubicMeter;
-                    $componentsTotal += $componentCost;
+                    $volumeCm3 = $this->componentVolumeCm3($componentData);
+                    $pricePerM3 = $this->resolveComponentPricePerM3($componentData);
+                    $componentsTotal += ($volumeCm3 / 1_000_000) * $pricePerM3;
                 }
             }
 
@@ -94,29 +118,23 @@ class ManufacturingOrderService
                 'profit_amount' => $totalProfitAmount,
                 'status' => 'draft',
                 'warehouse_id' => $data['warehouse_id'] ?? null,
+                'customer_id' => $data['customer_id'] ?? null,
                 'notes' => $data['notes'] ?? null,
                 'created_by' => $userId,
                 'updated_by' => $userId,
             ]);
 
             // Create components
-            if (!empty($data['components'])) {
+            if (! empty($data['components'])) {
                 foreach ($data['components'] as $componentData) {
                     $this->addComponent($order, $componentData);
                 }
 
-                // Decrease raw material quantities
-                foreach ($data['components'] as $componentData) {
-                    $rawMaterial = RawMaterialTemplate::where('name', $componentData['component_type'])->first();
-                    if ($rawMaterial) {
-                        $rawMaterial->decrement('quantity', (float) ($componentData['quantity'] ?? 0));
-                    }
-                }
             }
 
             Log::info('Manufacturing order created', [
                 'order_number' => $order->order_number,
-                'product_name' => $order->product_name
+                'product_name' => $order->product_name,
             ]);
 
             return $order->fresh(['components', 'product']);
@@ -128,8 +146,8 @@ class ManufacturingOrderService
      */
     public function updateOrder(ManufacturingOrder $order, array $data): ManufacturingOrder
     {
-        if (!$order->can_edit) {
-            throw new Exception('Cannot update an order that is ' . $order->status);
+        if (! $order->can_edit) {
+            throw new Exception('Cannot update an order that is '.$order->status);
         }
 
         return DB::transaction(function () use ($order, $data) {
@@ -140,22 +158,22 @@ class ManufacturingOrderService
                 $components = $data['components'] ?? $order->components()->get()->toArray();
 
                 foreach ($components as $componentData) {
-                    // If it's an existing component model, use its values; else array
                     if (is_object($componentData)) {
-                        $quantity = (float) $componentData->quantity;
-                        $thickness = (float) $componentData->thickness_cm;
-                        $width = (float) $componentData->width_cm;
-                        $length = (float) $componentData->length_cm;
-                        $pricePerCubicMeter = (float) $componentData->price_per_cubic_meter;
+                        $arr = [
+                            'quantity' => (float) $componentData->quantity,
+                            'thickness_cm' => (float) $componentData->thickness_cm,
+                            'width_cm' => (float) $componentData->width_cm,
+                            'length_cm' => (float) $componentData->length_cm,
+                            'price_per_cubic_meter' => (float) $componentData->price_per_cubic_meter,
+                            'wood_stock_id' => $componentData->wood_stock_id,
+                            'component_type' => $componentData->component_type,
+                        ];
                     } else {
-                        $quantity = (float) ($componentData['quantity'] ?? 0);
-                        $thickness = (float) ($componentData['thickness_cm'] ?? 0);
-                        $width = (float) ($componentData['width_cm'] ?? 0);
-                        $length = (float) ($componentData['length_cm'] ?? 0);
-                        $pricePerCubicMeter = (float) ($componentData['price_per_cubic_meter'] ?? 0);
+                        $arr = $componentData;
                     }
-                    $volumeCm3 = $quantity * $thickness * $width * $length;
-                    $componentsTotal += ($volumeCm3 / 1000000) * $pricePerCubicMeter;
+                    $volumeCm3 = $this->componentVolumeCm3($arr);
+                    $ppm = $this->resolveComponentPricePerM3($arr);
+                    $componentsTotal += ($volumeCm3 / 1_000_000) * $ppm;
                 }
 
                 // Calculate additional total
@@ -209,24 +227,16 @@ class ManufacturingOrderService
      */
     public function addComponent(ManufacturingOrder $order, array $data): ManufacturingOrderComponent
     {
-        // Calculate volume_cm3 = quantity × thickness × width × length
         $quantity = (float) ($data['quantity'] ?? 0);
         $thickness = (float) ($data['thickness_cm'] ?? 0);
         $width = (float) ($data['width_cm'] ?? 0);
         $length = (float) ($data['length_cm'] ?? 0);
-        $pricePerCubicMeter = (float) ($data['price_per_cubic_meter'] ?? 0);
+        $pricePerCubicMeter = $this->resolveComponentPricePerM3($data);
 
-        if ($pricePerCubicMeter == 0 && !empty($data['component_type'])) {
-            $rawMaterial = RawMaterialTemplate::where('name', $data['component_type'])->first();
-            if ($rawMaterial) {
-                $pricePerCubicMeter = (float) $rawMaterial->buy_price;
-            }
-        }
-
-        $volumeCm3 = $quantity * $thickness * $width * $length;
+        $volumeCm3 = $this->componentVolumeCm3($data);
 
         // component_total = (volume_cm3 / 1,000,000) × price_per_cubic_meter
-        $totalCost = ($volumeCm3 / 1000000) * $pricePerCubicMeter;
+        $totalCost = ($volumeCm3 / 1_000_000) * $pricePerCubicMeter;
 
         // Legacy fields to maintain DB compatibility
         $componentName = $data['component_type'] ?? 'مكون';
@@ -236,6 +246,7 @@ class ManufacturingOrderService
 
         return ManufacturingOrderComponent::create([
             'order_id' => $order->id,
+            'wood_stock_id' => ! empty($data['wood_stock_id']) ? (int) $data['wood_stock_id'] : null,
             'component_name' => $componentName,  // legacy
             'component_type' => $data['component_type'] ?? null,
             'quantity' => $quantity,
@@ -256,7 +267,7 @@ class ManufacturingOrderService
      */
     public function confirmOrder(ManufacturingOrder $order): ManufacturingOrder
     {
-        if (!$order->canBeConfirmed()) {
+        if (! $order->canBeConfirmed()) {
             throw new Exception('Order cannot be confirmed. Check status and components.');
         }
 
@@ -265,7 +276,7 @@ class ManufacturingOrderService
         if ($margin < 10) {
             Log::warning('Low profit margin on manufacturing order', [
                 'order_number' => $order->order_number,
-                'margin' => $margin
+                'margin' => $margin,
             ]);
         }
 
@@ -288,15 +299,45 @@ class ManufacturingOrderService
      */
     public function completeOrder(ManufacturingOrder $order, int $warehouseId, ?int $productId = null): ManufacturingOrder
     {
-        if (!$order->canBeCompleted()) {
+        if (! $order->canBeCompleted()) {
             throw new Exception('Order cannot be completed. Must be confirmed first.');
         }
 
-        return DB::transaction(function () use ($order, $warehouseId, $productId) {
+        return DB::transaction(function () use ($order, $warehouseId) {
 
-            // ✅ STEP 1: Prepare product data
+            $order->load(['components.woodStock']);
+
+            foreach ($order->components as $component) {
+                if (! $component->wood_stock_id || ! $component->woodStock) {
+                    continue;
+                }
+
+                $volumePerPalletCm3 = (float) $component->volume_cm3;
+                $volumeTakenCm3 = $volumePerPalletCm3 * (float) $order->quantity_produced;
+
+                $this->woodStockService->dispense($component->woodStock, [
+                    'volume_cm3_taken' => $volumeTakenCm3,
+                    'manufacturing_order_id' => $order->id,
+                    'client_id' => $order->customer_id,
+                    'notes' => 'صرف خشب لإكمال أمر التصنيع '.$order->order_number,
+                    'dispensed_at' => now()->toDateString(),
+                ]);
+            }
+
+            foreach ($order->components as $component) {
+                if ($component->wood_stock_id) {
+                    continue;
+                }
+                $rawMaterial = RawMaterialTemplate::where('name', $component->component_type ?? '')->first();
+                if ($rawMaterial) {
+                    $perPallet = (float) $component->quantity;
+                    $rawMaterial->decrement('quantity', $perPallet * (float) $order->quantity_produced);
+                }
+            }
+
+            // ✅ STEP 1–2: الكتالوج + وحدات البيع متوافقة مع فاتورة المبيعات (سعر/تكلفة من أمر التصنيع)
             $productData = [
-                'name' => $order->product_name,
+                'name' => trim($order->product_name),
                 'product_type' => 'manufactured',
                 'is_manufactured' => true,
                 'base_unit' => 'piece',
@@ -306,16 +347,32 @@ class ManufacturingOrderService
                 'warehouses' => [
                     [
                         'warehouse_id' => $warehouseId,
-                        'quantity' => 0, // Initialize with 0, as we will add the production movement below
+                        'quantity' => 0,
                         'min_stock' => 10,
-                    ]
+                    ],
                 ],
                 'is_active' => true,
             ];
 
-            // ✅ STEP 2: Use ProductService to create/update product
-            // This ensures base units and selling units are created properly
-            $product = $this->productService->createProduct($productData);
+            $existing = $order->product_id ? Product::find($order->product_id) : null;
+            if (! $existing) {
+                $existing = Product::where('name', $productData['name'])->first();
+            }
+
+            if ($existing) {
+                $productData['name'] = $existing->name;
+                $productData['sku'] = $existing->sku;
+                $productData['category'] = $existing->category ?: $productData['category'];
+                $productData['base_unit'] = $existing->base_unit ?: $productData['base_unit'];
+                $productData['product_type'] = 'manufactured';
+                $productData['is_manufactured'] = true;
+                $productData['price_change_reason'] = 'إكمال أمر تصنيع '.$order->order_number;
+
+                $product = $this->productService->updateProduct($existing, $productData);
+                $this->productService->ensureProductWarehousePivot($product, $warehouseId, 10);
+            } else {
+                $product = $this->productService->createProduct($productData);
+            }
 
             // ✅ STEP 3: Record production inventory movement using InventoryMovementService
             $this->inventoryService->recordMovement([
@@ -340,6 +397,12 @@ class ManufacturingOrderService
                 'updated_by' => Auth::id(),
             ]);
 
+            // NOTE: Stock updates are handled by:
+            // - woodStockService->dispense()      → raw wood components (wood_stock table)
+            // - RawMaterialTemplate->decrement()  → other raw materials
+            // - inventoryService->recordMovement() → finished product added to product_warehouse
+            // No additional StockService calls needed here to avoid double-counting.
+
             Log::info('Manufacturing order completed', [
                 'order_number' => $order->order_number,
                 'product_id' => $product->id,
@@ -354,22 +417,22 @@ class ManufacturingOrderService
     /**
      * Cancel a manufacturing order
      */
-    public function cancelOrder(ManufacturingOrder $order, string $reason = null): ManufacturingOrder
+    public function cancelOrder(ManufacturingOrder $order, ?string $reason = null): ManufacturingOrder
     {
-        if (!in_array($order->status, ['draft', 'confirmed'])) {
-            throw new Exception('Cannot cancel an order that is ' . $order->status);
+        if (! in_array($order->status, ['draft', 'confirmed'])) {
+            throw new Exception('Cannot cancel an order that is '.$order->status);
         }
 
         return DB::transaction(function () use ($order, $reason) {
             $order->update([
                 'status' => 'cancelled',
-                'notes' => $order->notes . "\n\nCancelled: " . $reason,
+                'notes' => $order->notes."\n\nCancelled: ".$reason,
                 'updated_by' => Auth::id(),
             ]);
 
             Log::info('Manufacturing order cancelled', [
                 'order_number' => $order->order_number,
-                'reason' => $reason
+                'reason' => $reason,
             ]);
 
             return $order->fresh();
@@ -381,7 +444,7 @@ class ManufacturingOrderService
      */
     public function deleteOrder(ManufacturingOrder $order): void
     {
-        if (!$order->is_draft) {
+        if (! $order->is_draft) {
             throw new Exception('Cannot delete an order that is not in draft status');
         }
 
@@ -401,14 +464,9 @@ class ManufacturingOrderService
         $totalCost = 0;
 
         foreach ($components as $component) {
-            $quantity = (float) ($component['quantity'] ?? 0);
-            $thickness = (float) ($component['thickness_cm'] ?? 0);
-            $width = (float) ($component['width_cm'] ?? 0);
-            $length = (float) ($component['length_cm'] ?? 0);
-            $pricePerCubicMeter = (float) ($component['price_per_cubic_meter'] ?? 0);
-
-            $volumeCm3 = $quantity * $thickness * $width * $length;
-            $totalCost += ($volumeCm3 / 1000000) * $pricePerCubicMeter;
+            $volumeCm3 = $this->componentVolumeCm3($component);
+            $ppm = $this->resolveComponentPricePerM3($component);
+            $totalCost += ($volumeCm3 / 1_000_000) * $ppm;
         }
 
         return [
@@ -425,7 +483,7 @@ class ManufacturingOrderService
             ->where('product_id', $productId)
             ->latest();
 
-        if (!empty($filters['status'])) {
+        if (! empty($filters['status'])) {
             $query->where('status', $filters['status']);
         }
 
@@ -439,11 +497,11 @@ class ManufacturingOrderService
     {
         $query = ManufacturingOrder::query();
 
-        if (!empty($filters['date_from'])) {
+        if (! empty($filters['date_from'])) {
             $query->whereDate('created_at', '>=', $filters['date_from']);
         }
 
-        if (!empty($filters['date_to'])) {
+        if (! empty($filters['date_to'])) {
             $query->whereDate('created_at', '<=', $filters['date_to']);
         }
 

@@ -66,23 +66,6 @@ class WarehouseInboundOrder extends Model
                 $order->order_number = $order->generateOrderNumber();
             }
         });
-
-        static::created(function ($order) {
-            // إنشاء حركة مخزون عند إنشاء الأمر
-            foreach ($order->items as $item) {
-                InventoryMovement::create([
-                    'warehouse_id' => $order->warehouse_id,
-                    'product_id' => $item->product_id,
-                    'quantity' => $item->quantity,
-                    'unit' => $item->unit,
-                    'movement_type' => 'inbound',
-                    'reference_type' => 'WarehouseInboundOrder',
-                    'reference_id' => $order->id,
-                    'notes' => 'أذن إدخال بضاعة رقم: ' . $order->order_number,
-                    'created_by' => $order->created_by,
-                ]);
-            }
-        });
     }
 
     public function scopePending($query)

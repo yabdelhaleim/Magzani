@@ -12,6 +12,10 @@ use Illuminate\Support\Facades\Log;
 
 class ManufacturingCostService
 {
+    public function __construct(
+        private ProductService $productService
+    ) {}
+
     public function calculateCosts(array $data): array
     {
         $components = $data['components'] ?? [];
@@ -184,21 +188,46 @@ class ManufacturingCostService
     public function confirmCost(ManufacturingCost $cost): ManufacturingCost
     {
         return DB::transaction(function () use ($cost) {
+            $productData = [
+                'name' => trim((string) $cost->product_name),
+                'product_type' => 'manufactured',
+                'is_manufactured' => true,
+                'base_unit' => 'piece',
+                'category' => 'Manufactured Products',
+                'purchase_price' => (float) $cost->total_cost,
+                'selling_price' => (float) $cost->final_price,
+                'is_active' => true,
+            ];
+
+            $product = $cost->product_id ? Product::find($cost->product_id) : null;
+            if (! $product && $productData['name'] !== '') {
+                $product = Product::where('name', $productData['name'])->first();
+            }
+
+            if ($product) {
+                $productData['name'] = $product->name;
+                $productData['sku'] = $product->sku;
+                $productData['category'] = $product->category ?: $productData['category'];
+                $productData['base_unit'] = $product->base_unit ?: $productData['base_unit'];
+                $productData['price_change_reason'] = 'تأكيد تكلفة تصنيع #'.$cost->id;
+
+                $product = $this->productService->updateProduct($product, $productData);
+            } else {
+                $product = $this->productService->createProduct($productData);
+            }
+
             $cost->update([
                 'status' => 'confirmed',
+                'product_id' => $product->id,
                 'updated_by' => Auth::id(),
             ]);
 
-            if ($cost->product_id) {
-                $cost->product->update([
-                    'selling_price' => $cost->final_price,
-                    'purchase_price' => $cost->total_cost,
-                ]);
-            }
-
             $this->clearCache();
 
-            Log::info('Manufacturing cost confirmed', ['id' => $cost->id]);
+            Log::info('Manufacturing cost confirmed', [
+                'id' => $cost->id,
+                'product_id' => $product->id,
+            ]);
 
             return $cost->fresh();
         });

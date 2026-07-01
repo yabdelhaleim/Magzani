@@ -26,6 +26,7 @@ class InventoryMovement extends Model
         
         // ✅ التكاليف والأسعار
         'unit_cost',
+        'unit_cost_snapshot',
         'unit_price',
         'total_cost',
         'total_price',
@@ -53,6 +54,7 @@ class InventoryMovement extends Model
         'quantity_before' => 'decimal:3',
         'quantity_after' => 'decimal:3',
         'unit_cost' => 'decimal:2',
+        'unit_cost_snapshot' => 'decimal:4',
         'unit_price' => 'decimal:2',
         'total_cost' => 'decimal:2',
         'total_price' => 'decimal:2',

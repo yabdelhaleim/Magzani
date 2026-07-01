@@ -36,11 +36,13 @@ class PurchaseReturnItem extends Model
         return $this->belongsTo(Product::class);
     }
 
-    /**
-     * Get the purchase invoice item
-     */
     public function purchaseInvoiceItem()
     {
         return $this->belongsTo(PurchaseInvoiceItem::class, 'purchase_invoice_item_id');
+    }
+
+    public function getQuantityAttribute()
+    {
+        return $this->quantity_returned;
     }
 }

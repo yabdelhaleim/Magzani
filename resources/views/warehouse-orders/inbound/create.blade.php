@@ -3,30 +3,28 @@
 @section('title', 'إنشاء أذن إدخال بضاعة')
 
 @section('content')
-<div class="container-fluid px-4"
+<div class="wo-warehouse-order-page container-fluid px-2 px-md-4 pb-4"
      id="inbound-create-root"
      data-stock-url="{{ route('warehouse-orders.stock-preview') }}">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h1 class="h3 mb-0">
-                <i class="fas fa-arrow-down text-success"></i>
-                إنشاء أذن إدخال بضاعة
-            </h1>
-        </div>
-        <a href="{{ route('warehouse-orders.inbound.index') }}" class="btn btn-outline-secondary">
-            <i class="fas fa-arrow-right"></i>
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+        <h1 class="h3 mb-0 flex-grow-1" style="min-width: 0;">
+            <i class="fas fa-arrow-down text-success ms-1"></i>
+            إنشاء أذن إدخال بضاعة
+        </h1>
+        <a href="{{ route('warehouse-orders.inbound.index') }}" class="btn btn-outline-secondary flex-shrink-0">
+            <i class="fas fa-arrow-right ms-1"></i>
             رجوع
         </a>
     </div>
 
-    <div class="row">
-        <div class="col-lg-8">
+    <div class="row g-4">
+        <div class="col-12 col-lg-8 order-2 order-lg-1">
             <form method="POST" action="{{ route('warehouse-orders.inbound.store') }}" id="inbound-store-form">
                 @csrf
 
                 @if ($errors->any())
                 <div class="alert alert-danger mb-3" role="alert">
-                    <ul class="mb-0 ps-3 small">
+                    <ul class="mb-0 pe-3 small">
                         @foreach ($errors->all() as $error)
                             <li>{{ $error }}</li>
                         @endforeach
@@ -92,10 +90,10 @@
                 <div class="card-body">
                     <div id="items-container">
                         <!-- الصف الأول -->
-                        <div class="item-row card mb-3">
+                        <div class="item-row card mb-3 border shadow-sm">
                             <div class="card-body">
-                                <div class="row align-items-end">
-                                    <div class="col-md-4 mb-2">
+                                <div class="row g-3 align-items-end">
+                                    <div class="col-12 col-lg-5">
                                         <label class="form-label">الصنف <span class="text-danger">*</span></label>
                                         <select name="items[0][product_id]" class="form-select product-select" required>
                                             <option value="">اختر الصنف</option>
@@ -107,33 +105,34 @@
                                             @endforeach
                                         </select>
                                     </div>
-                                    <div class="col-md-2 mb-2">
+                                    <div class="col-6 col-md-3 col-lg-2">
                                         <label class="form-label">الكمية <span class="text-danger">*</span></label>
                                         <input type="number" name="items[0][quantity]" class="form-control qty-input"
                                                step="0.001" min="0.001" required>
                                     </div>
-                                    <div class="col-md-2 mb-2">
+                                    <div class="col-6 col-md-3 col-lg-2">
                                         <label class="form-label">الوحدة <span class="text-danger">*</span></label>
                                         <input type="text" name="items[0][unit]" class="form-control" required>
                                     </div>
-                                    <div class="col-md-2 mb-2">
+                                    <div class="col-6 col-md-3 col-lg-2">
                                         <label class="form-label">تكلفة الوحدة</label>
                                         <input type="number" name="items[0][unit_cost]" class="form-control unit-cost-input"
                                                step="0.01" min="0" placeholder="0.00">
                                     </div>
-                                    <div class="col-md-2 mb-2">
-                                        <button type="button" class="btn btn-danger w-100 remove-item">
+                                    <div class="col-6 col-md-3 col-lg-1 d-grid">
+                                        <label class="form-label d-none d-md-block">&nbsp;</label>
+                                        <button type="button" class="btn btn-danger remove-item" title="حذف الصنف">
                                             <i class="fas fa-trash"></i>
                                         </button>
                                     </div>
                                 </div>
-                                <div class="row mt-2 align-items-center">
-                                    <div class="col-md-6">
+                                <div class="row mt-3 align-items-center gy-2">
+                                    <div class="col-12 col-md-6">
                                         <small class="text-muted">الكمية في المخزن:
                                             <strong class="stock-qty-display">—</strong>
                                             <span class="stock-system-total-hint text-muted d-none ms-1"></span></small>
                                     </div>
-                                    <div class="col-md-6 text-md-end">
+                                    <div class="col-12 col-md-6 text-md-start">
                                         <small class="text-muted">إجمالي التكلفة:
                                             <strong class="line-total-display">0.00</strong></small>
                                     </div>
@@ -157,15 +156,15 @@
 
             <div class="card border-0 shadow-sm mt-4">
                 <div class="card-body">
-                    <div class="d-flex justify-content-between">
-                        <a href="{{ route('warehouse-orders.inbound.index') }}" class="btn btn-outline-secondary">
-                            <i class="fas fa-times"></i>
-                            إلغاء
-                        </a>
+                    <div class="d-flex flex-wrap gap-2 justify-content-between align-items-center">
                         <button type="submit" class="btn btn-success">
-                            <i class="fas fa-save"></i>
+                            <i class="fas fa-save ms-1"></i>
                             حفظ الأذن
                         </button>
+                        <a href="{{ route('warehouse-orders.inbound.index') }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-times ms-1"></i>
+                            إلغاء
+                        </a>
                     </div>
                 </div>
             </div>
@@ -173,7 +172,7 @@
             </form>
         </div>
 
-        <div class="col-lg-4">
+        <div class="col-12 col-lg-4 order-1 order-lg-2">
             <div class="card border-0 shadow-sm">
                 <div class="card-header bg-white">
                     <h5 class="mb-0">
@@ -299,10 +298,10 @@
     document.getElementById('add-item').addEventListener('click', function () {
         const container = document.getElementById('items-container');
         const template = `
-        <div class="item-row card mb-3">
+        <div class="item-row card mb-3 border shadow-sm">
             <div class="card-body">
-                <div class="row align-items-end">
-                    <div class="col-md-4 mb-2">
+                <div class="row g-3 align-items-end">
+                    <div class="col-12 col-lg-5">
                         <label class="form-label">الصنف <span class="text-danger">*</span></label>
                         <select name="items[${itemCount}][product_id]" class="form-select product-select" required>
                             <option value="">اختر الصنف</option>
@@ -313,33 +312,34 @@
                             @endforeach
                         </select>
                     </div>
-                    <div class="col-md-2 mb-2">
+                    <div class="col-6 col-md-3 col-lg-2">
                         <label class="form-label">الكمية <span class="text-danger">*</span></label>
                         <input type="number" name="items[${itemCount}][quantity]" class="form-control qty-input"
                                step="0.001" min="0.001" required>
                     </div>
-                    <div class="col-md-2 mb-2">
+                    <div class="col-6 col-md-3 col-lg-2">
                         <label class="form-label">الوحدة <span class="text-danger">*</span></label>
                         <input type="text" name="items[${itemCount}][unit]" class="form-control" required>
                     </div>
-                    <div class="col-md-2 mb-2">
+                    <div class="col-6 col-md-3 col-lg-2">
                         <label class="form-label">تكلفة الوحدة</label>
                         <input type="number" name="items[${itemCount}][unit_cost]" class="form-control unit-cost-input"
                                step="0.01" min="0" placeholder="0.00">
                     </div>
-                    <div class="col-md-2 mb-2">
-                        <button type="button" class="btn btn-danger w-100 remove-item">
+                    <div class="col-6 col-md-3 col-lg-1 d-grid">
+                        <label class="form-label d-none d-md-block">&nbsp;</label>
+                        <button type="button" class="btn btn-danger remove-item" title="حذف الصنف">
                             <i class="fas fa-trash"></i>
                         </button>
                     </div>
                 </div>
-                <div class="row mt-2 align-items-center">
-                    <div class="col-md-6">
+                <div class="row mt-3 align-items-center gy-2">
+                    <div class="col-12 col-md-6">
                         <small class="text-muted">الكمية في المخزن:
                             <strong class="stock-qty-display">—</strong>
                             <span class="stock-system-total-hint text-muted d-none ms-1"></span></small>
                     </div>
-                    <div class="col-md-6 text-md-end">
+                    <div class="col-12 col-md-6 text-md-start">
                         <small class="text-muted">إجمالي التكلفة:
                             <strong class="line-total-display">0.00</strong></small>
                     </div>

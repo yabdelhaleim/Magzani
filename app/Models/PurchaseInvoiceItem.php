@@ -2,8 +2,8 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class PurchaseInvoiceItem extends Model
@@ -13,6 +13,9 @@ class PurchaseInvoiceItem extends Model
     protected $fillable = [
         'purchase_invoice_id',
         'product_id',
+        'storage_type',
+        'tilde_number',
+        'tilde_details',
         'purchase_unit_id',
         'quantity',
         'base_quantity',
@@ -46,6 +49,7 @@ class PurchaseInvoiceItem extends Model
         'tax_amount' => 'decimal:2',
         'subtotal' => 'decimal:2',
         'total' => 'decimal:2',
+        'tilde_details' => 'array',
     ];
 
     // ==================== Relationships ====================
@@ -59,50 +63,50 @@ class PurchaseInvoiceItem extends Model
     {
         return $this->belongsTo(Product::class);
     }
-    
+
     public function purchaseUnit(): BelongsTo
     {
         return $this->belongsTo(ProductSellingUnit::class, 'purchase_unit_id');
     }
-    
+
     // ==================== Accessors ====================
-    
+
     public function getSubtotalAttribute(): float
     {
         if (isset($this->attributes['subtotal'])) {
             return (float) $this->attributes['subtotal'];
         }
-        
+
         return round($this->quantity * $this->unit_price, 2);
     }
-    
+
     // ==================== Methods ====================
-    
+
     public function calculateBaseQuantity(): float
     {
-        $factor = $this->purchaseUnit?->conversion_factor 
-            ?? $this->conversion_factor 
+        $factor = $this->purchaseUnit?->conversion_factor
+            ?? $this->conversion_factor
             ?? 1;
-        
+
         return round($this->quantity * $factor, 3);
     }
-    
+
     // ==================== Events ====================
-    
+
     protected static function boot()
     {
         parent::boot();
 
         static::saving(function ($item) {
-            if (!$item->base_quantity && $item->purchase_unit_id) {
+            if (! $item->base_quantity && $item->purchase_unit_id) {
                 $item->base_quantity = $item->calculateBaseQuantity();
             }
 
-            if (!$item->subtotal) {
+            if (! $item->subtotal) {
                 $item->subtotal = round($item->quantity * $item->unit_price, 2);
             }
 
-            if (!isset($item->total)) {
+            if (! isset($item->total)) {
                 $discount = $item->discount_amount ?? 0;
                 $tax = $item->tax_amount ?? 0;
                 $item->total = round($item->subtotal - $discount + $tax, 2);

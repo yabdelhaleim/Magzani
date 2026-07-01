@@ -379,6 +379,10 @@
                 <span class="info-value">{{ $manufacturingOrder->warehouse->name ?? '-' }}</span>
             </div>
             <div class="info-row">
+                <span class="info-label">العميل (تتبع الخشب):</span>
+                <span class="info-value">{{ optional($manufacturingOrder->customer)->name ?? '—' }}</span>
+            </div>
+            <div class="info-row">
                 <span class="info-label">العدد المنتج:</span>
                 <span class="info-value">{{ number_format($manufacturingOrder->quantity_produced, 2) }}</span>
             </div>
@@ -406,24 +410,40 @@
                 <table class="mfg-table">
                     <thead>
                         <tr>
+                            <th>دفعة الخشب</th>
                             <th>النوع</th>
-                            <th>السمك</th>
-                            <th>العرض</th>
-                            <th>الطول</th>
+                            <th>الأبعاد (سم)</th>
                             <th>العدد</th>
-                            <th>السعر</th>
+                            <th>م³</th>
+                            <th>م²</th>
+                            <th>ج.م/م³</th>
                             <th>التكلفة</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach($manufacturingOrder->components as $component)
+                        @php
+                            $vM3 = ($component->volume_cm3 ?? 0) / 1_000_000;
+                            $tM = ((float) $component->thickness_cm) / 100;
+                            $m2 = $tM > 0 ? $vM3 / $tM : 0;
+                        @endphp
                         <tr>
+                            <td>
+                                @if($component->woodStock)
+                                    <a href="{{ route('manufacturing.wood-stocks.index') }}" style="color:var(--tf-indigo); font-weight:700;" title="مخزون الخشب">
+                                        #{{ $component->wood_stock_id }}
+                                    </a>
+                                    <div style="font-size:11px;color:var(--tf-text-m);">{{ $component->woodStock->supplier?->name ?? '—' }}</div>
+                                @else
+                                    —
+                                @endif
+                            </td>
                             <td>{{ $component->component_type }}</td>
-                            <td>{{ number_format($component->thickness_cm, 1) }} سم</td>
-                            <td>{{ number_format($component->width_cm, 1) }} سم</td>
-                            <td>{{ number_format($component->length_cm, 2) }} م</td>
+                            <td>{{ number_format($component->thickness_cm, 1) }}×{{ number_format($component->width_cm, 1) }}×{{ number_format($component->length_cm, 1) }}</td>
                             <td>{{ number_format($component->quantity) }}</td>
-                            <td>{{ number_format($component->price_per_cubic_meter, 2) }} ج.م</td>
+                            <td>{{ number_format($vM3, 4) }}</td>
+                            <td>{{ number_format($m2, 4) }}</td>
+                            <td>{{ number_format($component->price_per_cubic_meter, 2) }}</td>
                             <td><strong>{{ number_format($component->total_cost, 2) }} ج.م</strong></td>
                         </tr>
                         @endforeach
@@ -532,6 +552,7 @@
                             <th>دفعة الخشب</th>
                             <th>الأبعاد</th>
                             <th>الكمية (م³)</th>
+                            <th>المساحة (م²)</th>
                             <th>الموظف</th>
                             <th>العميل</th>
                             <th>ملاحظات</th>
@@ -559,6 +580,14 @@
                             </td>
                             <td>
                                 <strong>{{ number_format($dispensing->volume_cm3_taken / 1000000, 4) }}</strong> م³
+                            </td>
+                            <td>
+                                @php
+                                    $dM3 = $dispensing->volume_cm3_taken / 1_000_000;
+                                    $dThM = $dispensing->woodStock ? ((float) $dispensing->woodStock->thickness_cm) / 100 : 0;
+                                    $dM2 = $dThM > 0 ? $dM3 / $dThM : 0;
+                                @endphp
+                                <strong>{{ number_format($dM2, 4) }}</strong> م²
                             </td>
                             <td>{{ $dispensing->user?->name ?? '-' }}</td>
                             <td>{{ $dispensing->client?->name ?? '-' }}</td>
@@ -590,6 +619,17 @@
                     <i class="fas fa-check-double"></i> إكمال التصنيع
                 </button>
             </form>
+        @endif
+
+        @if($manufacturingOrder->status === 'completed' && $manufacturingOrder->product_id)
+            <a href="{{ route('invoices.sales.create', array_filter([
+                'customer_id' => $manufacturingOrder->customer_id,
+                'warehouse_id' => $manufacturingOrder->warehouse_id,
+                'product_id' => $manufacturingOrder->product_id,
+                'quantity' => $manufacturingOrder->quantity_produced,
+            ])) }}" class="btn btn-green btn-block" style="background: linear-gradient(135deg, #0faa7e, #0a8f68);">
+                <i class="fas fa-file-invoice-dollar"></i> فاتورة بيع — تعبئة من أمر التصنيع
+            </a>
         @endif
 
         <a href="{{ route('manufacturing-orders.edit', $manufacturingOrder->id) }}" class="btn btn-primary btn-block">

@@ -26,7 +26,7 @@
                     <i class="fas fa-arrow-right ml-2"></i>
                     العودة للخلف
                 </a>
-                <a href="{{ route('dashboard') }}" class="block w-full py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold transition">
+                <a href="{{ url('/') }}" class="block w-full py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold transition">
                     <i class="fas fa-home ml-2"></i>
                     الرئيسية
                 </a>

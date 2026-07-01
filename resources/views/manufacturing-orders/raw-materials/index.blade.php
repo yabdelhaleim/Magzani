@@ -119,6 +119,7 @@
                     <tr>
                         <th>#</th>
                         <th>اسم الخامة</th>
+                        <th>المخزن</th>
                         <th>الكمية</th>
                         <th>سعر الشراء</th>
                         <th>سعر البيع</th>
@@ -135,6 +136,15 @@
                                style="color:var(--tf-indigo); font-weight:700; text-decoration:none;">
                                 {{ $template->name }}
                             </a>
+                        </td>
+                        <td data-label="المخزن">
+                            @if($template->warehouse)
+                                <a href="{{ route('warehouses.show', $template->warehouse_id) }}" style="color:var(--tf-text-b); font-weight:600;">
+                                    {{ $template->warehouse->name }}
+                                </a>
+                            @else
+                                <span style="color:var(--tf-text-m);">—</span>
+                            @endif
                         </td>
                         <td data-label="الكمية">{{ number_format($template->quantity) }}</td>
                         <td data-label="سعر الشراء">{{ number_format($template->buy_price, 2) }} ج.م</td>
@@ -155,7 +165,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="7" style="text-align:center; padding:40px; color:var(--tf-text-m);">
+                        <td colspan="8" style="text-align:center; padding:40px; color:var(--tf-text-m);">
                             <i class="fas fa-inbox" style="font-size:32px; display:block; margin-bottom:10px;"></i>
                             لا توجد خامات بعد
                         </td>

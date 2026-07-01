@@ -457,9 +457,11 @@
             <p>
                 <strong style="color:var(--tf-green);">المكونات التي تدخلها هي للبالة الواحدة فقط.</strong>
                 <br>
-                مثال: لو منتِج <strong>50 بالة</strong>، كل بالة هتاخد نفس المكونات اللي هتدخلها بالأسود.
+                <strong>الخشب:</strong> الأبعاد بالسنتيمتر — الحجم = الطول × العرض × السمك × العدد → يُحسب بالـ <strong>م³</strong>، والتكلفة = المتر المكعب × سعر المتر المكعب (من دفعة المخزون أو من سعر خامة القالب).
                 <br>
-                <span style="color:var(--tf-text-m); font-size:12px;">النظام هيتولى حساب الإجمالي تلقائياً: (تكلفة البالة × عدد البالات)</span>
+                <strong>المساحة (م²):</strong> تُشتق من الحجم والسمك (للعرض على الطلبيات).
+                <br>
+                <span style="color:var(--tf-text-m); font-size:12px;">عند <strong>إكمال</strong> أمر التصنيع يُصرف الخشب من الدفعة المختارة ويُسجَّل للعميل المحدد (إن وُجد) في سجل الصرف.</span>
             </p>
         </div>
     </div>
@@ -498,10 +500,19 @@
                     </div>
                     <div class="form-group">
                         <label class="form-label">المستودع</label>
-                        <select name="warehouse_id" class="form-control">
+                        <select name="warehouse_id" id="warehouse_id" class="form-control" onchange="refreshAllWoodStockSelects()">
                             <option value="">-- اختر المستودع --</option>
                             @foreach($warehouses as $warehouse)
                             <option value="{{ $warehouse->id }}">{{ $warehouse->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">العميل <span style="font-weight:500;color:var(--tf-text-m);">(لتتبع صرف الخشب)</span></label>
+                        <select name="customer_id" class="form-control">
+                            <option value="">— اختياري —</option>
+                            @foreach($customers as $customer)
+                            <option value="{{ $customer->id }}">{{ $customer->name }}@if($customer->phone) — {{ $customer->phone }}@endif</option>
                             @endforeach
                         </select>
                     </div>
@@ -536,6 +547,8 @@
                 <div style="background:linear-gradient(135deg, #e3f2fd, #f3e5f5); padding:12px 16px; border-radius:12px; margin-bottom:16px; border-left:4px solid var(--tf-indigo);">
                     <div style="font-size:13px; color:var(--tf-text-h);">
                         <strong>ملاحظة هامة:</strong> المكونات أدناه تمثل الخامات اللازمة لـ <strong>بالة واحدة</strong> فقط.
+                        <br>
+                        <span style="color:var(--tf-text-m);">عند اختيار <strong>المستودع</strong> تُصفّى قائمة <strong>دفعات الخشب</strong> لتظهر دفعات هذا الموقع فقط (مع الإبقاء على الدفعة المختارة إن كانت من موقع آخر).</span>
                     </div>
                 </div>
 
@@ -547,13 +560,15 @@
                     <table class="mfg-table" id="components-table">
                         <thead>
                             <tr>
-                                <th>النوع</th>
+                                <th>دفعة الخشب</th>
+                                <th>نوع الخام</th>
                                 <th>السمك (سم)</th>
                                 <th>العرض (سم)</th>
-                                <th>الطول (م)</th>
+                                <th>الطول (سم)</th>
                                 <th>العدد</th>
-                                <th>سعر الشراء</th>
-                                <th>سعر البيع</th>
+                                <th>م³</th>
+                                <th>م²</th>
+                                <th>ج.م/م³</th>
                                 <th>التكلفة</th>
                                 <th>إجراء</th>
                             </tr>
@@ -690,55 +705,130 @@
 </div>
 
 <script>
-let componentIndex = 0;
+window.MAGZANI_WOOD_LOTS = @json($woodLots ?? []);
 let additionalIndex = 0;
 
+function getFilteredWoodLots() {
+    const wid = document.getElementById('warehouse_id')?.value || '';
+    const lots = window.MAGZANI_WOOD_LOTS || [];
+    if (!wid) return lots;
+    return lots.filter(function (l) {
+        return String(l.warehouse_id) === String(wid);
+    });
+}
+
+function woodStockSelectOptionsHtml(selectedId) {
+    selectedId = selectedId ? String(selectedId) : '';
+    const filtered = getFilteredWoodLots();
+    const all = window.MAGZANI_WOOD_LOTS || [];
+    let html = '<option value="">— بدون دفعة (سعر من نوع الخام) —</option>';
+    filtered.forEach(function (l) {
+        const sel = String(l.id) === selectedId ? ' selected' : '';
+        html += '<option value="' + l.id + '" data-unit-cost="' + l.unit_cost + '"' + sel + '>' + (l.label || ('#' + l.id)) + '</option>';
+    });
+    if (selectedId && !filtered.some(function (l) { return String(l.id) === selectedId; })) {
+        const orphan = all.find(function (l) { return String(l.id) === selectedId; });
+        if (orphan) {
+            html += '<option value="' + orphan.id + '" data-unit-cost="' + orphan.unit_cost + '" selected>(مستودع آخر) ' + (orphan.label || ('#' + orphan.id)) + '</option>';
+        }
+    }
+    return html;
+}
+
+function refreshAllWoodStockSelects() {
+    document.querySelectorAll('#components-body tr').forEach(function (row) {
+        const sel = row.querySelector('.wood-stock-select');
+        if (!sel) return;
+        const cur = sel.value;
+        sel.innerHTML = woodStockSelectOptionsHtml(cur);
+        syncPriceHiddenFromRow(row);
+    });
+    recalculateAll();
+}
+
 function addComponent() {
-    componentIndex++;
     const tbody = document.getElementById('components-body');
+    const idx = tbody.querySelectorAll('tr').length;
 
     const row = document.createElement('tr');
     row.innerHTML = `
-        <td data-label="النوع">
-            <select name="components[${componentIndex}][component_type]" class="form-control component-type-select" style="padding:8px 30px;" onchange="onComponentTypeChange(this)">
+        <td data-label="دفعة الخشب">
+            <select name="components[${idx}][wood_stock_id]" class="form-control wood-stock-select" style="padding:8px 12px;" onchange="onWoodStockChange(this)">
+                ${woodStockSelectOptionsHtml('')}
+            </select>
+        </td>
+        <td data-label="نوع الخام">
+            <select name="components[${idx}][component_type]" class="form-control component-type-select" style="padding:8px 12px;" onchange="onComponentTypeChange(this)">
                 <option value="" disabled selected>النوع</option>
                 @foreach($rawMaterials as $material)
                 <option value="{{ $material->name }}" data-buy-price="{{ $material->buy_price }}" data-sale-price="{{ $material->sale_price }}">{{ $material->name }}</option>
                 @endforeach
             </select>
         </td>
-        <td data-label="السمك (سم)"><input type="number" name="components[${componentIndex}][thickness_cm]" class="input-sm" step="0.1" placeholder="2.5" oninput="recalculateAll()"></td>
-        <td data-label="العرض (سم)"><input type="number" name="components[${componentIndex}][width_cm]" class="input-sm" step="0.1" placeholder="12" oninput="recalculateAll()"></td>
-        <td data-label="الطول (م)"><input type="number" name="components[${componentIndex}][length_cm]" class="input-sm" step="0.01" placeholder="4.00" oninput="recalculateAll()"></td>
-        <td data-label="العدد"><input type="number" name="components[${componentIndex}][quantity]" class="input-sm" value="1" oninput="recalculateAll()"></td>
-        <td data-label="سعر الشراء"><span class="buy-price-display">-</span></td>
-        <td data-label="سعر البيع"><span class="sale-price-display">-</span></td>
+        <td data-label="السمك (سم)"><input type="number" name="components[${idx}][thickness_cm]" class="input-sm" step="0.1" placeholder="2.5" oninput="recalculateAll()"></td>
+        <td data-label="العرض (سم)"><input type="number" name="components[${idx}][width_cm]" class="input-sm" step="0.1" placeholder="12" oninput="recalculateAll()"></td>
+        <td data-label="الطول (سم)"><input type="number" name="components[${idx}][length_cm]" class="input-sm" step="0.1" placeholder="400" oninput="recalculateAll()"></td>
+        <td data-label="العدد"><input type="number" name="components[${idx}][quantity]" class="input-sm" value="1" min="0.0001" step="any" oninput="recalculateAll()"></td>
+        <td data-label="م³"><span class="vol-m3-display">0</span></td>
+        <td data-label="م²"><span class="vol-m2-display">0</span></td>
+        <td data-label="ج.م/م³">
+            <span class="price-m3-readout">0</span>
+            <input type="hidden" class="price-per-m3-hidden" name="components[${idx}][price_per_cubic_meter]" value="0">
+        </td>
         <td data-label="التكلفة"><span class="cost-display">0.00</span></td>
-        <td data-label="إجراء"><button type="button" class="remove-btn" onclick="removeComponent(${componentIndex}, this)"><i class="fas fa-trash"></i></button></td>
+        <td data-label="إجراء"><button type="button" class="remove-btn" onclick="removeComponent(this)"><i class="fas fa-trash"></i></button></td>
     `;
     tbody.appendChild(row);
 }
 
+function syncPriceHiddenFromRow(row) {
+    const woodSel = row.querySelector('.wood-stock-select');
+    const typeSel = row.querySelector('.component-type-select');
+    const hidden = row.querySelector('.price-per-m3-hidden');
+    const readout = row.querySelector('.price-m3-readout');
+    let p = 0;
+    if (woodSel && woodSel.value) {
+        const o = woodSel.options[woodSel.selectedIndex];
+        p = parseFloat(o?.dataset?.unitCost) || 0;
+    } else if (typeSel && typeSel.value) {
+        const o = typeSel.options[typeSel.selectedIndex];
+        p = parseFloat(o?.dataset?.buyPrice) || 0;
+    }
+    if (hidden) hidden.value = p > 0 ? p.toFixed(4) : '0';
+    if (readout) readout.textContent = p > 0 ? p.toFixed(2) : '0';
+}
+
+function onWoodStockChange(select) {
+    const row = select.closest('tr');
+    syncPriceHiddenFromRow(row);
+    recalculateAll();
+}
+
 function onComponentTypeChange(select) {
     const row = select.closest('tr');
-    const option = select.options[select.selectedIndex];
-    const buyDisplay = row.querySelector('.buy-price-display');
-    const saleDisplay = row.querySelector('.sale-price-display');
-    if (option && option.dataset.buyPrice) {
-        buyDisplay.textContent = parseFloat(option.dataset.buyPrice).toFixed(2) + ' ج.م';
-        saleDisplay.textContent = parseFloat(option.dataset.salePrice).toFixed(2) + ' ج.م';
-    } else {
-        buyDisplay.textContent = '-';
-        saleDisplay.textContent = '-';
+    const woodSel = row.querySelector('.wood-stock-select');
+    if (woodSel && !woodSel.value) {
+        syncPriceHiddenFromRow(row);
     }
     recalculateAll();
 }
 
-function removeComponent(index, btn) {
+function removeComponent(btn) {
     const row = btn.closest('tr');
     if (row) row.remove();
 
+    reindexComponentRows();
     recalculateAll();
+}
+
+function reindexComponentRows() {
+    const tbody = document.getElementById('components-body');
+    if (!tbody) return;
+    tbody.querySelectorAll('tr').forEach(function (row, idx) {
+        row.querySelectorAll('[name^="components["]').forEach(function (el) {
+            el.name = el.name.replace(/components\[\d+]/, 'components[' + idx + ']');
+        });
+    });
 }
 
 function addAdditionalComponent() {
@@ -767,16 +857,24 @@ function recalculateAll() {
     let woodCost = 0;
     let additionalTableCost = 0;
 
-    // Calculate wood components
     document.querySelectorAll('#components-body tr').forEach(row => {
-        const inputs = row.querySelectorAll('input');
-        const length = parseFloat(inputs[2]?.value) || 0;
-        const quantity = parseFloat(inputs[3]?.value) || 0;
-        const select = row.querySelector('.component-type-select');
-        const option = select?.options[select.selectedIndex];
-        const price = parseFloat(option?.dataset?.buyPrice) || 0;
-        const cost = length * quantity * price;
+        syncPriceHiddenFromRow(row);
+        const t = parseFloat(row.querySelector('[name*="[thickness_cm]"]')?.value) || 0;
+        const w = parseFloat(row.querySelector('[name*="[width_cm]"]')?.value) || 0;
+        const l = parseFloat(row.querySelector('[name*="[length_cm]"]')?.value) || 0;
+        const q = parseFloat(row.querySelector('[name*="[quantity]"]')?.value) || 0;
+        const volCm3 = t * w * l * q;
+        const volM3 = volCm3 / 1000000;
+        const thicknessM = t / 100;
+        const m2 = thicknessM > 0 ? volM3 / thicknessM : 0;
+        const price = parseFloat(row.querySelector('.price-per-m3-hidden')?.value) || 0;
+        const cost = volM3 * price;
         woodCost += cost;
+
+        const m3el = row.querySelector('.vol-m3-display');
+        const m2el = row.querySelector('.vol-m2-display');
+        if (m3el) m3el.textContent = volM3.toFixed(4);
+        if (m2el) m2el.textContent = m2.toFixed(4);
 
         const display = row.querySelector('.cost-display');
         if (display) display.textContent = cost.toFixed(2);
@@ -838,6 +936,10 @@ function recalculateAll() {
     document.getElementById('summary-pallet').textContent = finalPalletCost.toFixed(2) + ' ج.م';
     document.getElementById('summary-total').textContent = totalCost.toFixed(2) + ' ج.م';
 }
+
+document.addEventListener('DOMContentLoaded', function () {
+    refreshAllWoodStockSelects();
+});
 
 // Add one component by default
 addComponent();

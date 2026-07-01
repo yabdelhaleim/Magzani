@@ -371,6 +371,7 @@
             margin-right: var(--sidebar-w);
             transition: margin-right 0.35s cubic-bezier(.4,0,.2,1);
             min-height: 100vh;
+            min-width: 0;
             display: flex;
             flex-direction: column;
         }
@@ -521,6 +522,7 @@
         /* ── Page body ── */
         .page-body {
             flex: 1;
+            min-width: 0;
             padding: 28px;
         }
 
@@ -767,9 +769,41 @@
             .bottom-brand-bar { padding: 6px 16px; gap: 10px; bottom: 15px; }
             .bar-brand-text { font-size: 11px; letter-spacing: 2px; }
         }
+
+        /* Feature Gating: Disabled/Faded nav item and Upgrade badge */
+        .nav-item-disabled {
+            opacity: 0.55;
+            cursor: not-allowed !important;
+            position: relative;
+            pointer-events: auto !important;
+        }
+        .nav-item-disabled * {
+            pointer-events: none;
+        }
+        .badge-upgrade {
+            background: linear-gradient(90deg, #f59e0b, #d97706);
+            color: #fff !important;
+            font-size: 9px;
+            font-weight: 700;
+            padding: 2px 6px;
+            border-radius: 6px;
+            margin-right: auto;
+            box-shadow: 0 0 8px rgba(245, 158, 11, 0.3);
+            animation: badgePulse 2s infinite;
+            white-space: nowrap;
+        }
+        @keyframes badgePulse {
+            0%, 100% { box-shadow: 0 0 6px rgba(245, 158, 11, 0.3); opacity: 0.9; }
+            50% { box-shadow: 0 0 12px rgba(245, 158, 11, 0.7); opacity: 1; }
+        }
+        .sidebar.collapsed .badge-upgrade {
+            display: none !important;
+        }
     </style>
 
+
     @stack('styles')
+    @livewireStyles
 </head>
 <body>
 
@@ -892,9 +926,30 @@
             <span class="label">لوحة التحكم</span>
         </a>
 
+        @if(function_exists('tenant') && tenant() && tenant()->hasFeature('pos'))
+        <div x-data="{ open: {{ request()->routeIs('pos.*') ? 'true' : 'false' }} }">
+            <button class="nav-item {{ request()->routeIs('pos.*') ? 'active' : '' }}"
+                    @click="open = !open" data-tip="نقاط البيع (POS)">
+                <div class="icon"><i class="fas fa-cash-register text-indigo-400"></i></div>
+                <span class="label text-indigo-200 font-extrabold">نقاط البيع (POS) ⚡</span>
+                <i class="fas fa-chevron-down chevron" :class="open ? 'open' : ''"></i>
+            </button>
+            <div class="sub-menu" :class="open ? 'open' : ''">
+                <a href="{{ route('pos.index') }}" class="sub-item {{ request()->routeIs('pos.index') ? 'active' : '' }}"><span class="dot"></span>شاشة الكاشير</a>
+                <a href="{{ route('pos.returns') }}" class="sub-item {{ request()->routeIs('pos.returns') ? 'active' : '' }}"><span class="dot"></span>المرتجعات (POS)</a>
+                <a href="{{ route('pos.xreport') }}" class="sub-item {{ request()->routeIs('pos.xreport') ? 'active' : '' }}"><span class="dot"></span>تقرير X اللحظي</a>
+                <a href="{{ route('pos.history') }}" class="sub-item {{ request()->routeIs('pos.history') ? 'active' : '' }}"><span class="dot"></span>سجل الورديات</a>
+                @if(Auth::user()->isAdmin())
+                <a href="{{ route('pos.settings.index') }}" class="sub-item {{ request()->routeIs('pos.settings.*') ? 'active' : '' }}"><span class="dot"></span>إعدادات الكاشير</a>
+                @endif
+            </div>
+        </div>
+        @endif
+
         <div class="nav-divider"></div>
         <div class="nav-section-label">إدارة المخزون</div>
 
+        @if($planFeatures->contains('multi_warehouse') || $planFeatures->contains('warehouses'))
         <div x-data="{ open: {{ request()->routeIs('warehouses.*','transfers.*','stock-counts.*','movements.*','warehouse-orders.*') ? 'true' : 'false' }} }">
             <button class="nav-item {{ request()->routeIs('warehouses.*','transfers.*','stock-counts.*','movements.*','warehouse-orders.*') ? 'active' : '' }}"
                     @click="open = !open" data-tip="المخازن">
@@ -914,9 +969,16 @@
                 <a href="{{ route('movements.index') }}"    class="sub-item {{ request()->routeIs('movements.*')        ? 'active' : '' }}"><span class="dot"></span>حركات المخزن</a>
             </div>
         </div>
+        @else
+        <div class="nav-item nav-item-disabled" data-tip="المخازن والجرد (ترقية الباقة)">
+            <div class="icon"><i class="fas fa-warehouse"></i></div>
+            <span class="label">المخازن والجرد</span>
+            <span class="badge-upgrade">ترقية الباقة</span>
+        </div>
+        @endif
 
-        <div x-data="{ open: {{ request()->routeIs('products.*') ? 'true' : 'false' }} }">
-            <button class="nav-item {{ request()->routeIs('products.*') ? 'active' : '' }}"
+        <div x-data="{ open: {{ request()->routeIs('products.*', 'categories.*') ? 'true' : 'false' }} }">
+            <button class="nav-item {{ request()->routeIs('products.*', 'categories.*') ? 'active' : '' }}"
                     @click="open = !open" data-tip="المنتجات">
                 <div class="icon"><i class="fas fa-box-open"></i></div>
                 <span class="label">المنتجات</span>
@@ -925,10 +987,12 @@
             <div class="sub-menu" :class="open ? 'open' : ''">
                 <a href="{{ route('products.index') }}"             class="sub-item {{ request()->routeIs('products.index')            ? 'active' : '' }}"><span class="dot"></span>قائمة المنتجات</a>
                 <a href="{{ route('products.create') }}"            class="sub-item {{ request()->routeIs('products.create')           ? 'active' : '' }}"><span class="dot"></span>إضافة منتج</a>
+                <a href="{{ route('categories.index') }}"           class="sub-item {{ request()->routeIs('categories.*')              ? 'active' : '' }}"><span class="dot"></span>تصنيفات المنتجات</a>
                 <a href="{{ route('products.bulk-price-update') }}"  class="sub-item {{ request()->routeIs('products.bulk-price-update') ? 'active' : '' }}"><span class="dot"></span>تحديث الأسعار</a>
             </div>
         </div>
 
+        @if($planFeatures->contains('manufacturing'))
         <div x-data="{ open: {{ request()->routeIs('manufacturing.*','manufacturing-orders.*') ? 'true' : 'false' }} }">
             <button class="nav-item {{ request()->routeIs('manufacturing.*','manufacturing-orders.*') ? 'active' : '' }}"
                     @click="open = !open" data-tip="التصنيع">
@@ -949,7 +1013,16 @@
                 <a href="{{ route('manufacturing.wood-dispensings.index') }}" class="sub-item {{ request()->routeIs('manufacturing.wood-dispensings.*') ? 'active' : '' }}"><span class="dot"></span>سجل الصرف</a>
             </div>
         </div>
+        @else
+        <div class="nav-item nav-item-disabled" data-tip="التصنيع (ترقية الباقة)">
+            <div class="icon"><i class="fas fa-industry"></i></div>
+            <span class="label">التصنيع</span>
+            <span class="badge-upgrade">ترقية الباقة</span>
+        </div>
+        @endif
 
+
+        @if(function_exists('tenant') && tenant() && (tenant()->hasFeature('sales') || tenant()->hasFeature('purchases')))
         <div class="nav-divider"></div>
         <div class="nav-section-label">المعاملات التجارية</div>
 
@@ -961,10 +1034,18 @@
                 <i class="fas fa-chevron-down chevron" :class="open ? 'open' : ''"></i>
             </button>
             <div class="sub-menu" :class="open ? 'open' : ''">
+                @if(tenant()->hasFeature('sales'))
                 <a href="{{ route('invoices.sales.index') }}"           class="sub-item {{ request()->routeIs('invoices.sales.*')           ? 'active' : '' }}"><span class="dot"></span>فواتير المبيعات</a>
+                @endif
+                @if(tenant()->hasFeature('purchases'))
                 <a href="{{ route('invoices.purchases.index') }}"       class="sub-item {{ request()->routeIs('invoices.purchases.*')       ? 'active' : '' }}"><span class="dot"></span>فواتير المشتريات</a>
+                @endif
+                @if(tenant()->hasFeature('sales'))
                 <a href="{{ route('invoices.sales-returns.index') }}"   class="sub-item {{ request()->routeIs('invoices.sales-returns.*')   ? 'active' : '' }}"><span class="dot"></span>مرتجعات المبيعات</a>
+                @endif
+                @if(tenant()->hasFeature('purchases'))
                 <a href="{{ route('invoices.purchase-returns.index') }}" class="sub-item {{ request()->routeIs('invoices.purchase-returns.*') ? 'active' : '' }}"><span class="dot"></span>مرتجعات المشتريات</a>
+                @endif
             </div>
         </div>
 
@@ -976,14 +1057,20 @@
                 <i class="fas fa-chevron-down chevron" :class="open ? 'open' : ''"></i>
             </button>
             <div class="sub-menu" :class="open ? 'open' : ''">
+                @if(tenant()->hasFeature('sales'))
                 <a href="{{ route('customers.index') }}" class="sub-item {{ request()->routeIs('customers.*') ? 'active' : '' }}"><span class="dot"></span>العملاء</a>
+                @endif
+                @if(tenant()->hasFeature('purchases'))
                 <a href="{{ route('suppliers.index') }}" class="sub-item {{ request()->routeIs('suppliers.*') ? 'active' : '' }}"><span class="dot"></span>الموردون</a>
+                @endif
             </div>
         </div>
+        @endif
 
         <div class="nav-divider"></div>
         <div class="nav-section-label">التحليل والمالية</div>
 
+        @if($planFeatures->contains('accounting'))
         <div x-data="{ open: {{ request()->routeIs('accounting.*') ? 'true' : 'false' }} }">
             <button class="nav-item {{ request()->routeIs('accounting.*') ? 'active' : '' }}"
                     @click="open = !open" data-tip="الحسابات">
@@ -997,7 +1084,15 @@
                 <a href="{{ route('accounting.expenses.index') }}"  class="sub-item {{ request()->routeIs('accounting.expenses.*') ? 'active' : '' }}"><span class="dot"></span>المصروفات</a>
             </div>
         </div>
+        @else
+        <div class="nav-item nav-item-disabled" data-tip="الحسابات (ترقية الباقة)">
+            <div class="icon"><i class="fas fa-coins"></i></div>
+            <span class="label">الحسابات</span>
+            <span class="badge-upgrade">ترقية الباقة</span>
+        </div>
+        @endif
 
+        @if($planFeatures->contains('reports_advanced') || $planFeatures->contains('reports'))
         <div x-data="{ open: {{ request()->routeIs('reports.*') ? 'true' : 'false' }} }">
             <button class="nav-item {{ request()->routeIs('reports.*') ? 'active' : '' }}"
                     @click="open = !open" data-tip="التقارير">
@@ -1011,6 +1106,14 @@
                 <a href="{{ route('reports.profit-loss') }}" class="sub-item {{ request()->routeIs('reports.profit-loss') ? 'active' : '' }}"><span class="dot"></span>الأرباح والخسائر</a>
             </div>
         </div>
+        @else
+        <div class="nav-item nav-item-disabled" data-tip="التقارير المتقدمة (ترقية الباقة)">
+            <div class="icon"><i class="fas fa-chart-bar"></i></div>
+            <span class="label">التقارير المتقدمة</span>
+            <span class="badge-upgrade">ترقية الباقة</span>
+        </div>
+        @endif
+
 
         <div class="nav-divider"></div>
         <div class="nav-section-label">النظام</div>
@@ -1285,5 +1388,6 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
 @stack('scripts')
+@livewireScripts
 </body>
 </html>

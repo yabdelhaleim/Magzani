@@ -217,6 +217,7 @@ document.addEventListener('alpine:init', () => {
 
         addItem() {
             this.items.push({
+                sales_invoice_item_id: '',
                 product_id: '',
                 product_name: '',
                 quantity: 1,
@@ -232,23 +233,26 @@ document.addEventListener('alpine:init', () => {
             this.calculateTotal();
         },
 
-        loadItemData(index) {
+        loadLineData(index) {
             const item = this.items[index];
-            if (!item.product_id || !this.selectedInvoice) {
+            if (!item.sales_invoice_item_id || !this.selectedInvoice) {
+                item.product_id = '';
+                item.product_name = '';
                 item.price = 0;
                 item.available_quantity = 0;
                 item.show_warning = false;
                 return;
             }
 
-            const invoiceItem = this.selectedInvoice.items.find(
-                i => i.product_id == item.product_id
+            const line = this.selectedInvoice.items.find(
+                i => String(i.sales_invoice_item_id) === String(item.sales_invoice_item_id)
             );
 
-            if (invoiceItem) {
-                item.product_name = invoiceItem.product_name;
-                item.price = invoiceItem.price;
-                item.available_quantity = invoiceItem.available_quantity;
+            if (line) {
+                item.product_id = String(line.product_id);
+                item.product_name = line.product_name;
+                item.price = line.price;
+                item.available_quantity = line.available_quantity;
                 this.checkQuantity(index);
             }
         },
@@ -280,12 +284,19 @@ document.addEventListener('alpine:init', () => {
                 return false;
             }
 
-            const invalidItems = this.items.filter(item => 
-                item.product_id && item.quantity > item.available_quantity
+            const lineIds = this.items.map(i => i.sales_invoice_item_id).filter(Boolean);
+            const dup = lineIds.filter((id, idx) => lineIds.indexOf(id) !== idx);
+            if (dup.length > 0) {
+                alert('⚠️ لا يمكن اختيار نفس سطر الفاتورة أكثر من مرة في المرتجع');
+                return false;
+            }
+
+            const invalidItems = this.items.filter(item =>
+                item.sales_invoice_item_id && item.quantity > item.available_quantity
             );
 
             if (invalidItems.length > 0) {
-                const itemsList = invalidItems.map(item => 
+                const itemsList = invalidItems.map(item =>
                     `- ${item.product_name}: مطلوب ${item.quantity}، متاح ${item.available_quantity}`
                 ).join('\n');
                 
@@ -383,7 +394,7 @@ document.addEventListener('alpine:init', () => {
                             </tr>
                         </thead>
                         <tbody>
-                            <template x-for="item in selectedInvoice.items" :key="item.product_id">
+                            <template x-for="item in selectedInvoice.items" :key="item.sales_invoice_item_id">
                                 <tr>
                                     <td style="font-weight: 600;" x-text="item.product_name"></td>
                                     <td x-text="item.original_quantity"></td>
@@ -426,13 +437,14 @@ document.addEventListener('alpine:init', () => {
                         <div class="tf-row-item" :class="{ 'warning': item.show_warning }">
                             <div style="font-weight: 800; color: var(--tf-text-m);" x-text="index + 1"></div>
                             <div>
-                                <label class="tf-label">الصنف</label>
-                                <select :name="'items[' + index + '][product_id]'" x-model="item.product_id" @change="loadItemData(index)" class="tf-select" required>
-                                    <option value="">اختر الصنف</option>
-                                    <template x-for="availItem in availableItems" :key="availItem.product_id">
-                                        <option :value="availItem.product_id" x-text="availItem.product_name"></option>
+                                <label class="tf-label">سطر الفاتورة</label>
+                                <select :name="'items[' + index + '][sales_invoice_item_id]'" x-model="item.sales_invoice_item_id" @change="loadLineData(index)" class="tf-select" required>
+                                    <option value="">اختر السطر</option>
+                                    <template x-for="availItem in availableItems" :key="availItem.sales_invoice_item_id">
+                                        <option :value="availItem.sales_invoice_item_id" x-text="availItem.product_name"></option>
                                     </template>
                                 </select>
+                                <input type="hidden" :name="'items[' + index + '][product_id]'" :value="item.product_id">
                             </div>
                             <div>
                                 <label class="tf-label">المتاح</label>
