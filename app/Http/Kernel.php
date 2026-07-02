@@ -67,5 +67,6 @@ class Kernel extends HttpKernel
         'role' => \App\Http\Middleware\RoleMiddleware::class,
         'admin.only' => \App\Http\Middleware\AdminOnly::class,
         'feature' => \App\Http\Middleware\CheckPlanFeature::class,
+        'central.domains' => \App\Http\Middleware\CentralDomainsOnly::class,
     ];
 }
