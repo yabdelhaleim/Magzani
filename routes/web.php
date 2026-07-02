@@ -2,7 +2,6 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Landlord\SuperAdminController;
-use App\Models\Plan;
 
 /*
 |--------------------------------------------------------------------------
@@ -16,11 +15,6 @@ use App\Models\Plan;
 | These central routes are accessible only via the central domains (localhost, 127.0.0.1).
 |
 */
-
-Route::get('/', function () {
-    $plans = Plan::where('is_active', true)->get();
-    return view('welcome_central', compact('plans'));
-});
 
 Route::prefix('super-admin')->name('super-admin.')->group(function () {
     Route::get('/dashboard', [SuperAdminController::class, 'dashboard'])->name('dashboard');

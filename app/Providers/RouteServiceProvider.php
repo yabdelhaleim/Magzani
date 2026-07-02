@@ -33,6 +33,16 @@ class RouteServiceProvider extends ServiceProvider
                 ->prefix('api')
                 ->group(base_path('routes/api.php'));
 
+            // Central home must be domain-scoped and registered before tenant routes,
+            // otherwise tenant "/" overwrites it and central domains get 404.
+            foreach (config('tenancy.central_domains', ['localhost', '127.0.0.1']) as $domain) {
+                Route::domain($domain)
+                    ->middleware('web')
+                    ->get('/', function () {
+                        return redirect('/super-admin/dashboard');
+                    });
+            }
+
             // Register central (landlord) routes once to avoid duplicate route names.
             // Access is restricted by middleware instead of domain-group looping.
             Route::middleware(['web', 'central.domains'])
