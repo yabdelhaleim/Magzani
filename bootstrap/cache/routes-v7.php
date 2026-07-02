@@ -52,7 +52,7 @@ app('router')->setCompiledRoutes(
         array (
           0 => 
           array (
-            '_route' => 'generated::shLmZk4A7multxqC',
+            '_route' => 'generated::DfomAcAV6Jfdft9p',
           ),
           1 => NULL,
           2 => 
@@ -72,7 +72,7 @@ app('router')->setCompiledRoutes(
         array (
           0 => 
           array (
-            '_route' => 'generated::xWCZZVH9VAKCWiZJ',
+            '_route' => 'generated::4yrbJ8lhdT8Mn9Bj',
           ),
           1 => NULL,
           2 => 
@@ -169,7 +169,7 @@ app('router')->setCompiledRoutes(
         array (
           0 => 
           array (
-            '_route' => 'generated::P6Q5aXqwqmX4RJ77',
+            '_route' => 'generated::gcUKKoCWH08xozHp',
           ),
           1 => NULL,
           2 => 
@@ -190,7 +190,7 @@ app('router')->setCompiledRoutes(
         array (
           0 => 
           array (
-            '_route' => 'generated::F5vsVJ52XkcnnJpx',
+            '_route' => 'generated::kwzrqZp7CP7MxVBW',
           ),
           1 => NULL,
           2 => 
@@ -379,7 +379,7 @@ app('router')->setCompiledRoutes(
         array (
           0 => 
           array (
-            '_route' => 'generated::9ctcsCR3SXIIxKPI',
+            '_route' => 'generated::jdHDGG3eaJDthwQd',
           ),
           1 => NULL,
           2 => 
@@ -417,7 +417,7 @@ app('router')->setCompiledRoutes(
         array (
           0 => 
           array (
-            '_route' => 'generated::qyD2xRHzot5v71Gr',
+            '_route' => 'generated::nBAcnpXTUHqrX7FU',
           ),
           1 => NULL,
           2 => 
@@ -5118,7 +5118,7 @@ app('router')->setCompiledRoutes(
       'waitSeconds' => NULL,
       'withTrashed' => false,
     ),
-    'generated::shLmZk4A7multxqC' => 
+    'generated::DfomAcAV6Jfdft9p' => 
     array (
       'methods' => 
       array (
@@ -5130,7 +5130,7 @@ app('router')->setCompiledRoutes(
       array (
         'uses' => 'Livewire\\Mechanisms\\FrontendAssets\\FrontendAssets@returnJavaScriptAsFile',
         'controller' => 'Livewire\\Mechanisms\\FrontendAssets\\FrontendAssets@returnJavaScriptAsFile',
-        'as' => 'generated::shLmZk4A7multxqC',
+        'as' => 'generated::DfomAcAV6Jfdft9p',
       ),
       'fallback' => false,
       'defaults' => 
@@ -5146,7 +5146,7 @@ app('router')->setCompiledRoutes(
       'waitSeconds' => NULL,
       'withTrashed' => false,
     ),
-    'generated::xWCZZVH9VAKCWiZJ' => 
+    'generated::4yrbJ8lhdT8Mn9Bj' => 
     array (
       'methods' => 
       array (
@@ -5158,7 +5158,7 @@ app('router')->setCompiledRoutes(
       array (
         'uses' => 'Livewire\\Mechanisms\\FrontendAssets\\FrontendAssets@maps',
         'controller' => 'Livewire\\Mechanisms\\FrontendAssets\\FrontendAssets@maps',
-        'as' => 'generated::xWCZZVH9VAKCWiZJ',
+        'as' => 'generated::4yrbJ8lhdT8Mn9Bj',
       ),
       'fallback' => false,
       'defaults' => 
@@ -5367,7 +5367,7 @@ app('router')->setCompiledRoutes(
       'waitSeconds' => NULL,
       'withTrashed' => false,
     ),
-    'generated::P6Q5aXqwqmX4RJ77' => 
+    'generated::gcUKKoCWH08xozHp' => 
     array (
       'methods' => 
       array (
@@ -5393,7 +5393,7 @@ app('router')->setCompiledRoutes(
         array (
           0 => 'Illuminate\\Foundation\\Http\\Middleware\\VerifyCsrfToken',
         ),
-        'as' => 'generated::P6Q5aXqwqmX4RJ77',
+        'as' => 'generated::gcUKKoCWH08xozHp',
       ),
       'fallback' => false,
       'defaults' => 
@@ -5409,7 +5409,7 @@ app('router')->setCompiledRoutes(
       'waitSeconds' => NULL,
       'withTrashed' => false,
     ),
-    'generated::F5vsVJ52XkcnnJpx' => 
+    'generated::kwzrqZp7CP7MxVBW' => 
     array (
       'methods' => 
       array (
@@ -5432,7 +5432,7 @@ app('router')->setCompiledRoutes(
         'where' => 
         array (
         ),
-        'as' => 'generated::F5vsVJ52XkcnnJpx',
+        'as' => 'generated::kwzrqZp7CP7MxVBW',
       ),
       'fallback' => false,
       'defaults' => 
@@ -5461,8 +5461,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'role',
@@ -6028,8 +6028,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'guest',
         ),
@@ -6056,7 +6056,7 @@ app('router')->setCompiledRoutes(
       'waitSeconds' => NULL,
       'withTrashed' => false,
     ),
-    'generated::9ctcsCR3SXIIxKPI' => 
+    'generated::jdHDGG3eaJDthwQd' => 
     array (
       'methods' => 
       array (
@@ -6068,8 +6068,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'guest',
           5 => 'throttle:5,1',
@@ -6081,7 +6081,7 @@ app('router')->setCompiledRoutes(
         'where' => 
         array (
         ),
-        'as' => 'generated::9ctcsCR3SXIIxKPI',
+        'as' => 'generated::jdHDGG3eaJDthwQd',
       ),
       'fallback' => false,
       'defaults' => 
@@ -6109,8 +6109,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
         ),
@@ -6137,7 +6137,7 @@ app('router')->setCompiledRoutes(
       'waitSeconds' => NULL,
       'withTrashed' => false,
     ),
-    'generated::qyD2xRHzot5v71Gr' => 
+    'generated::nBAcnpXTUHqrX7FU' => 
     array (
       'methods' => 
       array (
@@ -6155,8 +6155,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
         ),
         'uses' => '\\Illuminate\\Routing\\RedirectController@__invoke',
@@ -6166,7 +6166,7 @@ app('router')->setCompiledRoutes(
         'where' => 
         array (
         ),
-        'as' => 'generated::qyD2xRHzot5v71Gr',
+        'as' => 'generated::nBAcnpXTUHqrX7FU',
       ),
       'fallback' => false,
       'defaults' => 
@@ -6197,8 +6197,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
         ),
         'uses' => 'App\\Http\\Controllers\\PlanController@upgrade',
@@ -6237,8 +6237,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'feature:pos',
@@ -6279,8 +6279,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'feature:pos',
@@ -6321,8 +6321,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'feature:pos',
@@ -6363,8 +6363,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'feature:pos',
@@ -6406,8 +6406,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'feature:pos',
@@ -6447,8 +6447,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'feature:pos',
@@ -6489,8 +6489,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'feature:pos',
@@ -6530,8 +6530,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'feature:pos',
@@ -6572,8 +6572,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'feature:pos',
@@ -6614,8 +6614,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'feature:pos',
@@ -6656,8 +6656,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'feature:pos',
@@ -6698,8 +6698,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'feature:pos',
@@ -6740,8 +6740,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'feature:pos',
@@ -6782,8 +6782,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'feature:pos',
@@ -6824,8 +6824,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'feature:pos',
@@ -6867,8 +6867,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'feature:pos',
@@ -6909,8 +6909,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'feature:pos',
@@ -6951,8 +6951,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'feature:pos',
@@ -6994,8 +6994,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'feature:pos',
@@ -7036,8 +7036,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'feature:manufacturing',
@@ -7079,8 +7079,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'feature:manufacturing',
@@ -7121,8 +7121,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'feature:manufacturing',
@@ -7163,8 +7163,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'feature:manufacturing',
@@ -7206,8 +7206,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'feature:manufacturing',
@@ -7249,8 +7249,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'feature:manufacturing',
@@ -7291,8 +7291,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'feature:manufacturing',
@@ -7334,8 +7334,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'feature:manufacturing',
@@ -7377,8 +7377,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'feature:manufacturing',
@@ -7419,8 +7419,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'feature:manufacturing',
@@ -7462,8 +7462,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'feature:manufacturing',
@@ -7505,8 +7505,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'feature:manufacturing',
@@ -7548,8 +7548,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'feature:manufacturing',
@@ -7590,8 +7590,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'feature:manufacturing',
@@ -7632,8 +7632,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'feature:manufacturing',
@@ -7674,8 +7674,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'feature:manufacturing',
@@ -7717,8 +7717,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'feature:manufacturing',
@@ -7760,8 +7760,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'feature:manufacturing',
@@ -7802,8 +7802,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'feature:manufacturing',
@@ -7844,8 +7844,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'feature:manufacturing',
@@ -7887,8 +7887,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'feature:manufacturing',
@@ -7930,8 +7930,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'feature:manufacturing',
@@ -7972,8 +7972,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'feature:manufacturing',
@@ -8015,8 +8015,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'feature:manufacturing',
@@ -8058,8 +8058,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'feature:manufacturing',
@@ -8100,8 +8100,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'feature:manufacturing',
@@ -8142,8 +8142,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'feature:manufacturing',
@@ -8185,8 +8185,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'feature:manufacturing',
@@ -8228,8 +8228,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'feature:manufacturing',
@@ -8270,8 +8270,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'feature:manufacturing',
@@ -8312,8 +8312,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'feature:manufacturing',
@@ -8355,8 +8355,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'feature:manufacturing',
@@ -8398,8 +8398,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'feature:manufacturing',
@@ -8441,8 +8441,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'feature:manufacturing',
@@ -8484,8 +8484,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'feature:multi_warehouse',
@@ -8526,8 +8526,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'feature:multi_warehouse',
@@ -8567,8 +8567,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'feature:multi_warehouse',
@@ -8609,8 +8609,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'feature:multi_warehouse',
@@ -8651,8 +8651,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'feature:multi_warehouse',
@@ -8692,8 +8692,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'feature:multi_warehouse',
@@ -8733,8 +8733,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'feature:multi_warehouse',
@@ -8775,8 +8775,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'feature:multi_warehouse',
@@ -8817,8 +8817,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'feature:accounting',
@@ -8860,8 +8860,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'feature:accounting',
@@ -8902,8 +8902,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'feature:accounting',
@@ -8944,8 +8944,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'feature:accounting',
@@ -8986,8 +8986,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'feature:accounting',
@@ -9028,8 +9028,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'feature:accounting',
@@ -9071,8 +9071,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'feature:accounting',
@@ -9113,8 +9113,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'feature:accounting',
@@ -9155,8 +9155,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'feature:accounting',
@@ -9197,8 +9197,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'feature:accounting',
@@ -9240,8 +9240,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'feature:accounting',
@@ -9283,8 +9283,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'feature:accounting',
@@ -9326,8 +9326,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'feature:accounting',
@@ -9369,8 +9369,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'feature:accounting',
@@ -9412,8 +9412,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'feature:accounting',
@@ -9455,8 +9455,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'feature:accounting',
@@ -9498,8 +9498,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'feature:accounting',
@@ -9541,8 +9541,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'feature:accounting',
@@ -9584,8 +9584,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'feature:accounting',
@@ -9627,8 +9627,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'feature:accounting',
@@ -9670,8 +9670,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'role',
@@ -9713,8 +9713,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'role',
@@ -9755,8 +9755,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'role',
@@ -9798,8 +9798,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'role',
@@ -9841,8 +9841,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'role',
@@ -9883,8 +9883,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'role',
@@ -9925,8 +9925,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'role',
@@ -9968,8 +9968,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'role',
@@ -10010,8 +10010,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'role',
@@ -10053,8 +10053,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'role',
@@ -10096,8 +10096,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'role',
@@ -10139,8 +10139,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'role',
@@ -10182,8 +10182,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'role',
@@ -10225,8 +10225,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'role',
@@ -10268,8 +10268,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'role',
@@ -10310,8 +10310,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'role',
@@ -10353,8 +10353,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'role',
@@ -10396,8 +10396,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'role',
@@ -10439,8 +10439,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'role',
@@ -10482,8 +10482,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'role',
@@ -10524,8 +10524,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'role',
@@ -10567,8 +10567,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'role',
@@ -10610,8 +10610,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'role',
@@ -10652,8 +10652,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'role',
@@ -10694,8 +10694,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'role',
@@ -10737,8 +10737,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'role',
@@ -10780,8 +10780,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'role',
@@ -10822,8 +10822,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'role',
@@ -10865,8 +10865,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'role',
@@ -10907,8 +10907,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'role',
@@ -10950,8 +10950,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'role',
@@ -10992,8 +10992,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'role',
@@ -11034,8 +11034,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'role',
@@ -11076,8 +11076,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'role',
@@ -11118,8 +11118,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'role',
@@ -11160,8 +11160,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'role',
@@ -11203,8 +11203,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'role',
@@ -11246,8 +11246,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'role',
@@ -11289,8 +11289,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'feature:warehouses',
@@ -11331,8 +11331,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'feature:warehouses',
@@ -11373,8 +11373,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'feature:warehouses',
@@ -11415,8 +11415,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
         ),
@@ -11456,8 +11456,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
         ),
@@ -11497,8 +11497,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
         ),
@@ -11538,8 +11538,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
         ),
@@ -11579,8 +11579,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
         ),
@@ -11619,8 +11619,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
         ),
@@ -11659,8 +11659,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
         ),
@@ -11700,8 +11700,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
         ),
@@ -11741,8 +11741,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
         ),
@@ -11781,8 +11781,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
         ),
@@ -11822,8 +11822,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
         ),
@@ -11863,8 +11863,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
         ),
@@ -11904,8 +11904,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
         ),
@@ -11945,8 +11945,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'admin.only',
@@ -11986,8 +11986,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'admin.only',
@@ -12028,8 +12028,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'admin.only',
@@ -12069,8 +12069,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'admin.only',
@@ -12110,8 +12110,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'admin.only',
@@ -12151,8 +12151,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
         ),
@@ -12192,8 +12192,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
         ),
@@ -12233,8 +12233,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
         ),
@@ -12274,8 +12274,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
         ),
@@ -12314,8 +12314,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
         ),
@@ -12354,8 +12354,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
         ),
@@ -12394,8 +12394,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
         ),
@@ -12434,8 +12434,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
         ),
@@ -12475,8 +12475,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
         ),
@@ -12516,8 +12516,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'feature:purchase',
@@ -12558,8 +12558,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'feature:purchase',
@@ -12599,8 +12599,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'feature:purchase',
@@ -12640,8 +12640,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'feature:purchase',
@@ -12682,8 +12682,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'feature:purchase',
@@ -12724,8 +12724,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'feature:purchase',
@@ -12766,8 +12766,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'feature:purchase',
@@ -12808,8 +12808,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'feature:purchase',
@@ -12850,8 +12850,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'feature:purchase',
@@ -12891,8 +12891,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'feature:purchase',
@@ -12932,8 +12932,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'feature:purchase',
@@ -12974,8 +12974,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'feature:pos',
@@ -13016,8 +13016,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'feature:pos',
@@ -13057,8 +13057,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'feature:pos',
@@ -13099,8 +13099,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'feature:pos',
@@ -13140,8 +13140,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'feature:pos',
@@ -13182,8 +13182,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'feature:purchase',
@@ -13224,8 +13224,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'feature:purchase',
@@ -13265,8 +13265,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'feature:purchase',
@@ -13307,8 +13307,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'feature:purchase',
@@ -13349,8 +13349,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'feature:purchase',
@@ -13390,8 +13390,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'feature:purchase',
@@ -13431,8 +13431,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'feature:purchase',
@@ -13473,8 +13473,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'feature:purchase',
@@ -13515,8 +13515,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
         ),
@@ -13556,8 +13556,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
         ),
@@ -13597,8 +13597,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'admin.only',
@@ -13638,8 +13638,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'admin.only',
@@ -13680,8 +13680,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'admin.only',
@@ -13721,8 +13721,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'admin.only',
@@ -13762,8 +13762,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'admin.only',
@@ -13804,8 +13804,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
         ),
@@ -13845,8 +13845,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
         ),
@@ -13886,8 +13886,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
         ),
@@ -13927,8 +13927,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
         ),
@@ -13968,8 +13968,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
         ),
@@ -14009,8 +14009,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'admin.only',
@@ -14050,8 +14050,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'admin.only',
@@ -14092,8 +14092,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'admin.only',
@@ -14133,8 +14133,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'admin.only',
@@ -14174,8 +14174,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'admin.only',
@@ -14216,8 +14216,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
         ),
@@ -14257,8 +14257,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
         ),
@@ -14298,8 +14298,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
         ),
@@ -14339,8 +14339,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'admin.only',
@@ -14380,8 +14380,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'admin.only',
@@ -14421,8 +14421,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'admin.only',
@@ -14462,8 +14462,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'admin.only',
@@ -14504,8 +14504,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'admin.only',
@@ -14546,8 +14546,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'admin.only',
@@ -14587,8 +14587,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'admin.only',
@@ -14629,8 +14629,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'admin.only',
@@ -14671,8 +14671,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'admin.only',
@@ -14712,8 +14712,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'admin.only',
@@ -14753,8 +14753,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'admin.only',
@@ -14794,8 +14794,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'admin.only',
@@ -14836,8 +14836,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'admin.only',
@@ -14878,8 +14878,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'admin.only',
@@ -14919,8 +14919,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'admin.only',
@@ -14961,8 +14961,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'admin.only',
@@ -15002,8 +15002,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'admin.only',
@@ -15043,8 +15043,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'admin.only',
@@ -15084,8 +15084,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'admin.only',
@@ -15125,8 +15125,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'admin.only',
@@ -15167,8 +15167,8 @@ app('router')->setCompiledRoutes(
         'middleware' => 
         array (
           0 => 'web',
-          1 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
-          2 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          1 => 'Stancl\\Tenancy\\Middleware\\PreventAccessFromCentralDomains',
+          2 => 'Stancl\\Tenancy\\Middleware\\InitializeTenancyByDomain',
           3 => 'feature',
           4 => 'auth',
           5 => 'admin.only',
