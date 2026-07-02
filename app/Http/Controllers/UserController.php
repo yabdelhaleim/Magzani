@@ -40,13 +40,19 @@ class UserController extends Controller
             'is_active' => 'boolean',
         ]);
 
-        User::create([
+        $newUser = User::create([
             'name' => $validated['name'],
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
             'phone' => $validated['phone'] ?? null,
             'role' => $validated['role'],
             'is_active' => $validated['is_active'] ?? true,
+        ]);
+
+        // تسجيل في سجل الأنشطة
+        \App\Models\ActivityLog::log('user_create', $newUser, "تم إنشاء مستخدم جديد باسم: '{$newUser->name}' وصلاحية: '{$newUser->role}'", [
+            'email' => $newUser->email,
+            'role' => $newUser->role,
         ]);
 
         return redirect()->route('users.index')->with('success', 'تم إنشاء المستخدم بنجاح');
@@ -97,6 +103,13 @@ class UserController extends Controller
 
         $user->update($updateData);
 
+        // تسجيل في سجل الأنشطة
+        \App\Models\ActivityLog::log('user_update', $user, "تم تحديث بيانات المستخدم: '{$user->name}' وصلاحيته إلى: '{$user->role}'", [
+            'email' => $user->email,
+            'role' => $user->role,
+            'is_active' => $user->is_active,
+        ]);
+
         return redirect()->route('users.index')->with('success', 'تم تحديث بيانات المستخدم بنجاح');
     }
 
@@ -109,6 +122,12 @@ class UserController extends Controller
         if ($user->id === auth()->id()) {
             return redirect()->route('users.index')->with('error', 'لا يمكنك حذف حسابك الخاص');
         }
+
+        // تسجيل في سجل الأنشطة قبل الحذف
+        \App\Models\ActivityLog::log('user_delete', $user, "تم حذف حساب المستخدم: '{$user->name}'", [
+            'email' => $user->email,
+            'role' => $user->role,
+        ]);
 
         $user->delete();
 
@@ -127,7 +146,15 @@ class UserController extends Controller
 
         $user->update(['is_active' => !$user->is_active]);
 
-        $status = $user->is_active ? 'تم تفعيل' : 'تم إلغاء تفعيل';
-        return redirect()->route('users.index')->with('success', "{$status} حساب المستخدم بنجاح");
+        $status = $user->is_active ? 'تفعيل' : 'إلغاء تفعيل';
+        $statusAr = $user->is_active ? 'تم تفعيل' : 'تم إلغاء تفعيل';
+
+        // تسجيل في سجل الأنشطة
+        \App\Models\ActivityLog::log('user_toggle_active', $user, "تم تغيير حالة الحساب للمستخدم '{$user->name}' إلى: '{$statusAr}'", [
+            'email' => $user->email,
+            'status' => $status,
+        ]);
+
+        return redirect()->route('users.index')->with('success', "{$statusAr} حساب المستخدم بنجاح");
     }
 }

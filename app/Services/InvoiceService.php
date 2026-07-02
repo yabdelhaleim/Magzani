@@ -779,6 +779,12 @@ class InvoiceService
                 'refund_amount' => $invoice->paid,
                 'items_count' => $invoice->items->count()
             ]);
+
+            // تسجيل النشاط في سجل الأنشطة الموحد
+            \App\Models\ActivityLog::log('invoice_cancel', $invoice, "تم إلغاء فاتورة مبيعات رقم: '{$invoice->invoice_number}' بقيمة إجمالية {$invoice->total}", [
+                'reason' => $cancellationReason,
+                'refund_amount' => $invoice->paid,
+            ]);
             
             // مسح الـ Cache
             $this->clearSalesInvoiceCache($invoice->customer_id);

@@ -281,12 +281,46 @@ class ManufacturingOrderService
         }
 
         return DB::transaction(function () use ($order) {
+            $order->load(['components.woodStock']);
+
+            // Validate and reserve/deduct stock immediately
+            foreach ($order->components as $component) {
+                if ($component->wood_stock_id && $component->woodStock) {
+                    $volumePerPalletCm3 = (float) $component->volume_cm3;
+                    $volumeTakenCm3 = $volumePerPalletCm3 * (float) $order->quantity_produced;
+
+                    // Verify availability first
+                    if ($component->woodStock->remaining_cm3 < $volumeTakenCm3) {
+                        throw new Exception("حجم الخشب المطلوب للمكون '{$component->component_name}' يتجاوز الرصيد المتبقي في دفعة الخشب.");
+                    }
+
+                    // Dispense stock (this decrements remaining wood stock volume and records movement)
+                    $this->woodStockService->dispense($component->woodStock, [
+                        'volume_cm3_taken' => $volumeTakenCm3,
+                        'manufacturing_order_id' => $order->id,
+                        'client_id' => $order->customer_id,
+                        'notes' => 'حجز خشب لتأكيد أمر التصنيع '.$order->order_number,
+                        'dispensed_at' => now()->toDateString(),
+                    ]);
+                } else {
+                    $rawMaterial = RawMaterialTemplate::where('name', $component->component_type ?? '')->first();
+                    if ($rawMaterial) {
+                        $requiredQty = (float) $component->quantity * (float) $order->quantity_produced;
+                        if ($rawMaterial->quantity < $requiredQty) {
+                            throw new Exception("الكمية المطلوبة للمادة الخام '{$component->component_type}' غير متوفرة في المخزن.");
+                        }
+                        // Decrement stock immediately to reserve it
+                        $rawMaterial->decrement('quantity', $requiredQty);
+                    }
+                }
+            }
+
             $order->update([
                 'status' => 'confirmed',
                 'updated_by' => Auth::id(),
             ]);
 
-            Log::info('Manufacturing order confirmed', ['order_number' => $order->order_number]);
+            Log::info('Manufacturing order confirmed and stock reserved', ['order_number' => $order->order_number]);
 
             return $order->fresh();
         });
@@ -305,35 +339,7 @@ class ManufacturingOrderService
 
         return DB::transaction(function () use ($order, $warehouseId) {
 
-            $order->load(['components.woodStock']);
-
-            foreach ($order->components as $component) {
-                if (! $component->wood_stock_id || ! $component->woodStock) {
-                    continue;
-                }
-
-                $volumePerPalletCm3 = (float) $component->volume_cm3;
-                $volumeTakenCm3 = $volumePerPalletCm3 * (float) $order->quantity_produced;
-
-                $this->woodStockService->dispense($component->woodStock, [
-                    'volume_cm3_taken' => $volumeTakenCm3,
-                    'manufacturing_order_id' => $order->id,
-                    'client_id' => $order->customer_id,
-                    'notes' => 'صرف خشب لإكمال أمر التصنيع '.$order->order_number,
-                    'dispensed_at' => now()->toDateString(),
-                ]);
-            }
-
-            foreach ($order->components as $component) {
-                if ($component->wood_stock_id) {
-                    continue;
-                }
-                $rawMaterial = RawMaterialTemplate::where('name', $component->component_type ?? '')->first();
-                if ($rawMaterial) {
-                    $perPallet = (float) $component->quantity;
-                    $rawMaterial->decrement('quantity', $perPallet * (float) $order->quantity_produced);
-                }
-            }
+            // Stock was already reserved and deducted at confirmation stage.
 
             // ✅ STEP 1–2: الكتالوج + وحدات البيع متوافقة مع فاتورة المبيعات (سعر/تكلفة من أمر التصنيع)
             $productData = [
@@ -424,13 +430,43 @@ class ManufacturingOrderService
         }
 
         return DB::transaction(function () use ($order, $reason) {
+            $oldStatus = $order->status;
+
             $order->update([
                 'status' => 'cancelled',
-                'notes' => $order->notes."\n\nCancelled: ".$reason,
+                'notes' => trim(($order->notes ?? '') . "\n\nCancelled: " . $reason),
                 'updated_by' => Auth::id(),
             ]);
 
-            Log::info('Manufacturing order cancelled', [
+            // If the order was confirmed, we must release the reserved stock!
+            if ($oldStatus === 'confirmed') {
+                $order->load(['components.woodStock']);
+
+                foreach ($order->components as $component) {
+                    if ($component->wood_stock_id) {
+                        // Find wood dispensing for this order and this wood stock
+                        $dispensings = \App\Models\WoodDispensing::where('manufacturing_order_id', $order->id)
+                            ->where('wood_stock_id', $component->wood_stock_id)
+                            ->get();
+
+                        foreach ($dispensings as $dispensing) {
+                            // Reverse dispensing by deleting the dispensing record and its inventory movement
+                            \App\Models\InventoryMovement::where('reference_type', \App\Models\WoodDispensing::class)
+                                ->where('reference_id', $dispensing->id)
+                                ->delete();
+                            $dispensing->delete();
+                        }
+                    } else {
+                        $rawMaterial = RawMaterialTemplate::where('name', $component->component_type ?? '')->first();
+                        if ($rawMaterial) {
+                            $requiredQty = (float) $component->quantity * (float) $order->quantity_produced;
+                            $rawMaterial->increment('quantity', $requiredQty);
+                        }
+                    }
+                }
+            }
+
+            Log::info('Manufacturing order cancelled and stock released', [
                 'order_number' => $order->order_number,
                 'reason' => $reason,
             ]);

@@ -436,6 +436,15 @@ class ProductService
                             'changed_by' => auth()->id(),
                             'changed_at' => now(),
                         ]);
+
+                        // تسجيل في سجل الأنشطة العام
+                        \App\Models\ActivityLog::log('price_change', $product, "تم تغيير سعر المنتج '{$product->name}' من {$oldSellingPrice} إلى {$newSellingPrice}", [
+                            'old_purchase_price' => $oldPurchasePrice,
+                            'new_purchase_price' => $newPurchasePrice,
+                            'old_selling_price' => $oldSellingPrice,
+                            'new_selling_price' => $newSellingPrice,
+                            'reason' => $data['price_change_reason'] ?? 'تحديث يدوي',
+                        ]);
                     }
                 } else {
                     // إنشاء الوحدة الأساسية إذا لم تكن موجودة
@@ -554,6 +563,25 @@ class ProductService
                 }
 
                 $this->clearProductCache();
+
+                // تسجيل النشاط الجماعي في سجل الأنشطة العام
+                if ($totalUpdated > 0) {
+                    \App\Models\ActivityLog::create([
+                        'user_id' => auth()->id(),
+                        'log_name' => 'product',
+                        'description' => "تم تحديث أسعار {$totalUpdated} منتجاً بشكل جماعي بقيمة سعر شراء {$purchasePrice} وسعر بيع {$sellingPrice}",
+                        'subject_type' => 'App\Models\Product',
+                        'subject_id' => 0, // 0 للمجموعة
+                        'causer_type' => auth()->check() ? get_class(auth()->user()) : null,
+                        'causer_id' => auth()->id(),
+                        'properties' => json_encode([
+                            'count' => $totalUpdated,
+                            'purchase_price' => $purchasePrice,
+                            'selling_price' => $sellingPrice,
+                            'reason' => $data['change_reason'] ?? 'تحديث جماعي',
+                        ]),
+                    ]);
+                }
 
                 Log::info('✅ تحديث جماعي للأسعار', [
                     'count' => $totalUpdated,

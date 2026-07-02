@@ -132,7 +132,7 @@ class ManufacturingOrder extends Model
 
     public function getCanEditAttribute(): bool
     {
-        return in_array($this->status, ['draft', 'confirmed']);
+        return $this->status === 'draft';
     }
 
     public function getCanConfirmAttribute(): bool
