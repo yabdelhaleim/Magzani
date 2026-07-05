@@ -26,6 +26,7 @@ class PurchaseReturn extends Model
         'updated_by',
         'confirmed_by',
         'confirmed_at',
+        'journal_entry_id',
     ];
 
     protected $casts = [
@@ -37,6 +38,11 @@ class PurchaseReturn extends Model
     public function invoice()
     {
         return $this->belongsTo(PurchaseInvoice::class, 'purchase_invoice_id');
+    }
+
+    public function journalEntry()
+    {
+        return $this->belongsTo(JournalEntry::class);
     }
 
     /**

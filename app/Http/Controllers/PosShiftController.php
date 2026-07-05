@@ -175,6 +175,11 @@ class PosShiftController extends Controller
             // ✅ الحالة الثالثة: حساب فرق الصندوق وحفظه صراحة
             $shift->computeAndSaveDifference();
 
+            // ترحيل فرق الصندوق للأستاذ العام
+            if (abs($cashDifference) >= 0.01) {
+                app(\App\Services\Accounting\PostingService::class)->postPosShiftVariance($shift->fresh());
+            }
+
             DB::commit();
 
             return redirect()->route('pos.shift.zreport', $shift->id)

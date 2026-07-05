@@ -3,6 +3,19 @@
 declare(strict_types=1);
 
 use App\Http\Controllers\AccountingController;
+use App\Http\Controllers\Accounting\AccountingDashboardController;
+use App\Http\Controllers\Accounting\ChartOfAccountsController;
+use App\Http\Controllers\Accounting\JournalEntryController;
+use App\Http\Controllers\Accounting\ReceiptVoucherController;
+use App\Http\Controllers\Accounting\PaymentVoucherController;
+use App\Http\Controllers\Accounting\FinancialReportController;
+use App\Http\Controllers\Accounting\FiscalPeriodController;
+use App\Http\Controllers\Accounting\AccountingSettingsController;
+use App\Http\Controllers\Accounting\AccountingSetupController;
+use App\Http\Controllers\Accounting\PostingFailureController;
+use App\Http\Controllers\Accounting\RecurringJournalEntryController;
+use App\Http\Controllers\Accounting\YearEndClosingController;
+use App\Http\Controllers\Accounting\FixedAssetController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\CustomerController;
@@ -473,5 +486,134 @@ Route::middleware([
         Route::put('/roles/{role}/permissions', [\App\Http\Controllers\PermissionsController::class, 'updateRolePermissions'])->name('update-role-permissions');
         Route::get('/print', [\App\Http\Controllers\PermissionsController::class, 'printReport'])->name('print');
     });
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Accounting & Finance Module (Protected by feature:accounting_advanced)
+    |--------------------------------------------------------------------------
+    */
+    Route::middleware(['auth', 'feature:accounting_advanced', 'admin.only'])
+        ->prefix('accounting')
+        ->name('accounting.')
+        ->group(function () {
+
+            // ── لوحة التحكم ──
+            Route::get('/', [AccountingDashboardController::class, 'index'])->name('dashboard');
+            Route::get('/integrity-check', [AccountingDashboardController::class, 'integrityCheck'])->name('integrity-check');
+            Route::post('/integrity/fix', [AccountingDashboardController::class, 'runIntegrityFix'])->name('integrity.fix');
+
+            // ── معالج الإعداد (Tenant Onboarding Wizard) ──
+            Route::prefix('setup')->name('setup.')->group(function () {
+                Route::get('/',                   [AccountingSetupController::class, 'index'])->name('index');
+                Route::get('/step/{step}',        [AccountingSetupController::class, 'step'])->name('step');
+                Route::post('/chart',             [AccountingSetupController::class, 'saveChart'])->name('save-chart');
+                Route::post('/fiscal-year',       [AccountingSetupController::class, 'saveFiscalYear'])->name('save-fiscal-year');
+                Route::post('/opening-balances',  [AccountingSetupController::class, 'saveOpeningBalances'])->name('save-opening-balances');
+                Route::post('/auto-posting',      [AccountingSetupController::class, 'saveAutoPosting'])->name('save-auto-posting');
+                Route::get('/complete',           [AccountingSetupController::class, 'complete'])->name('complete');
+            });
+
+            // ── دليل الحسابات (Chart of Accounts) ──
+            Route::prefix('coa')->name('coa.')->group(function () {
+                Route::get('/',              [ChartOfAccountsController::class, 'index'])->name('index');
+                Route::get('/create',        [ChartOfAccountsController::class, 'create'])->name('create');
+                Route::post('/',             [ChartOfAccountsController::class, 'store'])->name('store');
+                Route::get('/export',        [ChartOfAccountsController::class, 'export'])->name('export');
+                Route::get('/{account}',     [ChartOfAccountsController::class, 'show'])->name('show');
+                Route::get('/{account}/edit',[ChartOfAccountsController::class, 'edit'])->name('edit');
+                Route::put('/{account}',     [ChartOfAccountsController::class, 'update'])->name('update');
+                Route::delete('/{account}',  [ChartOfAccountsController::class, 'destroy'])->name('destroy');
+            });
+
+            // ── قيود اليومية (Journal Entries) ──
+            Route::prefix('journal')->name('journal.')->group(function () {
+                Route::get('/',                          [JournalEntryController::class, 'index'])->name('index');
+                Route::get('/create',                    [JournalEntryController::class, 'create'])->name('create');
+                Route::middleware('throttle:30,1')->group(function () {
+                    Route::post('/',                     [JournalEntryController::class, 'store'])->name('store');
+                    Route::post('/{journalEntry}/post',  [JournalEntryController::class, 'post'])->name('post');
+                    Route::post('/{journalEntry}/reverse', [JournalEntryController::class, 'reverse'])->name('reverse');
+                });
+                Route::get('/{journalEntry}',            [JournalEntryController::class, 'show'])->name('show');
+                Route::get('/{journalEntry}/print',      [JournalEntryController::class, 'print'])->name('print');
+            });
+
+            // ── سندات القبض (Receipt Vouchers) ──
+            Route::prefix('vouchers/receipt')->name('vouchers.receipt.')->group(function () {
+                Route::get('/',                       [ReceiptVoucherController::class, 'index'])->name('index');
+                Route::get('/create',                 [ReceiptVoucherController::class, 'create'])->name('create');
+                Route::post('/',                      [ReceiptVoucherController::class, 'store'])->name('store');
+                Route::get('/{journalEntry}',         [ReceiptVoucherController::class, 'show'])->name('show');
+                Route::get('/{journalEntry}/print',   [ReceiptVoucherController::class, 'print'])->name('print');
+            });
+
+            // ── سندات الصرف (Payment Vouchers) ──
+            Route::prefix('vouchers/payment')->name('vouchers.payment.')->group(function () {
+                Route::get('/',                       [PaymentVoucherController::class, 'index'])->name('index');
+                Route::get('/create',                 [PaymentVoucherController::class, 'create'])->name('create');
+                Route::post('/',                      [PaymentVoucherController::class, 'store'])->name('store');
+                Route::get('/{journalEntry}',         [PaymentVoucherController::class, 'show'])->name('show');
+                Route::get('/{journalEntry}/print',   [PaymentVoucherController::class, 'print'])->name('print');
+            });
+
+            // ── التقارير المالية ──
+            Route::prefix('reports')->name('reports.')->group(function () {
+                Route::get('/trial-balance',       [FinancialReportController::class, 'trialBalance'])->name('trial-balance');
+                Route::get('/income-statement',    [FinancialReportController::class, 'incomeStatement'])->name('income-statement');
+                Route::get('/comparative-income',  [FinancialReportController::class, 'comparativeIncome'])->name('comparative-income');
+                Route::get('/balance-sheet',       [FinancialReportController::class, 'balanceSheet'])->name('balance-sheet');
+                Route::get('/general-ledger',      [FinancialReportController::class, 'generalLedger'])->name('general-ledger');
+                Route::get('/partner-ledger',      [FinancialReportController::class, 'partnerLedger'])->name('partner-ledger');
+                Route::get('/audit-trail',         [FinancialReportController::class, 'auditTrail'])->name('audit-trail');
+                Route::get('/aging',               [FinancialReportController::class, 'agingReport'])->name('aging');
+                Route::get('/financial-ratios',    [FinancialReportController::class, 'financialRatios'])->name('financial-ratios');
+                Route::match(['get', 'post'], '/vat-settlement', [FinancialReportController::class, 'vatSettlement'])->name('vat-settlement');
+            });
+
+            // ── القيود المتكررة ──
+            Route::prefix('recurring')->name('recurring.')->group(function () {
+                Route::get('/',                          [RecurringJournalEntryController::class, 'index'])->name('index');
+                Route::get('/create',                    [RecurringJournalEntryController::class, 'create'])->name('create');
+                Route::post('/',                         [RecurringJournalEntryController::class, 'store'])->name('store');
+                Route::get('/{recurring}/edit',          [RecurringJournalEntryController::class, 'edit'])->name('edit');
+                Route::put('/{recurring}',               [RecurringJournalEntryController::class, 'update'])->name('update');
+                Route::delete('/{recurring}',            [RecurringJournalEntryController::class, 'destroy'])->name('destroy');
+                Route::post('/{recurring}/run',          [RecurringJournalEntryController::class, 'runNow'])->name('run');
+            });
+
+            // ── الفترات المالية (Fiscal Periods) ──
+            Route::prefix('fiscal')->name('fiscal.')->group(function () {
+                Route::get('/',                                    [FiscalPeriodController::class, 'index'])->name('index');
+                Route::post('/',                                   [FiscalPeriodController::class, 'store'])->name('store');
+                Route::post('/years/{fiscalYear}/close',           [FiscalPeriodController::class, 'closeYear'])->name('year.close');
+                Route::get('/year-end',                            [YearEndClosingController::class, 'wizard'])->name('year-end');
+                Route::post('/year-end/execute',                   [YearEndClosingController::class, 'execute'])->name('year-end.execute');
+                Route::post('/years/{fiscalYear}/set-current',     [FiscalPeriodController::class, 'setCurrent'])->name('year.set-current');
+                Route::post('/periods/{period}/close',             [FiscalPeriodController::class, 'closePeriod'])->name('period.close');
+            });
+
+            // ── الترحيلات الفاشلة (Posting Failures) ──
+            Route::prefix('posting-failures')->name('posting-failures.')->group(function () {
+                Route::get('/',                  [PostingFailureController::class, 'index'])->name('index');
+                Route::post('/{failure}/retry',  [PostingFailureController::class, 'retry'])->name('retry');
+                Route::post('/{failure}/resolve',[PostingFailureController::class, 'resolve'])->name('resolve');
+            });
+
+            // ── الأصول الثابتة (Fixed Assets) ──
+            Route::prefix('fixed-assets')->name('fixed-assets.')->group(function () {
+                Route::get('/',              [FixedAssetController::class, 'index'])->name('index');
+                Route::get('/create',        [FixedAssetController::class, 'create'])->name('create');
+                Route::post('/',             [FixedAssetController::class, 'store'])->name('store');
+                Route::get('/depreciate',    [FixedAssetController::class, 'depreciateForm'])->name('depreciate.form');
+                Route::post('/depreciate',   [FixedAssetController::class, 'runDepreciation'])->name('depreciate.run');
+                Route::get('/{fixedAsset}',  [FixedAssetController::class, 'show'])->name('show');
+                Route::post('/{fixedAsset}/dispose', [FixedAssetController::class, 'dispose'])->name('dispose');
+            });
+
+            // ── الإعدادات المحاسبية ──
+            Route::get('/settings',  [AccountingSettingsController::class, 'index'])->name('settings.index');
+            Route::put('/settings',  [AccountingSettingsController::class, 'update'])->name('settings.update');
+        });
 
 });

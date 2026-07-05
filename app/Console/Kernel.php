@@ -12,7 +12,30 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule): void
     {
-        // $schedule->command('inspire')->hourly();
+        $schedule->command('accounting:reconcile-daily --fix --notify')
+            ->dailyAt('02:00')
+            ->withoutOverlapping()
+            ->runInBackground();
+
+        $schedule->command('accounting:validate-integrity')
+            ->dailyAt('03:00')
+            ->withoutOverlapping()
+            ->runInBackground();
+
+        $schedule->command('accounting:retry-failures')
+            ->hourly()
+            ->withoutOverlapping()
+            ->runInBackground();
+
+        $schedule->command('accounting:process-recurring')
+            ->dailyAt('01:00')
+            ->withoutOverlapping()
+            ->runInBackground();
+
+        $schedule->command('accounting:remind-overdue')
+            ->weeklyOn(1, '08:00')
+            ->withoutOverlapping()
+            ->runInBackground();
     }
 
     /**

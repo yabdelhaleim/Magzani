@@ -20,7 +20,7 @@
                 <label class="block text-sm font-bold text-slate-400">معرف الشركة / النطاق الفرعي</label>
                 <div class="flex bg-slate-950 border border-slate-800/80 rounded-xl px-4 py-3 items-center select-none opacity-60">
                     <span class="text-slate-300 font-mono font-semibold" style="direction: ltr;">{{ $tenant->id }}</span>
-                    <span class="text-slate-500 font-mono text-sm ml-2" style="direction: ltr;">.localhost:8000</span>
+                    <span class="text-slate-500 font-mono text-sm ml-2" style="direction: ltr;">.{{ config('tenancy.tenant_domain_suffix', 'localhost') }}</span>
                 </div>
             </div>
 

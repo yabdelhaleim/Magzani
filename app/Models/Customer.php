@@ -9,7 +9,7 @@ class Customer extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name', 'phone', 'email','code', 'address', 'balance', 'credit_limit', 'is_active'];
+    protected $fillable = ['name', 'phone', 'email','code', 'address', 'balance', 'credit_limit', 'payment_terms', 'is_active'];
     protected $casts = [
     'is_active' => 'boolean',
 ];

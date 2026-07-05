@@ -83,6 +83,8 @@ class PurchaseInvoiceController extends Controller
             'confirmed_at' => now(),
         ]);
 
+        event(new \App\Events\Invoice\PurchaseInvoiceConfirmed($invoice));
+
         return back()->with('success', 'تم اعتماد الفاتورة بنجاح');
     }
 

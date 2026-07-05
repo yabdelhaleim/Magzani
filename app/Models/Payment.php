@@ -14,6 +14,7 @@ class Payment extends Model
         'payment_date',
         'reference_number',
         'notes',
+        'journal_entry_id',
     ];
 
     protected $casts = [
@@ -58,5 +59,15 @@ class Payment extends Model
     public function cashTransaction()
     {
         return $this->morphOne(CashTransaction::class, 'reference');
+    }
+
+    public function payable()
+    {
+        return $this->morphTo();
+    }
+
+    public function journalEntry()
+    {
+        return $this->belongsTo(JournalEntry::class);
     }
 }

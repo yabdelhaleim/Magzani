@@ -58,79 +58,64 @@
 }">
 
     <style>
-        /* Scoped Dark Mode Overrides for Immersive Cashier Experience */
-        body, .main-content, #mainContent {
-            background: radial-gradient(circle at top right, #131e35, #080d1a) !important;
-            color: #e2e8f0 !important;
-        }
-        .sidebar {
-            background: #070b14 !important;
-            border-left: 1px solid rgba(255, 255, 255, 0.03) !important;
-        }
-        .sidebar * {
-            color: rgba(226, 232, 240, 0.65) !important;
-        }
-        .sidebar .nav-item.active, .sidebar .nav-item.active * {
-            background: rgba(16, 185, 129, 0.1) !important;
-            color: #10b981 !important;
-            border-right: 3px solid #10b981 !important;
-        }
-        .sidebar .nav-section-label {
-            color: rgba(226, 232, 240, 0.3) !important;
-        }
-        .sidebar .nav-divider {
-            border-color: rgba(255, 255, 255, 0.03) !important;
-        }
-        .main-header {
-            background: #070b14 !important;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.03) !important;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25) !important;
-        }
-        .main-header * {
-            color: #e2e8f0 !important;
-        }
-        .main-footer {
-            background: #070b14 !important;
-            border-top: 1px solid rgba(255, 255, 255, 0.03) !important;
-            color: rgba(226, 232, 240, 0.35) !important;
-        }
-
-        /* Glassmorphic Components */
+        /* Scoped Light Theme overrides for POS Cashier */
         .glass-card {
-            background: rgba(22, 33, 56, 0.6) !important;
-            backdrop-filter: blur(12px) !important;
-            -webkit-backdrop-filter: blur(12px) !important;
-            border: 1px solid rgba(255, 255, 255, 0.05) !important;
+            background: #ffffff !important;
+            border: 1px solid #e2e8f0 !important;
             border-radius: 1.25rem !important;
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2) !important;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.03) !important;
         }
         .glass-input {
-            background: rgba(10, 16, 28, 0.65) !important;
-            border: 1px solid rgba(255, 255, 255, 0.08) !important;
-            color: #f1f5f9 !important;
+            background: #f8fafc !important;
+            border: 1px solid #cbd5e1 !important;
+            color: #0f172a !important;
             border-radius: 0.75rem !important;
             outline: none;
-            transition: all 0.2s ease-in-out;
+            transition: all 0.25s ease-in-out;
         }
         .glass-input:focus {
-            border-color: #10b981 !important;
-            box-shadow: 0 0 12px rgba(16, 185, 129, 0.3) !important;
+            border-color: #2563eb !important;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15) !important;
+        }
+        .glass-input::placeholder {
+            color: #94a3b8 !important;
         }
         .glass-bg {
-            background: rgba(10, 16, 28, 0.4) !important;
-            border: 1px solid rgba(255, 255, 255, 0.04) !important;
+            background: #f8fafc !important;
+            border: 1px solid #e2e8f0 !important;
         }
+        
+        /* Category Buttons */
+        .category-btn-active {
+            background: linear-gradient(135deg, #2563eb 0%, #06b6d4 100%) !important;
+            color: #ffffff !important;
+            border-color: transparent !important;
+            box-shadow: 0 4px 14px rgba(37, 99, 235, 0.25) !important;
+        }
+        .category-btn-inactive {
+            background: #ffffff !important;
+            border: 1px solid #e2e8f0 !important;
+            color: #475569 !important;
+        }
+        .category-btn-inactive:hover {
+            background: #f8fafc !important;
+            color: #0f172a !important;
+            border-color: #cbd5e1 !important;
+        }
+
+        /* Product Cards */
         .product-card {
-            background: rgba(22, 33, 56, 0.4) !important;
-            backdrop-filter: blur(8px) !important;
-            border: 1px solid rgba(255, 255, 255, 0.03) !important;
+            background: #ffffff !important;
+            border: 1px solid #e2e8f0 !important;
             border-radius: 1.25rem !important;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03) !important;
+            transition: all 0.25s ease-in-out !important;
+            overflow: hidden !important;
         }
         .product-card:hover {
             transform: translateY(-4px) !important;
-            border-color: rgba(16, 185, 129, 0.35) !important;
-            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.3) !important;
+            border-color: #2563eb !important;
+            box-shadow: 0 12px 20px -8px rgba(0, 0, 0, 0.1) !important;
         }
 
         /* Scrollbar styles */
@@ -139,23 +124,23 @@
             height: 6px;
         }
         ::-webkit-scrollbar-track {
-            background: rgba(255, 255, 255, 0.01);
+            background: rgba(0, 0, 0, 0.02);
         }
         ::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.08);
+            background: rgba(0, 0, 0, 0.1);
             border-radius: 3px;
         }
         ::-webkit-scrollbar-thumb:hover {
-            background: rgba(255, 255, 255, 0.18);
+            background: rgba(0, 0, 0, 0.2);
         }
     </style>
 
     {{-- ==================== SHIFT STATUS BAR ==================== --}}
     @if($activeShift)
-        <div style="background: linear-gradient(135deg,#0d9488,#0f766e); color:white; padding:12px 24px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px; font-size:12px; font-weight:800; border-bottom:1px solid rgba(255,255,255,0.05);">
+        <div style="background: linear-gradient(135deg,#0b1120,#1a2540); color:white; padding:12px 24px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px; font-size:12px; font-weight:800; border-bottom:1px solid rgba(255,255,255,0.05);">
             <div style="display:flex; align-items:center; gap:16px;">
                 <span style="display:flex; align-items:center; gap:6px;">
-                    <span style="width:8px;height:8px;background:#10b981;border-radius:50%;animation:pulse 1.5s infinite;display:inline-block;box-shadow:0 0 8px #10b981;"></span>
+                    <span style="width:8px;height:8px;background:#06b6d4;border-radius:50%;animation:pulse 1.5s infinite;display:inline-block;box-shadow:0 0 8px #06b6d4;"></span>
                     وردية مفتوحة — {{ $activeShift->user->name }}
                 </span>
                 <span style="opacity:0.85; border-right:1px solid rgba(255,255,255,0.2); padding-right:12px;">فتحت: {{ $activeShift->opened_at->format('H:i') }} | {{ $activeShift->duration }}</span>
@@ -222,7 +207,7 @@
             {{-- Search Bar --}}
             <div class="glass-card p-4 flex flex-col sm:flex-row gap-4 items-center justify-between">
                 <div class="relative flex-grow w-full">
-                    <i class="fa-solid fa-barcode absolute right-4 top-1/2 -translate-y-1/2 text-emerald-500 text-lg"></i>
+                    <i class="fa-solid fa-barcode absolute right-4 top-1/2 -translate-y-1/2 text-blue-500 text-lg"></i>
                     <input type="text"
                            id="pos-search-input"
                            wire:model.live.debounce.300ms="searchQuery"
@@ -230,7 +215,7 @@
                            placeholder="امسح الباركود، أو اكتب اسم المنتج للبحث..."
                            class="w-full glass-input pr-12 pl-4 py-3 text-slate-100 outline-none transition font-semibold text-sm">
                 </div>
-                <div class="flex items-center gap-2 flex-shrink-0 text-xs bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 font-bold px-4 py-2.5 rounded-xl">
+                <div class="flex items-center gap-2 flex-shrink-0 text-xs bg-blue-500/10 border border-blue-500/20 text-blue-400 font-bold px-4 py-2.5 rounded-xl">
                     <i class="fa-solid fa-keyboard animate-pulse"></i>
                     <span>قارئ الباركود نشط</span>
                 </div>
@@ -239,7 +224,7 @@
             {{-- Categories --}}
             <div class="flex gap-2 overflow-x-auto pb-2 scrollbar-thin">
                 <button wire:click="toggleFeaturedOnly"
-                        class="px-5 py-2.5 rounded-xl font-bold text-xs transition border cursor-pointer flex items-center gap-1.5 {{ $onlyFeatured ? 'bg-amber-500 text-white border-amber-500 shadow-lg shadow-amber-500/20' : 'category-btn-inactive' }}">
+                        class="px-5 py-2.5 rounded-xl font-bold text-xs transition border cursor-pointer flex items-center gap-1.5 {{ $onlyFeatured ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white border-amber-500 shadow-lg shadow-amber-500/20' : 'category-btn-inactive' }}">
                     <i class="fas fa-star text-amber-400"></i> المفضلة
                 </button>
                 <button wire:click="selectCategory(null)"
@@ -262,12 +247,12 @@
             <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 overflow-y-auto max-h-[64vh] pr-1">
                 @foreach($products as $product)
                     <div wire:click="addToCart({{ $product->id }})"
-                         class="product-card cursor-pointer overflow-hidden flex flex-col justify-between group relative select-none {{ $product->out_of_stock ? 'opacity-50' : '' }}">
+                          class="product-card cursor-pointer overflow-hidden flex flex-col justify-between group relative select-none {{ $product->out_of_stock ? 'opacity-50' : '' }}">
 
                         {{-- Stock Badge --}}
                         <div class="absolute top-2 left-2 z-10">
                             @if($product->available_stock > 10)
-                                <span class="bg-emerald-500/20 text-emerald-400 text-[10px] font-extrabold px-2 py-0.5 rounded-md border border-emerald-500/10">{{ $product->available_stock }} قطعة</span>
+                                <span class="bg-blue-50 text-blue-600 text-[10px] font-extrabold px-2 py-0.5 rounded-md border border-blue-100">{{ $product->available_stock }} قطعة</span>
                             @elseif($product->available_stock > 0)
                                 <span class="bg-amber-500/20 text-amber-400 text-[10px] font-extrabold px-2 py-0.5 rounded-md border border-amber-500/10">منخفض: {{ $product->available_stock }}</span>
                             @else
@@ -275,20 +260,20 @@
                             @endif
                         </div>
 
-                        {{-- Image / Icon Header --}}
-                        <div class="h-28 bg-gradient-to-br from-slate-800 to-slate-900/60 flex items-center justify-center relative overflow-hidden">
-                            <i class="fa-solid fa-cube text-slate-600 text-4xl group-hover:scale-110 transition duration-300"></i>
+                        {{-- Image / Icon Header (Light) --}}
+                        <div class="h-28 bg-gradient-to-br from-slate-50 to-slate-100/50 flex items-center justify-center relative overflow-hidden border-b border-slate-100">
+                            <i class="fa-solid fa-cube text-slate-400 text-4xl group-hover:scale-110 transition duration-300"></i>
                             @if($product->barcode)
-                                <span class="absolute bottom-1 right-2 text-[9px] font-mono text-slate-400 bg-slate-900/80 border border-white/5 px-1 rounded">{{ $product->barcode }}</span>
+                                <span class="absolute bottom-1 right-2 text-[9px] font-mono text-slate-500 bg-white border border-slate-200/80 px-1.5 py-0.5 rounded">{{ $product->barcode }}</span>
                             @endif
                         </div>
 
-                        {{-- Details --}}
-                        <div class="p-3.5 flex flex-col gap-2 flex-grow justify-between">
-                            <h4 class="font-bold text-slate-200 text-xs leading-relaxed line-clamp-2 h-8">{{ $product->name }}</h4>
-                            <div class="flex justify-between items-center border-t border-white/5 pt-2 mt-1">
-                                <span class="text-emerald-400 font-extrabold text-xs">{{ number_format($product->base_selling_price, 2) }} <span class="text-[9px] text-slate-400">ج.م</span></span>
-                                <span class="text-[10px] text-slate-400 font-semibold bg-white/5 px-1.5 py-0.5 rounded">{{ $product->base_unit_label ?? 'قطعة' }}</span>
+                        {{-- Details (Light) --}}
+                        <div class="p-3.5 flex flex-col gap-2 flex-grow justify-between bg-white">
+                            <h4 class="font-bold text-slate-700 text-xs leading-relaxed line-clamp-2 h-8">{{ $product->name }}</h4>
+                            <div class="flex justify-between items-center border-t border-slate-100 pt-2 mt-1">
+                                <span class="text-blue-600 font-extrabold text-xs">{{ number_format($product->base_selling_price, 2) }} <span class="text-[9px] text-slate-400">ج.م</span></span>
+                                <span class="text-[10px] text-slate-500 font-semibold bg-slate-50 border border-slate-100 px-1.5 py-0.5 rounded">{{ $product->base_unit_label ?? 'قطعة' }}</span>
                             </div>
                         </div>
                     </div>
@@ -306,9 +291,9 @@
                         <label class="text-[11px] font-extrabold text-slate-400 flex items-center gap-1">
                             <i class="fa-solid fa-warehouse text-indigo-400"></i> المستودع
                         </label>
-                        <select wire:model.live="selectedWarehouseId" class="w-full glass-input px-2.5 py-2 text-xs font-bold text-slate-200 outline-none transition">
+                        <select wire:model.live="selectedWarehouseId" class="w-full glass-input px-2.5 py-2 text-xs font-bold text-slate-700 outline-none transition">
                             @foreach($warehouses as $wh)
-                                <option value="{{ $wh->id }}" class="bg-slate-900">{{ $wh->name }}</option>
+                                <option value="{{ $wh->id }}">{{ $wh->name }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -317,9 +302,9 @@
                             <i class="fa-solid fa-user text-indigo-400"></i> العميل
                         </label>
                         <div class="flex gap-1.5">
-                            <select wire:model.live="selectedCustomerId" class="flex-grow glass-input px-2.5 py-2 text-xs font-bold text-slate-200 outline-none transition">
+                            <select wire:model.live="selectedCustomerId" class="flex-grow glass-input px-2.5 py-2 text-xs font-bold text-slate-700 outline-none transition">
                                 @foreach($customers as $cust)
-                                    <option value="{{ $cust->id }}" class="bg-slate-900">{{ $cust->name }}</option>
+                                    <option value="{{ $cust->id }}">{{ $cust->name }}</option>
                                 @endforeach
                             </select>
                             <button type="button" @click="showAddCustomerModal = true" class="bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 rounded-xl px-3 py-2 text-xs font-extrabold hover:bg-indigo-500/25 transition cursor-pointer" title="إضافة عميل سريع">
@@ -332,18 +317,18 @@
                 @if($selectedCustomer && $selectedCustomer->code !== 'CUST-CASH')
                     <div class="p-2.5 glass-bg rounded-xl flex justify-between items-center text-[10px] font-bold">
                         <div class="flex items-center gap-1">
-                            <span class="text-slate-400">الرصيد الحالي:</span>
-                            <span class="{{ $selectedCustomer->balance > 0 ? 'text-rose-400' : 'text-emerald-400' }}">
+                            <span class="text-slate-500">الرصيد الحالي:</span>
+                            <span class="{{ $selectedCustomer->balance > 0 ? 'text-rose-600' : 'text-blue-600' }}">
                                 {{ number_format($selectedCustomer->balance, 2) }} ج.م
                             </span>
                         </div>
                         @if($selectedCustomer->credit_limit)
                             <div class="flex items-center gap-1">
-                                <span class="text-slate-500">| الحد الائتماني:</span>
-                                <span class="text-slate-300">{{ number_format($selectedCustomer->credit_limit, 2) }} ج.م</span>
+                                <span class="text-slate-400">| الحد الائتماني:</span>
+                                <span class="text-slate-600">{{ number_format($selectedCustomer->credit_limit, 2) }} ج.م</span>
                             </div>
                             @if($selectedCustomer->balance >= $selectedCustomer->credit_limit)
-                                <span class="text-rose-400 animate-pulse"><i class="fas fa-exclamation-triangle"></i> تجاوز الحد!</span>
+                                <span class="text-rose-500 animate-pulse"><i class="fas fa-exclamation-triangle"></i> تجاوز الحد!</span>
                             @endif
                         @endif
                     </div>
@@ -354,14 +339,14 @@
                     <label class="text-[11px] font-extrabold text-slate-400 mb-2 block">طريقة الدفع</label>
                     <div class="flex gap-2 flex-wrap">
                         @foreach([
-                            'cash'     => ['label' => 'نقدي',    'icon' => 'fa-money-bill', 'color' => '#10b981'],
+                            'cash'     => ['label' => 'نقدي',    'icon' => 'fa-money-bill', 'color' => '#0b1120'],
                             'card'     => ['label' => 'شبكة',    'icon' => 'fa-credit-card','color' => '#3b82f6'],
                             'credit'   => ['label' => 'آجل',     'icon' => 'fa-file-invoice','color' => '#f59e0b'],
                             'multiple' => ['label' => 'متعدد',   'icon' => 'fa-layer-group', 'color' => '#6366f1'],
                         ] as $method => $info)
                             <button wire:click="$set('paymentMethod','{{ $method }}')"
                                     class="flex-1 py-2 px-2 rounded-xl text-[11px] font-bold transition border flex items-center justify-center gap-1 cursor-pointer"
-                                    style="{{ $paymentMethod === $method ? 'background:'.$info['color'].';color:white;border-color:'.$info['color'].';box-shadow:0 4px 12px '.$info['color'].'40;' : 'background:rgba(255,255,255,0.02);color:#94a3b8;border-color:rgba(255,255,255,0.05);' }}">
+                                    style="{{ $paymentMethod === $method ? 'background:'.$info['color'].';color:white;border-color:'.$info['color'].';box-shadow:0 4px 12px '.$info['color'].'40;' : 'background:#ffffff;color:#475569;border-color:#e2e8f0;' }}">
                                 <i class="fas {{ $info['icon'] }}"></i> {{ $info['label'] }}
                             </button>
                         @endforeach
@@ -371,102 +356,102 @@
 
             {{-- Cart List --}}
             <div class="glass-card flex-grow flex flex-col overflow-hidden min-h-[280px]">
-                <div class="p-4 border-b border-white/5 flex justify-between items-center bg-slate-900/30">
-                    <span class="font-extrabold text-slate-200 text-xs flex items-center gap-2">
-                        <i class="fa-solid fa-cart-shopping text-emerald-400"></i> سلة المبيعات
-                        <span class="bg-emerald-500/10 text-emerald-400 text-[10px] font-bold px-2.5 py-0.5 rounded-full border border-emerald-500/20">{{ count($cart) }} أصناف</span>
+                <div class="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+                    <span class="font-extrabold text-slate-700 text-xs flex items-center gap-2">
+                        <i class="fa-solid fa-cart-shopping text-blue-500"></i> سلة المبيعات
+                        <span class="bg-blue-50 text-blue-600 text-[10px] font-bold px-2.5 py-0.5 rounded-full border border-blue-100">{{ count($cart) }} أصناف</span>
                     </span>
                     <div class="flex items-center gap-2">
                         {{-- Hold Sale Button --}}
                         <button wire:click="holdSale"
                                 title="F2 — تعليق الفاتورة"
-                                class="flex items-center gap-1 text-[10px] text-amber-400 font-bold hover:text-amber-300 bg-amber-500/10 border border-amber-500/20 px-2.5 py-1.5 rounded-xl cursor-pointer transition">
+                                class="flex items-center gap-1 text-[10px] text-amber-700 font-bold hover:text-amber-800 bg-amber-50 border border-amber-100 px-2.5 py-1.5 rounded-xl cursor-pointer transition">
                             <i class="fas fa-pause"></i> تعليق
                         </button>
-                        <button wire:click="clearCart" class="text-[10px] text-rose-400 hover:text-rose-300 font-bold cursor-pointer bg-rose-500/10 border border-rose-500/20 px-2.5 py-1.5 rounded-xl transition">
+                        <button wire:click="clearCart" class="text-[10px] text-rose-700 hover:text-rose-800 font-bold cursor-pointer bg-rose-50 border border-rose-100 px-2.5 py-1.5 rounded-xl transition">
                             تفريغ
                         </button>
                     </div>
                 </div>
 
-                <div class="flex-grow overflow-y-auto divide-y divide-white/5 px-4">
+                <div class="flex-grow overflow-y-auto divide-y divide-slate-100 px-4">
                     @forelse($cart as $index => $item)
                         <div class="py-3.5 flex flex-col gap-2">
                             <div class="flex justify-between items-start">
                                 <div>
-                                    <h5 class="font-extrabold text-slate-100 text-xs leading-normal">{{ $item['name'] }}</h5>
-                                    <span class="text-[10px] text-slate-500 font-mono bg-white/5 px-1.5 rounded">{{ $item['code'] }}</span>
+                                    <h5 class="font-extrabold text-slate-700 text-xs leading-normal">{{ $item['name'] }}</h5>
+                                    <span class="text-[10px] text-slate-500 font-mono bg-slate-50 border border-slate-100 px-1.5 rounded">{{ $item['code'] }}</span>
                                 </div>
-                                <button wire:click="removeFromCart({{ $index }})" class="text-slate-500 hover:text-rose-400 transition cursor-pointer">
+                                <button wire:click="removeFromCart({{ $index }})" class="text-slate-400 hover:text-rose-600 transition cursor-pointer">
                                     <i class="fa-regular fa-trash-can text-sm"></i>
                                 </button>
                             </div>
                             <div class="flex justify-between items-center gap-2 mt-1">
                                 <div class="flex-shrink-0">
                                     @if(!empty($item['units']))
-                                        <select wire:change="selectUnit({{ $index }}, $event.target.value)" class="glass-input text-[10px] font-bold text-slate-300 px-2 py-1 outline-none">
-                                            <option value="" class="bg-slate-900">{{ $item['unit_code'] }} (أساسية)</option>
+                                        <select wire:change="selectUnit({{ $index }}, $event.target.value)" class="glass-input text-[10px] font-bold text-slate-600 px-2 py-1 outline-none">
+                                            <option value="">{{ $item['unit_code'] }} (أساسية)</option>
                                             @foreach($item['units'] as $unit)
-                                                <option value="{{ $unit['id'] }}" {{ $item['selling_unit_id'] == $unit['id'] ? 'selected' : '' }} class="bg-slate-900">{{ $unit['unit_name'] }}</option>
+                                                <option value="{{ $unit['id'] }}" {{ $item['selling_unit_id'] == $unit['id'] ? 'selected' : '' }}>{{ $unit['unit_name'] }}</option>
                                             @endforeach
                                         </select>
                                     @else
-                                        <span class="text-[11px] text-slate-400 font-bold bg-white/5 border border-white/5 px-2.5 py-1.5 rounded-lg">{{ $item['unit_code'] }}</span>
+                                        <span class="text-[11px] text-slate-500 font-bold bg-slate-50 border border-slate-100 px-2.5 py-1.5 rounded-lg">{{ $item['unit_code'] }}</span>
                                     @endif
                                 </div>
-                                <div class="flex items-center gap-1.5 bg-slate-900/50 border border-white/5 rounded-xl px-2 py-0.5">
-                                    <button wire:click="decrementQuantity({{ $index }})" class="w-6 h-6 flex items-center justify-center text-slate-400 hover:text-slate-100 font-bold text-xs bg-slate-800 rounded-lg border border-white/5 cursor-pointer shadow-sm">-</button>
+                                <div class="flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-xl px-2 py-0.5">
+                                    <button wire:click="decrementQuantity({{ $index }})" class="w-6 h-6 flex items-center justify-center text-slate-600 hover:text-slate-800 font-bold text-xs bg-white rounded-lg border border-slate-200 cursor-pointer shadow-sm">-</button>
                                     <input type="number"
                                            value="{{ $item['quantity'] }}"
                                            wire:change="updateQuantity({{ $index }}, $event.target.value)"
-                                           class="w-10 text-center font-extrabold text-xs bg-transparent border-none outline-none text-slate-100">
-                                    <button wire:click="incrementQuantity({{ $index }})" class="w-6 h-6 flex items-center justify-center text-slate-400 hover:text-slate-100 font-bold text-xs bg-slate-800 rounded-lg border border-white/5 cursor-pointer shadow-sm">+</button>
+                                           class="w-10 text-center font-extrabold text-xs bg-transparent border-none outline-none text-slate-700">
+                                    <button wire:click="incrementQuantity({{ $index }})" class="w-6 h-6 flex items-center justify-center text-slate-600 hover:text-slate-800 font-bold text-xs bg-white rounded-lg border border-slate-200 cursor-pointer shadow-sm">+</button>
                                 </div>
                                 <div class="text-left min-w-[70px]">
-                                    <span class="font-black text-slate-100 text-xs">{{ number_format($item['price'] * $item['quantity'], 2) }}</span>
-                                    <span class="text-[9px] text-slate-500 block">{{ number_format($item['price'], 2) }}</span>
+                                    <span class="font-black text-slate-700 text-xs">{{ number_format($item['price'] * $item['quantity'], 2) }}</span>
+                                    <span class="text-[9px] text-slate-400 block">{{ number_format($item['price'], 2) }}</span>
                                 </div>
                             </div>
                             <div class="mt-1 flex items-center gap-1.5">
-                                <i class="fas fa-edit text-slate-600 text-[10px]"></i>
+                                <i class="fas fa-edit text-slate-400 text-[10px]"></i>
                                 <input type="text"
                                        placeholder="ملاحظة للصنف (مثال: بدون سكر)..."
                                        value="{{ $item['notes'] ?? '' }}"
                                        wire:change="updateItemNotes({{ $index }}, $event.target.value)"
-                                       class="flex-grow glass-input px-2.5 py-1 text-[10px] text-slate-300 outline-none transition">
+                                       class="flex-grow glass-input px-2.5 py-1 text-[10px] text-slate-600 outline-none transition">
                             </div>
                         </div>
                     @empty
-                        <div class="flex flex-col items-center justify-center gap-3 py-14 text-center text-slate-500">
-                            <i class="fa-solid fa-basket-shopping text-3xl text-slate-600"></i>
+                        <div class="flex flex-col items-center justify-center gap-3 py-14 text-center text-slate-400">
+                            <i class="fa-solid fa-basket-shopping text-3xl text-slate-300"></i>
                             <span class="font-bold text-xs">سلة الكاشير فارغة</span>
                         </div>
                     @endforelse
                 </div>
 
                 {{-- Totals Footer --}}
-                <div class="p-4 border-t border-white/5 bg-slate-900/30 flex flex-col gap-2">
-                    <div class="flex justify-between items-center text-xs font-bold text-slate-400">
+                <div class="p-4 border-t border-slate-200 bg-slate-50 flex flex-col gap-2">
+                    <div class="flex justify-between items-center text-xs font-bold text-slate-600">
                         <span>المجموع الفرعي:</span>
-                        <span class="text-slate-200">{{ number_format($this->subtotal, 2) }} ج.م</span>
+                        <span class="text-slate-700">{{ number_format($this->subtotal, 2) }} ج.م</span>
                     </div>
-                    <div class="flex justify-between items-center text-xs font-bold text-slate-400">
+                    <div class="flex justify-between items-center text-xs font-bold text-slate-600">
                         <span>الخصم العام:</span>
                         <div class="flex items-center gap-1">
-                            <input type="number" wire:model.live="discount_value" class="w-12 glass-input px-1.5 py-0.5 text-center text-xs font-extrabold text-slate-200">
-                            <select wire:model.live="discount_type" class="glass-input py-0.5 text-[10px] font-bold text-slate-300 outline-none">
-                                <option value="fixed" class="bg-slate-900">ج.م</option>
-                                <option value="percentage" class="bg-slate-900">%</option>
+                            <input type="number" wire:model.live="discount_value" class="w-12 glass-input px-1.5 py-0.5 text-center text-xs font-extrabold text-slate-700">
+                            <select wire:model.live="discount_type" class="glass-input py-0.5 text-[10px] font-bold text-slate-600 outline-none">
+                                <option value="fixed">ج.م</option>
+                                <option value="percentage">%</option>
                             </select>
                         </div>
                     </div>
-                    <div class="flex justify-between items-center text-xs font-bold text-slate-400">
+                    <div class="flex justify-between items-center text-xs font-bold text-slate-600">
                         <span>الضريبة (%):</span>
-                        <input type="number" wire:model.live="tax_rate" class="w-12 glass-input px-1.5 py-0.5 text-center text-xs font-extrabold text-slate-200">
+                        <input type="number" wire:model.live="tax_rate" class="w-12 glass-input px-1.5 py-0.5 text-center text-xs font-extrabold text-slate-700">
                     </div>
-                    <div class="flex justify-between items-center border-t border-white/5 pt-3 mt-1">
-                        <span class="font-extrabold text-slate-200 text-sm">الإجمالي:</span>
-                        <span class="font-black text-emerald-400 text-lg">{{ number_format($this->grand_total, 2) }} ج.م</span>
+                    <div class="flex justify-between items-center border-t border-slate-200 pt-3 mt-1">
+                        <span class="font-extrabold text-slate-800 text-sm">الإجمالي:</span>
+                        <span class="font-black text-blue-600 text-lg">{{ number_format($this->grand_total, 2) }} ج.م</span>
                     </div>
                 </div>
             </div>
@@ -474,7 +459,7 @@
             {{-- Checkout Button --}}
             <button x-on:click="showPaymentModal = true; @this.updateTotals()"
                     {{ empty($cart) ? 'disabled' : '' }}
-                    class="w-full py-4 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-sm transition shadow-lg shadow-emerald-600/20 cursor-pointer flex items-center justify-center gap-2 {{ empty($cart) ? 'opacity-40 cursor-not-allowed shadow-none' : '' }}">
+                    class="w-full py-4 rounded-2xl bg-gradient-to-r from-[#0b1120] to-[#1a2540] hover:from-[#111827] hover:to-[#1f3058] text-white font-extrabold text-sm transition shadow-lg shadow-slate-900/10 cursor-pointer flex items-center justify-center gap-2 {{ empty($cart) ? 'opacity-40 cursor-not-allowed shadow-none' : '' }}">
                 <i class="fa-solid fa-cash-register"></i>
                 إتمام البيع
             </button>
@@ -482,28 +467,28 @@
             {{-- Quick Links --}}
             <div class="flex gap-2">
                 @if(!$activeShift && $requireShift)
-                    <a href="{{ route('pos.shift.create') }}" class="flex-1 py-2.5 bg-green-500/10 border border-green-500/20 text-green-400 rounded-xl text-xs font-bold text-center hover:bg-green-500/20 transition">
+                    <a href="{{ route('pos.shift.create') }}" class="flex-1 py-2.5 bg-blue-50 border border-blue-100 text-blue-600 rounded-xl text-xs font-bold text-center hover:bg-blue-100 transition">
                         <i class="fas fa-play-circle ml-1"></i> فتح وردية
                     </a>
                 @elseif($activeShift)
-                    <a href="{{ route('pos.shift.close-view') }}" class="flex-1 py-2.5 bg-red-500/10 border border-red-500/20 text-red-400 rounded-xl text-xs font-bold text-center hover:bg-red-100/25 transition">
+                    <a href="{{ route('pos.shift.close-view') }}" class="flex-1 py-2.5 bg-red-50 border border-red-100 text-red-600 rounded-xl text-xs font-bold text-center hover:bg-red-100 transition">
                         <i class="fas fa-lock ml-1"></i> إغلاق وردية
                     </a>
                 @endif
-                <a href="{{ route('pos.history') }}" class="flex-1 py-2.5 bg-slate-800/60 border border-white/5 text-slate-300 rounded-xl text-xs font-bold text-center hover:bg-slate-800 transition">
+                <a href="{{ route('pos.history') }}" class="flex-1 py-2.5 bg-slate-50 border border-slate-200 text-slate-600 rounded-xl text-xs font-bold text-center hover:bg-slate-100 transition">
                     <i class="fas fa-history ml-1"></i> السجل
                 </a>
-                <a href="{{ route('pos.settings.index') }}" class="flex-1 py-2.5 bg-slate-800/60 border border-white/5 text-slate-300 rounded-xl text-xs font-bold text-center hover:bg-slate-800 transition">
+                <a href="{{ route('pos.settings.index') }}" class="flex-1 py-2.5 bg-slate-50 border border-slate-200 text-slate-600 rounded-xl text-xs font-bold text-center hover:bg-slate-100 transition">
                     <i class="fas fa-cog ml-1"></i> الإعدادات
                 </a>
             </div>
 
             {{-- Shortcuts Legend --}}
-            <div class="glass-bg rounded-xl p-2 px-3 flex items-center justify-between text-[10px] text-slate-400 font-bold">
-                <span class="flex items-center gap-1"><kbd class="bg-slate-800 border border-white/5 px-1.5 rounded shadow-sm text-slate-300">F1</kbd> الدفع</span>
-                <span class="flex items-center gap-1"><kbd class="bg-slate-800 border border-white/5 px-1.5 rounded shadow-sm text-slate-300">F2</kbd> تعليق</span>
-                <span class="flex items-center gap-1"><kbd class="bg-slate-800 border border-white/5 px-1.5 rounded shadow-sm text-slate-300">F3</kbd> المعلقة</span>
-                <span class="flex items-center gap-1"><kbd class="bg-slate-800 border border-white/5 px-1.5 rounded shadow-sm text-slate-300">Esc</kbd> إغلاق</span>
+            <div class="glass-bg rounded-xl p-2 px-3 flex items-center justify-between text-[10px] text-slate-500 font-bold">
+                <span class="flex items-center gap-1"><kbd class="bg-slate-50 border border-slate-200 px-1.5 rounded shadow-sm text-slate-600">F1</kbd> الدفع</span>
+                <span class="flex items-center gap-1"><kbd class="bg-slate-50 border border-slate-200 px-1.5 rounded shadow-sm text-slate-600">F2</kbd> تعليق</span>
+                <span class="flex items-center gap-1"><kbd class="bg-slate-50 border border-slate-200 px-1.5 rounded shadow-sm text-slate-600">F3</kbd> المعلقة</span>
+                <span class="flex items-center gap-1"><kbd class="bg-slate-50 border border-slate-200 px-1.5 rounded shadow-sm text-slate-600">Esc</kbd> إغلاق</span>
             </div>
         </div>
 
@@ -511,36 +496,36 @@
 
     {{-- ==================== PAYMENT MODAL ==================== --}}
     <div x-show="showPaymentModal"
-         class="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm"
+         class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
          x-transition
          style="display: none;">
 
-        <div class="bg-slate-900 rounded-3xl p-6 w-full max-w-md shadow-2xl space-y-5 mx-4 border border-white/5"
+        <div class="bg-white rounded-3xl p-6 w-full max-w-md shadow-2xl space-y-5 mx-4 border border-slate-200"
              x-on:click.away="showPaymentModal = false">
 
-            <div class="flex justify-between items-center border-b border-white/5 pb-3">
-                <h3 class="font-extrabold text-slate-200 text-sm flex items-center gap-2">
-                    <i class="fa-solid fa-circle-dollar-to-slot text-emerald-400"></i> تفاصيل الدفع
+            <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+                <h3 class="font-extrabold text-slate-800 text-sm flex items-center gap-2">
+                    <i class="fa-solid fa-circle-dollar-to-slot text-blue-500"></i> تفاصيل الدفع
                 </h3>
-                <button x-on:click="showPaymentModal = false" class="text-slate-400 hover:text-slate-200 cursor-pointer">
+                <button x-on:click="showPaymentModal = false" class="text-slate-400 hover:text-slate-600 cursor-pointer">
                     <i class="fa-solid fa-xmark text-lg"></i>
                 </button>
             </div>
 
             <div class="space-y-4">
                 {{-- Grand Total Recap --}}
-                <div class="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl flex justify-between items-center">
-                    <span class="text-emerald-400 font-extrabold text-xs">الإجمالي المطلوب:</span>
-                    <span class="text-emerald-400 font-black text-xl">{{ number_format($this->grand_total, 2) }} ج.م</span>
+                <div class="p-4 bg-blue-50 border border-blue-100 rounded-2xl flex justify-between items-center">
+                    <span class="text-blue-600 font-extrabold text-xs">الإجمالي المطلوب:</span>
+                    <span class="text-blue-600 font-black text-xl">{{ number_format($this->grand_total, 2) }} ج.م</span>
                 </div>
 
                 {{-- Cash Payment Details --}}
                 @if($paymentMethod === 'cash')
                     <div class="space-y-3">
                         <div class="space-y-1.5">
-                            <label class="text-xs font-bold text-slate-400">المبلغ المستلم من العميل</label>
+                            <label class="text-xs font-bold text-slate-500">المبلغ المستلم من العميل</label>
                             <input type="number" wire:model.live="cashReceived" placeholder="0.00"
-                                   class="w-full glass-input px-4 py-3 text-slate-100 font-extrabold text-sm transition">
+                                   class="w-full glass-input px-4 py-3 text-slate-700 font-extrabold text-sm transition">
                         </div>
 
                         {{-- Quick Cash Buttons --}}
@@ -549,87 +534,87 @@
                             <button type="button"
                                     wire:click="$set('cashReceived', {{ $amount === 'exact' ? $this->grand_total : $amount }})"
                                     class="py-2 rounded-xl text-xs font-extrabold border transition cursor-pointer
-                                           {{ $amount === 'exact' ? 'bg-emerald-600 text-white border-emerald-600 hover:bg-emerald-700' : 'bg-slate-800 text-slate-300 border-white/5 hover:bg-slate-700' }}">
+                                           {{ $amount === 'exact' ? 'bg-blue-600 text-white border-blue-600 hover:bg-blue-700' : 'bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200' }}">
                                 {{ $amount === 'exact' ? 'بالضبط' : $amount }}
                             </button>
                             @endforeach
                         </div>
 
                         @if(floatval($cashReceived) >= $this->grand_total && floatval($cashReceived) > 0)
-                            <div class="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl flex justify-between items-center">
-                                <span class="text-emerald-400 font-bold text-xs">الباقي للعميل:</span>
-                                <span class="text-emerald-400 font-black text-lg">{{ number_format(floatval($cashReceived) - $this->grand_total, 2) }} ج.م</span>
+                            <div class="p-3 bg-blue-50 border border-blue-100 rounded-xl flex justify-between items-center">
+                                <span class="text-blue-700 font-bold text-xs">الباقي للعميل:</span>
+                                <span class="text-blue-700 font-black text-lg">{{ number_format(floatval($cashReceived) - $this->grand_total, 2) }} ج.م</span>
                             </div>
                         @elseif(floatval($cashReceived) > 0)
-                            <div class="p-3 bg-rose-500/10 border border-rose-500/20 rounded-xl flex justify-between items-center">
-                                <span class="text-rose-400 font-bold text-xs">المبلغ ناقص:</span>
-                                <span class="text-rose-400 font-black text-lg">{{ number_format($this->grand_total - floatval($cashReceived), 2) }} ج.م</span>
+                            <div class="p-3 bg-rose-50 border border-rose-100 rounded-xl flex justify-between items-center">
+                                <span class="text-rose-700 font-bold text-xs">المبلغ ناقص:</span>
+                                <span class="text-rose-700 font-black text-lg">{{ number_format($this->grand_total - floatval($cashReceived), 2) }} ج.م</span>
                             </div>
                         @endif
                     </div>
                 @elseif($paymentMethod === 'card')
-                    <div class="p-3 bg-blue-500/10 border border-blue-500/20 rounded-xl text-blue-400 text-xs font-bold">
+                    <div class="p-3 bg-blue-50 border border-blue-100 rounded-xl text-blue-700 text-xs font-bold">
                         <i class="fas fa-credit-card ml-2"></i>
                         سيتم خصم المبلغ كاملاً عبر البطاقة: {{ number_format($this->grand_total, 2) }} ج.م
                     </div>
                 @elseif($paymentMethod === 'credit')
-                    <div class="p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl text-amber-400 text-xs font-bold">
+                    <div class="p-3 bg-amber-50 border border-amber-100 rounded-xl text-amber-700 text-xs font-bold">
                         <i class="fas fa-file-invoice ml-2"></i>
                         سيتم إضافة المبلغ لرصيد العميل الآجل.
                     </div>
                     <div class="space-y-1.5">
-                        <label class="text-xs font-bold text-slate-400">الدفعة المقدمة (اختياري)</label>
+                        <label class="text-xs font-bold text-slate-500">الدفعة المقدمة (اختياري)</label>
                         <input type="number" wire:model.live="paid_amount" placeholder="0.00"
-                               class="w-full glass-input px-4 py-2.5 text-slate-100 font-extrabold text-sm transition">
+                               class="w-full glass-input px-4 py-2.5 text-slate-700 font-extrabold text-sm transition">
                     </div>
                 @elseif($paymentMethod === 'multiple')
                     <div class="grid grid-cols-2 gap-3">
                         <div class="space-y-1.5">
-                            <label class="text-xs font-bold text-slate-400">نقدي</label>
+                            <label class="text-xs font-bold text-slate-500">نقدي</label>
                             <input type="number" wire:model.live="cashReceived" placeholder="0.00"
-                                   class="w-full glass-input px-3 py-2.5 text-slate-100 font-extrabold text-sm transition">
+                                   class="w-full glass-input px-3 py-2.5 text-slate-700 font-extrabold text-sm transition">
                         </div>
                         <div class="space-y-1.5">
-                            <label class="text-xs font-bold text-slate-400">شبكة</label>
+                            <label class="text-xs font-bold text-slate-500">شبكة</label>
                             <input type="number" wire:model.live="cardAmount" placeholder="0.00"
-                                   class="w-full glass-input px-3 py-2.5 text-slate-100 font-extrabold text-sm transition">
+                                   class="w-full glass-input px-3 py-2.5 text-slate-700 font-extrabold text-sm transition">
                         </div>
                     </div>
                     @php $multiTotal = floatval($cashReceived) + floatval($cardAmount); @endphp
-                    <div class="p-3 rounded-xl flex justify-between items-center {{ abs($multiTotal - $this->grand_total) < 0.01 ? 'bg-emerald-500/10 border border-emerald-500/20' : 'bg-rose-500/10 border border-rose-500/20' }}">
-                        <span class="text-xs font-bold {{ abs($multiTotal - $this->grand_total) < 0.01 ? 'text-emerald-400' : 'text-rose-400' }}">المجموع المدفوع:</span>
-                        <span class="font-black text-sm {{ abs($multiTotal - $this->grand_total) < 0.01 ? 'text-emerald-400' : 'text-rose-400' }}">{{ number_format($multiTotal, 2) }} ج.م</span>
+                    <div class="p-3 rounded-xl flex justify-between items-center {{ abs($multiTotal - $this->grand_total) < 0.01 ? 'bg-blue-50 border border-blue-100' : 'bg-rose-50 border border-rose-100' }}">
+                        <span class="text-xs font-bold {{ abs($multiTotal - $this->grand_total) < 0.01 ? 'text-blue-700' : 'text-rose-700' }}">المجموع المدفوع:</span>
+                        <span class="font-black text-sm {{ abs($multiTotal - $this->grand_total) < 0.01 ? 'text-blue-700' : 'text-rose-700' }}">{{ number_format($multiTotal, 2) }} ج.م</span>
                     </div>
                 @endif
 
                 {{-- Shipping & Other Charges --}}
                 <div class="grid grid-cols-2 gap-3">
                     <div class="space-y-1">
-                        <label class="text-[11px] font-bold text-slate-400">تكلفة الشحن</label>
+                        <label class="text-[11px] font-bold text-slate-500">تكلفة الشحن</label>
                         <input type="number" wire:model.live="shipping_cost" class="w-full glass-input px-3 py-2 text-xs font-bold transition">
                     </div>
                     <div class="space-y-1">
-                        <label class="text-[11px] font-bold text-slate-400">رسوم أخرى</label>
+                        <label class="text-[11px] font-bold text-slate-500">رسوم أخرى</label>
                         <input type="number" wire:model.live="other_charges" class="w-full glass-input px-3 py-2 text-xs font-bold transition">
                     </div>
                 </div>
 
                 {{-- Notes --}}
                 <div class="space-y-1.5">
-                    <label class="text-xs font-bold text-slate-400">ملاحظات الفاتورة</label>
-                    <textarea wire:model.live="notes" rows="2" placeholder="ملاحظات..." class="w-full glass-input px-4 py-2.5 text-slate-100 text-xs transition"></textarea>
+                    <label class="text-xs font-bold text-slate-500">ملاحظات الفاتورة</label>
+                    <textarea wire:model.live="notes" rows="2" placeholder="ملاحظات..." class="w-full glass-input px-4 py-2.5 text-slate-700 text-xs transition"></textarea>
                 </div>
             </div>
 
             {{-- Action Buttons --}}
-            <div class="flex gap-3 pt-3 border-t border-white/5">
+            <div class="flex gap-3 pt-3 border-t border-slate-100">
                 <button wire:click="submitInvoice"
                         x-on:click="showPaymentModal = false"
-                        class="flex-1 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-extrabold text-xs transition shadow-lg shadow-emerald-600/20 cursor-pointer flex items-center justify-center gap-1.5">
+                        class="flex-1 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white rounded-xl font-extrabold text-xs transition shadow-lg shadow-blue-600/20 cursor-pointer flex items-center justify-center gap-1.5">
                     <i class="fa-solid fa-circle-check"></i> تأكيد وحفظ الفاتورة
                 </button>
                 <button x-on:click="showPaymentModal = false"
-                        class="flex-1 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl font-bold text-xs transition cursor-pointer">
+                        class="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl font-bold text-xs transition cursor-pointer">
                     إلغاء
                 </button>
             </div>
@@ -638,47 +623,47 @@
 
     {{-- ==================== QUICK CUSTOMER ADD MODAL ==================== --}}
     <div x-show="showAddCustomerModal"
-         class="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm"
+         class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
          x-transition
          style="display: none;">
 
-        <div class="bg-slate-900 rounded-3xl p-6 w-full max-sm shadow-2xl space-y-5 mx-4 border border-white/5"
+        <div class="bg-white rounded-3xl p-6 w-full max-sm shadow-2xl space-y-5 mx-4 border border-slate-200"
              x-on:click.away="showAddCustomerModal = false"
              @close-customer-modal.window="showAddCustomerModal = false">
 
-            <div class="flex justify-between items-center border-b border-white/5 pb-3">
-                <h3 class="font-extrabold text-slate-200 text-sm flex items-center gap-2">
-                    <i class="fa-solid fa-user-plus text-emerald-400"></i> إضافة عميل سريع
+            <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+                <h3 class="font-extrabold text-slate-800 text-sm flex items-center gap-2">
+                    <i class="fa-solid fa-user-plus text-blue-500"></i> إضافة عميل سريع
                 </h3>
-                <button x-on:click="showAddCustomerModal = false" class="text-slate-400 hover:text-slate-200 cursor-pointer">
+                <button x-on:click="showAddCustomerModal = false" class="text-slate-400 hover:text-slate-600 cursor-pointer">
                     <i class="fa-solid fa-xmark text-lg"></i>
                 </button>
             </div>
 
             <div class="space-y-4">
                 <div class="space-y-1.5">
-                    <label class="text-xs font-bold text-slate-400">اسم العميل <span class="text-rose-400">*</span></label>
+                    <label class="text-xs font-bold text-slate-500">اسم العميل <span class="text-rose-400">*</span></label>
                     <input type="text" wire:model="newCustomerName" placeholder="الاسم الكامل"
-                           class="w-full glass-input px-4 py-2.5 text-slate-100 font-bold text-sm transition">
+                           class="w-full glass-input px-4 py-2.5 text-slate-700 font-bold text-sm transition">
                     @error('newCustomerName') <span class="text-rose-400 text-[10px] font-bold">{{ $message }}</span> @enderror
                 </div>
 
                 <div class="space-y-1.5">
-                    <label class="text-xs font-bold text-slate-400">رقم الهاتف</label>
+                    <label class="text-xs font-bold text-slate-500">رقم الهاتف</label>
                     <input type="text" wire:model="newCustomerPhone" placeholder="رقم الجوال"
-                           class="w-full glass-input px-4 py-2.5 text-slate-100 font-bold text-sm transition">
+                           class="w-full glass-input px-4 py-2.5 text-slate-700 font-bold text-sm transition">
                     @error('newCustomerPhone') <span class="text-rose-400 text-[10px] font-bold">{{ $message }}</span> @enderror
                 </div>
             </div>
 
             {{-- Action Buttons --}}
-            <div class="flex gap-3 pt-3 border-t border-white/5">
+            <div class="flex gap-3 pt-3 border-t border-slate-100">
                 <button wire:click="quickAddCustomer"
-                        class="flex-1 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-extrabold text-xs transition shadow-lg shadow-emerald-600/20 cursor-pointer flex items-center justify-center gap-1.5">
+                        class="flex-1 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white rounded-xl font-extrabold text-xs transition shadow-lg shadow-blue-600/20 cursor-pointer flex items-center justify-center gap-1.5">
                     <i class="fa-solid fa-save"></i> حفظ وتحديد العميل
                 </button>
                 <button x-on:click="showAddCustomerModal = false"
-                        class="flex-1 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl font-bold text-xs transition cursor-pointer">
+                        class="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl font-bold text-xs transition cursor-pointer">
                     إلغاء
                 </button>
             </div>
@@ -687,33 +672,33 @@
 
     {{-- ==================== MANAGER PIN MODAL ==================== --}}
     @if($showManagerPinModal)
-        <div class="fixed inset-0 z-[100] flex items-center justify-center bg-black/75 backdrop-blur-sm" x-transition>
-            <div class="bg-slate-900 rounded-3xl p-6 w-full max-w-sm shadow-2xl space-y-4 mx-4 border border-white/5">
-                <div class="flex justify-between items-center border-b border-white/5 pb-3">
-                    <h3 class="font-extrabold text-slate-200 text-sm flex items-center gap-2">
-                        <i class="fa-solid fa-user-shield text-amber-400"></i> تصريح المدير للخصم
+        <div class="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm" x-transition>
+            <div class="bg-white rounded-3xl p-6 w-full max-w-sm shadow-2xl space-y-4 mx-4 border border-slate-200">
+                <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+                    <h3 class="font-extrabold text-slate-800 text-sm flex items-center gap-2">
+                        <i class="fa-solid fa-user-shield text-amber-500"></i> تصريح المدير للخصم
                     </h3>
-                    <button wire:click="$set('showManagerPinModal', false)" class="text-slate-400 hover:text-slate-200 cursor-pointer">
+                    <button wire:click="$set('showManagerPinModal', false)" class="text-slate-400 hover:text-slate-600 cursor-pointer">
                         <i class="fa-solid fa-xmark text-lg"></i>
                     </button>
                 </div>
                 <div class="space-y-3">
-                    <p class="text-xs text-slate-400 font-medium">الخصم المدخل يتجاوز 10%، يرجى إدخل الرمز السري للمدير للموافقة على العملية (الرمز الافتراضي: 1234):</p>
+                    <p class="text-xs text-slate-500 font-medium">الخصم المدخل يتجاوز 10%، يرجى إدخل الرمز السري للمدير للموافقة على العملية (الرمز الافتراضي: 1234):</p>
                     <input type="password"
                            wire:model="managerPinInput"
                            placeholder="رمز PIN المدير"
-                           class="w-full glass-input px-4 py-2.5 text-center tracking-widest text-slate-100 font-extrabold text-sm transition {{ $managerPinError ? 'border-rose-400 focus:border-rose-500' : '' }}">
+                           class="w-full glass-input px-4 py-2.5 text-center tracking-widest text-slate-700 font-extrabold text-sm transition {{ $managerPinError ? 'border-rose-400 focus:border-rose-500' : '' }}">
                     @if($managerPinError)
-                        <span class="text-rose-400 text-[10px] font-bold block text-center">{{ $managerPinError }}</span>
+                        <span class="text-rose-600 text-[10px] font-bold block text-center">{{ $managerPinError }}</span>
                     @endif
                 </div>
-                <div class="flex gap-3 pt-3 border-t border-white/5">
+                <div class="flex gap-3 pt-3 border-t border-slate-100">
                     <button wire:click="verifyManagerPin"
                             class="flex-1 py-3 bg-amber-500 hover:bg-amber-600 text-white rounded-xl font-extrabold text-xs transition shadow-lg shadow-amber-500/20 cursor-pointer">
                         تأكيد التصريح
                     </button>
                     <button wire:click="$set('showManagerPinModal', false)"
-                            class="flex-1 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl font-bold text-xs transition cursor-pointer">
+                            class="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl font-bold text-xs transition cursor-pointer">
                         إلغاء
                     </button>
                 </div>

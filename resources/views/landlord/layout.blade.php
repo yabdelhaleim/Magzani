@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة التحكم السحابية | مخزني SaaS</title>
+    <title>لوحة التحكم السحابية | كيان SaaS</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -46,16 +46,49 @@
 </head>
 <body class="text-slate-100 min-h-screen flex">
 
+    <!-- SVG Defs for Kayan Logo -->
+    <svg width="0" height="0" style="position:absolute;">
+        <defs>
+            <radialGradient id="kayanBgSmall" cx="40%" cy="30%" r="75%">
+                <stop offset="0%" stop-color="#2563eb" />
+                <stop offset="60%" stop-color="#1d4ed8" />
+                <stop offset="100%" stop-color="#0b132b" />
+            </radialGradient>
+            <linearGradient id="kLeftSmall" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#60a5fa" />
+                <stop offset="100%" stop-color="#2563eb" />
+            </linearGradient>
+            <linearGradient id="kRightTopSmall" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#38bdf8" />
+                <stop offset="100%" stop-color="#0284c7" />
+            </linearGradient>
+            <linearGradient id="kRightBottomSmall" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#0284c7" />
+                <stop offset="100%" stop-color="#1e3a8a" />
+            </linearGradient>
+            <filter id="glowSmall" x="-20%" y="-20%" width="140%" height="140%">
+                <feGaussianBlur stdDeviation="2" result="blur" />
+                <feComposite in="SourceGraphic" in2="blur" operator="over" />
+            </filter>
+        </defs>
+    </svg>
+
     <!-- Sidebar -->
     <aside class="w-64 glass-panel border-l border-slate-800 flex flex-col justify-between fixed h-full z-50">
         <div>
             <!-- Logo -->
             <div class="p-6 border-b border-slate-800 text-center">
-                <a href="{{ url('/') }}" class="text-xl font-extrabold bg-gradient-to-r from-indigo-400 to-purple-500 bg-clip-text text-transparent flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-cubes"></i>
-                    <span>مخزني SaaS</span>
+                <a href="{{ url('/') }}" class="text-xl font-extrabold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent flex items-center justify-center gap-2">
+                    <svg width="24" height="24" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style="display:inline-block; vertical-align:middle;">
+                        <rect x="5" y="5" width="90" height="90" rx="26" fill="url(#kayanBgSmall)" />
+                        <path d="M 34 26 L 46 18 L 46 71 L 34 79 Z" fill="url(#kLeftSmall)" filter="url(#glowSmall)" />
+                        <path d="M 46 44 L 68 20 L 78 20 L 53 47 Z" fill="url(#kRightTopSmall)" />
+                        <path d="M 50 44 L 75 72 L 64 72 L 46 51 Z" fill="url(#kRightBottomSmall)" />
+                        <path d="M 46 44 L 56 48 L 46 52 Z" fill="#e0f2fe" opacity="0.9" />
+                    </svg>
+                    <span>كيان SaaS</span>
                 </a>
-                <span class="text-xs text-purple-400 block mt-1 font-semibold">لوحة تحكم السوبر أدمن</span>
+                <span class="text-xs text-blue-400 block mt-1 font-semibold">لوحة تحكم السوبر أدمن</span>
             </div>
             
             <!-- Navigation Links -->

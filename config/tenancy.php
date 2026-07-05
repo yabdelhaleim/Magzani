@@ -24,6 +24,37 @@ return [
     )))),
 
     /**
+     * Base domain used when creating tenant domains in production.
+     * Example: kayan + remotelly1.site => kayan.remotelly1.site
+     * Falls back to the central domain suffix, then localhost.
+     */
+    'tenant_domain_suffix' => env('TENANT_DOMAIN_SUFFIX') ?: (function (): string {
+        $centralDomains = env('CENTRAL_DOMAINS');
+        if ($centralDomains) {
+            $host = strtolower(trim(explode(',', (string) $centralDomains)[0]));
+            $parts = explode('.', $host);
+
+            if (count($parts) >= 3) {
+                return implode('.', array_slice($parts, 1));
+            }
+
+            if (count($parts) === 2) {
+                return $host;
+            }
+        }
+
+        return 'localhost';
+    })(),
+
+    /**
+     * Public URL parts for tenant domains shown in landlord dashboard links.
+     */
+    'tenant_url' => [
+        'scheme' => env('TENANT_URL_SCHEME', env('APP_ENV', 'production') === 'local' ? 'http' : 'https'),
+        'port' => env('TENANT_URL_PORT'),
+    ],
+
+    /**
      * Tenancy bootstrappers are executed when tenancy is initialized.
      * Their responsibility is making Laravel features tenant-aware.
      *

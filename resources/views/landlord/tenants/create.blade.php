@@ -19,7 +19,7 @@
                 <label for="tenant_id" class="block text-sm font-bold text-slate-300">معرف الشركة / النطاق الفرعي *</label>
                 <div class="flex bg-slate-900 border border-slate-800 focus-within:border-indigo-500 rounded-xl px-4 py-1 items-center transition">
                     <input type="text" id="tenant_id" name="tenant_id" required class="bg-transparent border-none outline-none text-white py-2 flex-grow text-left font-semibold" placeholder="مثال: my-store" style="direction: ltr;">
-                    <span class="text-slate-500 font-mono text-sm ml-2" style="direction: ltr;">.localhost:8000</span>
+                    <span class="text-slate-500 font-mono text-sm ml-2" style="direction: ltr;">.{{ config('tenancy.tenant_domain_suffix', 'localhost') }}</span>
                 </div>
                 <span class="text-xs text-slate-500 block">اكتب أحرفاً إنجليزية صغيرة فقط وبدون مسافات. سيكون هذا هو اسم رابط تسجيل الدخول وقاعدة البيانات.</span>
                 @error('tenant_id') <p class="text-xs text-rose-400 mt-1">{{ $message }}</p> @enderror

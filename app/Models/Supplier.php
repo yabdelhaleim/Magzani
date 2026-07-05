@@ -26,6 +26,7 @@ class Supplier extends Model
         // المالية
         'opening_balance',
         'current_balance',
+        'payment_terms',
         // الحالة
         'is_active',
         'notes',

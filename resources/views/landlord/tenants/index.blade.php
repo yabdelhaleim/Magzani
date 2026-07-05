@@ -38,7 +38,7 @@
                         <!-- Domain -->
                         <td class="py-4 font-mono text-xs text-purple-300">
                             @if($tenant->domains->first())
-                            <a href="http://{{ $tenant->domains->first()->domain }}:8000" target="_blank" class="hover:underline flex items-center gap-1.5">
+                            <a href="{{ $tenant->publicUrl() }}" target="_blank" class="hover:underline flex items-center gap-1.5">
                                 <span>{{ $tenant->domains->first()->domain }}</span>
                                 <i class="fa-solid fa-up-right-from-square text-[10px] text-slate-500"></i>
                             </a>

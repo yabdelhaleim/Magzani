@@ -25,6 +25,8 @@ class CashTransaction extends Model
         'transaction_date',
         'category',
         'reference',
+        'counter_account_id',
+        'journal_entry_id',
         'created_by',
     ];
 
@@ -115,6 +117,16 @@ class CashTransaction extends Model
     public function creator()
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function journalEntry()
+    {
+        return $this->belongsTo(JournalEntry::class);
+    }
+
+    public function counterAccount()
+    {
+        return $this->belongsTo(Account::class, 'counter_account_id');
     }
 
     // ==================== Scopes ====================

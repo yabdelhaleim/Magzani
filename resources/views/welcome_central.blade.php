@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>مخزني SaaS | نظام إدارة المخازن ونقاط البيع السحابي</title>
+    <title>كيان SaaS | نظام إدارة الأعمال والمخازن الذكي</title>
     
     <!-- Google Fonts: Cairo & Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -15,14 +15,14 @@
 
     <style>
         :root {
-            --bg-color: #0f172a;
-            --primary-gradient: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
-            --accent-gradient: linear-gradient(135deg, #3b82f6 0%, #06b6d4 100%);
-            --glass-bg: rgba(30, 41, 59, 0.7);
-            --glass-border: rgba(255, 255, 255, 0.08);
+            --bg-color: #0c1222;
+            --primary-gradient: linear-gradient(135deg, #2563eb 0%, #06b6d4 100%);
+            --accent-gradient: linear-gradient(135deg, #1d4ed8 0%, #3b82f6 100%);
+            --glass-bg: rgba(17, 24, 39, 0.75);
+            --glass-border: rgba(255, 255, 255, 0.05);
             --text-primary: #f8fafc;
             --text-secondary: #94a3b8;
-            --card-hover: rgba(51, 65, 85, 0.5);
+            --card-hover: rgba(30, 41, 59, 0.55);
         }
 
         * {
@@ -475,13 +475,44 @@
         }
     </style>
 </head>
-<body>
+    <!-- SVG Defs for Kayan Logo -->
+    <svg width="0" height="0" style="position:absolute;">
+        <defs>
+            <radialGradient id="kayanBgSmall" cx="40%" cy="30%" r="75%">
+                <stop offset="0%" stop-color="#2563eb" />
+                <stop offset="60%" stop-color="#1d4ed8" />
+                <stop offset="100%" stop-color="#0b132b" />
+            </radialGradient>
+            <linearGradient id="kLeftSmall" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#60a5fa" />
+                <stop offset="100%" stop-color="#2563eb" />
+            </linearGradient>
+            <linearGradient id="kRightTopSmall" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#38bdf8" />
+                <stop offset="100%" stop-color="#0284c7" />
+            </linearGradient>
+            <linearGradient id="kRightBottomSmall" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#0284c7" />
+                <stop offset="100%" stop-color="#1e3a8a" />
+            </linearGradient>
+            <filter id="glowSmall" x="-20%" y="-20%" width="140%" height="140%">
+                <feGaussianBlur stdDeviation="2" result="blur" />
+                <feComposite in="SourceGraphic" in2="blur" operator="over" />
+            </filter>
+        </defs>
+    </svg>
 
     <!-- Navigation -->
     <nav>
         <div class="logo">
-            <i class="fa-solid fa-boxes-stacked"></i>
-            <span>مخزني SaaS</span>
+            <svg width="34" height="34" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style="display:inline-block; vertical-align:middle;">
+                <rect x="5" y="5" width="90" height="90" rx="26" fill="url(#kayanBgSmall)" />
+                <path d="M 34 26 L 46 18 L 46 71 L 34 79 Z" fill="url(#kLeftSmall)" filter="url(#glowSmall)" />
+                <path d="M 46 44 L 68 20 L 78 20 L 53 47 Z" fill="url(#kRightTopSmall)" />
+                <path d="M 50 44 L 75 72 L 64 72 L 46 51 Z" fill="url(#kRightBottomSmall)" />
+                <path d="M 46 44 L 56 48 L 46 52 Z" fill="#e0f2fe" opacity="0.9" />
+            </svg>
+            <span style="font-weight:900; letter-spacing:1px; margin-right:8px; background:linear-gradient(135deg, #38bdf8, #2563eb); -webkit-background-clip:text; -webkit-text-fill-color:transparent;">كيان SaaS</span>
         </div>
         <ul class="nav-links">
             <li><a href="#hero">الرئيسية</a></li>
@@ -493,10 +524,10 @@
 
     <!-- Hero Section -->
     <section class="hero" id="hero">
-        <div class="badge">🚀 أطلق مشروعك السحابي اليوم مع مخزني</div>
+        <div class="badge" style="background:rgba(37,99,235,0.15); border-color:rgba(37,99,235,0.3); color:#60a5fa;">🚀 أطلق مشروعك السحابي اليوم مع منصة كيان</div>
         <h1>كل ما تحتاجه لإدارة <span>مخازنك، نقاط بيعك، وتصنيعك</span> في منصة واحدة</h1>
         <p class="hero-desc">
-            مخزني هو نظام متكامل مصمم خصيصاً للشركات والمحلات لتتبع مخزون المنتجات وإدارتها، البيع المباشر من خلال الكاشير، وحساب تكاليف التصنيع بدقة فائقة.
+            منصة كيان هي نظام ذكي متكامل مصمم خصيصاً للشركات والمحلات لتتبع مخزون المنتجات وإدارتها، البيع المباشر من خلال الكاشير، وحساب تكاليف التصنيع بدقة فائقة.
         </p>
 
         <!-- Subdomain Redirect Tool Card -->
@@ -619,7 +650,7 @@
 
     <!-- Footer -->
     <footer>
-        <p>جميع الحقوق محفوظة &copy; 2026 لمشروع مخزني SaaS</p>
+        <p>جميع الحقوق محفوظة &copy; 2026 لمشروع كيان SaaS</p>
     </footer>
 
     <script>

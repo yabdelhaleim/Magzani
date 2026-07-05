@@ -343,7 +343,7 @@
 
         <!-- تذييل التقرير -->
         <div class="mt-6 pt-4 border-top text-center text-gray-500 text-sm">
-            <p class="mb-1">تم إنشاء هذا التقرير بواسطة نظام إدارة المخازن - Magzani</p>
+            <p class="mb-1">تم إنشاء هذا التقرير بواسطة نظام إدارة الأعمال والمخازن - Kayan</p>
             <p class="mb-0">تاريخ الطباعة: {{ \Carbon\Carbon::now()->format('Y-m-d H:i:s') }}</p>
         </div>
     </div>

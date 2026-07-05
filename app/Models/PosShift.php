@@ -28,6 +28,7 @@ class PosShift extends Model
         'cash_difference',
         'status',
         'notes',
+        'journal_entry_id',
     ];
 
     /** قيم الحالة المسموحة */
@@ -65,6 +66,11 @@ class PosShift extends Model
     public function salesReturns(): HasMany
     {
         return $this->hasMany(SalesReturn::class, 'shift_id');
+    }
+
+    public function journalEntry(): BelongsTo
+    {
+        return $this->belongsTo(JournalEntry::class);
     }
 
     // ==================== Scopes ====================

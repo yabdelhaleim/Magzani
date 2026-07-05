@@ -32,7 +32,7 @@
     <!-- كروت مقارنة الباقات -->
     <div class="text-center mb-8">
         <h3 class="text-3xl font-black text-slate-800 font-cairo mb-2">اختر الباقة المناسبة لنمو أعمالك</h3>
-        <p class="text-slate-500 text-sm max-w-lg mx-auto">قارن بين باقات نظام مخزني المتميزة واختر ما يلبي طموحاتك واحتياجات تجارتك.</p>
+        <p class="text-slate-500 text-sm max-w-lg mx-auto">قارن بين باقات نظام كيان المتميزة واختر ما يلبي طموحاتك واحتياجات تجارتك.</p>
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12 items-stretch">
@@ -86,7 +86,7 @@
                 @if($currentPlanId === 'starter')
                     <button class="w-full bg-slate-100 text-slate-400 font-bold py-3 px-6 rounded-2xl cursor-not-allowed text-center" disabled>نشطة حالياً</button>
                 @else
-                    <a href="https://wa.me/966500000000?text={{ urlencode('أريد ترقية باقة متجري في نظام مخزني إلى باقة Starter') }}" target="_blank"
+                    <a href="https://wa.me/966500000000?text={{ urlencode('أريد ترقية باقة متجري في نظام كيان إلى باقة Starter') }}" target="_blank"
                        class="block w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-3 px-6 rounded-2xl transition text-center shadow-lg hover:shadow-xl">طلب الباقة</a>
                 @endif
             </div>
@@ -141,7 +141,7 @@
                 @if($currentPlanId === 'pro')
                     <button class="w-full bg-slate-800 text-slate-500 font-bold py-3 px-6 rounded-2xl cursor-not-allowed text-center" disabled>نشطة حالياً</button>
                 @else
-                    <a href="https://wa.me/966500000000?text={{ urlencode('أريد ترقية باقة متجري في نظام مخزني إلى باقة Pro الاحترافية') }}" target="_blank"
+                    <a href="https://wa.me/966500000000?text={{ urlencode('أريد ترقية باقة متجري في نظام كيان إلى باقة Pro الاحترافية') }}" target="_blank"
                        class="block w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-bold py-3 px-6 rounded-2xl transition text-center shadow-lg hover:shadow-amber-500/20">ترقية الباقة الآن</a>
                 @endif
             </div>
@@ -196,7 +196,7 @@
                 @if($currentPlanId === 'enterprise')
                     <button class="w-full bg-slate-100 text-slate-400 font-bold py-3 px-6 rounded-2xl cursor-not-allowed text-center" disabled>نشطة حالياً</button>
                 @else
-                    <a href="https://wa.me/966500000000?text={{ urlencode('أريد ترقية باقة متجري في نظام مخزني إلى باقة Enterprise الشاملة') }}" target="_blank"
+                    <a href="https://wa.me/966500000000?text={{ urlencode('أريد ترقية باقة متجري في نظام كيان إلى باقة Enterprise الشاملة') }}" target="_blank"
                        class="block w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-3 px-6 rounded-2xl transition text-center shadow-lg hover:shadow-xl">تواصل للترقية</a>
                 @endif
             </div>
@@ -211,7 +211,7 @@
         <p class="text-slate-500 text-sm mb-6 max-w-lg mx-auto">فريق الدعم الفني جاهز لمساعدتك في تخصيص باقة تناسب حجم متجرك وتطلعاتك، تواصل معنا الآن عبر قنوات الاتصال المباشرة.</p>
         
         <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <a href="https://wa.me/966500000000?text={{ urlencode('مرحباً، أريد الاستفسار عن تفاصيل ترقية الباقة لمتجري في نظام مخزني') }}" target="_blank"
+            <a href="https://wa.me/966500000000?text={{ urlencode('مرحباً، أريد الاستفسار عن تفاصيل ترقية الباقة لمتجري في نظام كيان') }}" target="_blank"
                class="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold py-3 px-8 rounded-2xl transition shadow-lg hover:shadow-emerald-600/20 shrink-0">
                 <i class="fab fa-whatsapp text-lg"></i>
                 <span>تواصل معنا عبر واتساب</span>

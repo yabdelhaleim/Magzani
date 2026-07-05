@@ -23,6 +23,7 @@ class PlanSeeder extends Seeder
             PlanFeature::MANUFACTURING   => ['enabled' => true,  'limit' => null],
             PlanFeature::MULTI_WAREHOUSE => ['enabled' => true,  'limit' => null],
             PlanFeature::ACCOUNTING      => ['enabled' => true,  'limit' => null],
+            PlanFeature::ACCOUNTING_ADVANCED => ['enabled' => true, 'limit' => null],
             PlanFeature::STOCK_COUNT     => ['enabled' => true,  'limit' => null],
             PlanFeature::REPORTS_ADVANCED=> ['enabled' => true,  'limit' => null],
         ];
@@ -38,6 +39,7 @@ class PlanSeeder extends Seeder
             PlanFeature::MANUFACTURING   => ['enabled' => true, 'limit' => null],
             PlanFeature::MULTI_WAREHOUSE => ['enabled' => true, 'limit' => 5],
             PlanFeature::ACCOUNTING      => ['enabled' => true, 'limit' => null],
+            PlanFeature::ACCOUNTING_ADVANCED => ['enabled' => true, 'limit' => null],
             PlanFeature::REPORTS_ADVANCED=> ['enabled' => true, 'limit' => null],
         ];
 
@@ -47,6 +49,7 @@ class PlanSeeder extends Seeder
             PlanFeature::MANUFACTURING   => ['enabled' => true, 'limit' => null],
             PlanFeature::MULTI_WAREHOUSE => ['enabled' => true, 'limit' => null],
             PlanFeature::ACCOUNTING      => ['enabled' => true, 'limit' => null],
+            PlanFeature::ACCOUNTING_ADVANCED => ['enabled' => true, 'limit' => null],
             PlanFeature::STOCK_COUNT     => ['enabled' => true, 'limit' => null],
             PlanFeature::REPORTS_ADVANCED=> ['enabled' => true, 'limit' => null],
         ];

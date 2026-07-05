@@ -29,6 +29,7 @@ class SalesReturn extends Model
         'confirmed_by',
         'confirmed_at',
         'shift_id',
+        'journal_entry_id',
     ];
 
     protected $casts = [
@@ -50,6 +51,11 @@ class SalesReturn extends Model
     public function salesInvoice(): BelongsTo
     {
         return $this->belongsTo(SalesInvoice::class);
+    }
+
+    public function journalEntry(): BelongsTo
+    {
+        return $this->belongsTo(JournalEntry::class);
     }
 
     public function customer(): BelongsTo

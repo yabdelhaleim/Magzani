@@ -15,6 +15,7 @@ class PlanFeature extends Model
     const MANUFACTURING = 'manufacturing';
     const MULTI_WAREHOUSE = 'multi_warehouse';
     const ACCOUNTING = 'accounting';
+    const ACCOUNTING_ADVANCED = 'accounting_advanced';
     const STOCK_COUNT = 'stock_count';
     const PURCHASE = 'purchase';
     const REPORTS_ADVANCED = 'reports_advanced';

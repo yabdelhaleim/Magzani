@@ -67,7 +67,7 @@
                             <td class="py-3 font-semibold text-white">{{ $tenant->id }}</td>
                             <td class="py-3 font-mono text-xs text-purple-300">
                                 @if($tenant->domains->first())
-                                <a href="http://{{ $tenant->domains->first()->domain }}:8000" target="_blank" class="hover:underline">
+                                <a href="{{ $tenant->publicUrl() }}" target="_blank" class="hover:underline">
                                     {{ $tenant->domains->first()->domain }}
                                 </a>
                                 @else

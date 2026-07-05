@@ -322,6 +322,13 @@ class ManufacturingOrderService
 
             Log::info('Manufacturing order confirmed and stock reserved', ['order_number' => $order->order_number]);
 
+            // GL: ترحيل سحب المواد الخام إلى WIP
+            try {
+                app(\App\Services\Accounting\PostingService::class)->postManufacturingConfirm($order);
+            } catch (\Throwable $e) {
+                Log::warning("[Manufacturing] GL posting failed for confirm: " . $e->getMessage());
+            }
+
             return $order->fresh();
         });
     }
@@ -416,6 +423,13 @@ class ManufacturingOrderService
                 'warehouse_id' => $warehouseId,
             ]);
 
+            // GL: ترحيل إنتاج تام (WIP → مخزون)
+            try {
+                app(\App\Services\Accounting\PostingService::class)->postManufacturingComplete($order);
+            } catch (\Throwable $e) {
+                Log::warning("[Manufacturing] GL posting failed for complete: " . $e->getMessage());
+            }
+
             return $order->fresh(['components', 'product', 'inventoryMovements']);
         });
     }
@@ -470,6 +484,8 @@ class ManufacturingOrderService
                 'order_number' => $order->order_number,
                 'reason' => $reason,
             ]);
+
+            event(new \App\Events\Manufacturing\ManufacturingOrderCancelled($order, $reason));
 
             return $order->fresh();
         });

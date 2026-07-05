@@ -22,31 +22,46 @@ class EventServiceProvider extends ServiceProvider
     ],
     \App\Events\Invoice\SalesInvoiceConfirmed::class => [
         \App\Listeners\Invoice\UpdateSalesInvoiceConfirmedCache::class,
+        \App\Listeners\Accounting\PostSalesInvoiceToGL::class,
     ],
     \App\Events\Invoice\SalesInvoiceCancelled::class => [
         \App\Listeners\Invoice\HandleSalesInvoiceCancellation::class,
+        \App\Listeners\Accounting\ReverseSalesInvoiceFromGL::class,
     ],
     \App\Events\Invoice\PurchaseInvoiceCreated::class => [
         \App\Listeners\Invoice\SendPurchaseInvoiceCreatedNotification::class,
     ],
+    \App\Events\Invoice\PurchaseInvoiceConfirmed::class => [
+        \App\Listeners\Accounting\PostPurchaseInvoiceToGL::class,
+    ],
     \App\Events\Invoice\PurchaseInvoiceCancelled::class => [
         \App\Listeners\Invoice\HandlePurchaseInvoiceCancellation::class,
+        \App\Listeners\Accounting\ReversePurchaseInvoiceFromGL::class,
+    ],
+    \App\Events\Manufacturing\ManufacturingOrderCancelled::class => [
+        \App\Listeners\Accounting\ReverseManufacturingOrderFromGL::class,
     ],
 
     // Payment Events
     \App\Events\Payment\PaymentReceived::class => [
         \App\Listeners\Payment\HandlePaymentReceived::class,
+        \App\Listeners\Accounting\PostPaymentToGL::class,
     ],
     \App\Events\Payment\PaymentCancelled::class => [
         \App\Listeners\Payment\HandlePaymentCancellation::class,
+    ],
+    \App\Events\Payment\SupplierPaymentCreated::class => [
+        \App\Listeners\Accounting\PostSupplierPaymentToGL::class,
     ],
 
     // Return Events
     \App\Events\Return\SalesReturnProcessed::class => [
         \App\Listeners\Return\HandleSalesReturnProcessed::class,
+        \App\Listeners\Accounting\PostSalesReturnToGL::class,
     ],
     \App\Events\Return\PurchaseReturnProcessed::class => [
         \App\Listeners\Return\HandlePurchaseReturnProcessed::class,
+        \App\Listeners\Accounting\PostPurchaseReturnToGL::class,
     ],
 
     // Stock Events

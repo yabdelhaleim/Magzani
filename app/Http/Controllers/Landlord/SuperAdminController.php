@@ -151,8 +151,9 @@ class SuperAdminController extends Controller
             ]);
 
             // إنشاء الدومين
+            $tenantDomainSuffix = (string) config('tenancy.tenant_domain_suffix', 'localhost');
             $tenant->domains()->create([
-                'domain' => $request->tenant_id . '.localhost',
+                'domain' => $request->tenant_id.'.'.$tenantDomainSuffix,
             ]);
 
             // تشغيل تهيئة وتلقيم قاعدة بيانات المستأجر

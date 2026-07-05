@@ -37,6 +37,8 @@ class SalesInvoice extends Model
         'shift_id',
         'source',
         'payment_method',
+        'journal_entry_id',
+        'cogs_entry_id',
     ];
 
     protected $casts = [
@@ -61,6 +63,16 @@ class SalesInvoice extends Model
     public function shift()
     {
         return $this->belongsTo(PosShift::class, 'shift_id');
+    }
+
+    public function journalEntry()
+    {
+        return $this->belongsTo(JournalEntry::class);
+    }
+
+    public function cogsEntry()
+    {
+        return $this->belongsTo(JournalEntry::class, 'cogs_entry_id');
     }
 
     public function customer()

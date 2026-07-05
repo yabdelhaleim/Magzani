@@ -1,83 +1,46 @@
 @extends('layouts.app')
 
 @section('title', 'إعدادات الكاشير')
-@section('page-title', 'إعدا�@push('styles')
+@section('page-title', 'إعدا@push('styles')
 <style>
-    :root {
+        :root {
         --tf-bg:          transparent;
-        --tf-surface:     rgba(22, 33, 56, 0.6);
-        --tf-surface2:    rgba(10, 16, 28, 0.55);
-        --tf-border:      rgba(255, 255, 255, 0.06);
-        --tf-border-soft: rgba(255, 255, 255, 0.04);
-        --tf-indigo:      #6366f1;
-        --tf-indigo-light:#818cf8;
-        --tf-indigo-soft: rgba(99, 102, 241, 0.15);
+        --tf-surface:     #ffffff;
+        --tf-surface2:    #f8fafc;
+        --tf-border:      #e2e8f0;
+        --tf-border-soft: #f1f5f9;
+        --tf-indigo:      #2563eb;
+        --tf-indigo-light:#3b82f6;
+        --tf-indigo-soft: rgba(37, 99, 235, 0.1);
         --tf-blue:        #3b82f6;
-        --tf-blue-soft:   rgba(59, 130, 246, 0.15);
-        --tf-green:       #10b981;
-        --tf-green-soft:  rgba(16, 185, 129, 0.15);
+        --tf-blue-soft:   rgba(37, 99, 235, 0.1);
+        --tf-green:       #2563eb;
+        --tf-green-soft:  rgba(37, 99, 235, 0.1);
         --tf-red:         #ef4444;
         --tf-red-soft:    rgba(239, 68, 68, 0.15);
         --tf-amber:       #f59e0b;
         --tf-amber-soft:  rgba(245, 158, 11, 0.15);
-
-        --tf-text-h:      #f1f5f9;
-        --tf-text-b:      #cbd5e1;
-        --tf-text-m:      #94a3b8;
-        --tf-text-d:      #64748b;
+        --tf-text-h:      #0f172a;
+        --tf-text-b:      #334155;
+        --tf-text-m:      #64748b;
+        --tf-text-d:      #94a3b8;
         --tf-text-s:      #475569;
-
-        --tf-shadow-sm:   0 2px 12px rgba(0,0,0,0.15);
-        --tf-shadow-card: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
-        --tf-shadow-lg:   0 12px 40px rgba(0, 0, 0, 0.35);
+        --tf-shadow-sm:   0 2px 12px rgba(0,0,0,0.05);
+        --tf-shadow-card: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+        --tf-shadow-lg:   0 10px 25px -5px rgba(0, 0, 0, 0.05);
         --radius-lg:      20px;
         --radius-md:      14px;
         --radius-sm:      8px;
     }
 
-    /* Scoped Dark Mode Overrides for Immersive Cashier Experience */
-    body, .main-content, #mainContent {
-        background: radial-gradient(circle at top right, #131e35, #080d1a) !important;
-        color: #e2e8f0 !important;
-    }
-    .sidebar {
-        background: #070b14 !important;
-        border-left: 1px solid rgba(255, 255, 255, 0.03) !important;
-    }
-    .sidebar * {
-        color: rgba(226, 232, 240, 0.65) !important;
-    }
-    .sidebar .nav-item.active, .sidebar .nav-item.active * {
-        background: rgba(16, 185, 129, 0.1) !important;
-        color: #10b981 !important;
-        border-right: 3px solid #10b981 !important;
-    }
-    .sidebar .nav-section-label {
-        color: rgba(226, 232, 240, 0.3) !important;
-    }
-    .sidebar .nav-divider {
-        border-color: rgba(255, 255, 255, 0.03) !important;
-    }
-    .main-header {
-        background: #070b14 !important;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.03) !important;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25) !important;
-    }
-    .main-header * {
-        color: #e2e8f0 !important;
-    }
-    .main-footer {
-        background: #070b14 !important;
-        border-top: 1px solid rgba(255, 255, 255, 0.03) !important;
-        color: rgba(226, 232, 240, 0.35) !important;
-    }
+    
 
     .pos-settings-page {
         background: var(--tf-bg);
         min-height: 100vh;
         padding: 24px;
-        backdrop-filter: blur(12px) !important;
-        -webkit-backdrop-filter: blur(12px) !important;
+        
+        -webkit-
     }
 
     @keyframes fadeUp {
@@ -137,13 +100,13 @@
         padding: 16px;
         border-radius: 12px;
         border: 1.5px solid var(--tf-border-soft);
-        background: rgba(22, 33, 56, 0.4) !important;
+        background: #f8fafc !important;
         transition: all 0.25s;
         cursor: pointer;
     }
     .toggle-switch-container:hover {
-        border-color: var(--tf-indigo-light) !important;
-        background: rgba(22, 33, 56, 0.6) !important;
+        border-color: #cbd5e1 !important;
+        background: #f1f5f9 !important;
     }
     .toggle-switch {
         position: relative;
@@ -174,16 +137,16 @@
 
     /* Input overrides to fit style */
     input[type="text"], textarea, select {
-        background: rgba(10, 16, 28, 0.65) !important;
-        border: 1px solid rgba(255, 255, 255, 0.08) !important;
-        color: #f1f5f9 !important;
+        background: #f8fafc !important;
+        border: 1px solid #cbd5e1 !important;
+        color: #0f172a !important;
         outline: none;
         border-radius: 0.75rem !important;
         transition: all 0.2s ease-in-out;
     }
     input[type="text"]:focus, textarea:focus, select:focus {
         border-color: var(--tf-indigo) !important;
-        box-shadow: 0 0 12px rgba(99, 102, 241, 0.3) !important;
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15) !important;
     }
 
     .text-slate-800 { color: var(--tf-text-h) !important; }
@@ -200,17 +163,17 @@
 
     /* Submit Bar */
     .mt-6.p-4.bg-white {
-        background: rgba(22, 33, 56, 0.6) !important;
-        border: 1px solid rgba(255, 255, 255, 0.05) !important;
+        background: #f1f5f9 !important;
+        border: 1px solid #f8fafc !important;
         box-shadow: var(--tf-shadow-card) !important;
     }
     .mt-6.p-4.bg-white a {
-        border-color: rgba(255, 255, 255, 0.08) !important;
+        border-color: #334155 !important;
         color: var(--tf-text-m) !important;
     }
     .mt-6.p-4.bg-white a:hover {
-        background: rgba(255, 255, 255, 0.05) !important;
-        color: #f1f5f9 !important;
+        background: #f8fafc !important;
+        color: #0f172a !important;
     }
     .btn-primary {
         background: var(--tf-indigo) !important;

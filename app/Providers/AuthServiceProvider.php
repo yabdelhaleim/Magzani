@@ -49,5 +49,33 @@ class AuthServiceProvider extends ServiceProvider
         \Gate::define('users.permissions', function ($user) {
             return $user->isAdmin() || $user->hasPermission('users.permissions');
         });
+
+        // ── صلاحيات المحاسبة ──
+        $accountingAbilities = [
+            'accounting.dashboard',
+            'accounting.coa.read',
+            'accounting.coa.create',
+            'accounting.coa.update',
+            'accounting.coa.delete',
+            'accounting.journal.read',
+            'accounting.journal.create',
+            'accounting.journal.post',
+            'accounting.journal.reverse',
+            'accounting.vouchers.read',
+            'accounting.vouchers.create',
+            'accounting.reports.read',
+            'accounting.fiscal.read',
+            'accounting.fiscal.manage',
+            'accounting.settings.read',
+            'accounting.settings.update',
+            'accounting.posting-failures.read',
+            'accounting.posting-failures.manage',
+        ];
+
+        foreach ($accountingAbilities as $ability) {
+            \Gate::define($ability, function ($user) use ($ability) {
+                return $user->hasPermission($ability);
+            });
+        }
     }
 }

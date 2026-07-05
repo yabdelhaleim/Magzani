@@ -9,14 +9,14 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('customers', function (Blueprint $table) {
-            $table->decimal('balance', 15, 2)->change();
+            $table->decimal('balance', 15, 2)->default(0)->change();
         });
     }
 
     public function down(): void
     {
         Schema::table('customers', function (Blueprint $table) {
-            $table->decimal('balance', 10, 2)->change();
+            $table->decimal('balance', 10, 2)->default(0)->change();
         });
     }
 };

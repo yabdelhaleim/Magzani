@@ -332,7 +332,7 @@
                                     <span class="text-xs text-gray-500">ج.م</span>
                                 </td>
                                 <td class="px-6 py-4">
-                                    <span class="text-blue-600 font-bold text-lg">{{ number_format($unit->selling_price, 2) }}</span>
+                                    <span class="text-slate-800 font-bold text-lg">{{ number_format($unit->selling_price, 2) }}</span>
                                     <span class="text-xs text-gray-500">ج.م</span>
                                 </td>
                                 <td class="px-6 py-4">
@@ -395,7 +395,7 @@
                         <div class="grid grid-cols-3 gap-2 text-sm">
                             <div class="text-center bg-white rounded-lg p-2">
                                 <p class="text-gray-500 text-xs">الكمية</p>
-                                <p class="font-bold text-blue-600">{{ number_format($warehouse->pivot->quantity ?? 0, 0) }}</p>
+                                <p class="font-bold text-slate-800">{{ number_format($warehouse->pivot->quantity ?? 0, 0) }}</p>
                             </div>
                             <div class="text-center bg-white rounded-lg p-2">
                                 <p class="text-gray-500 text-xs">محجوز</p>

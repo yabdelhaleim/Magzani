@@ -105,5 +105,26 @@ class Tenant extends BaseTenant implements TenantWithDatabase
 
         return $this->getRelationValue('plan') ?? Plan::where('slug', $planId)->first();
     }
+
+    /**
+     * Build the public URL for this tenant (login page by default).
+     */
+    public function publicUrl(string $path = '/login'): ?string
+    {
+        $domain = $this->domains->first()?->domain;
+        if (!$domain) {
+            return null;
+        }
+
+        $scheme = (string) config('tenancy.tenant_url.scheme', 'https');
+        $port = config('tenancy.tenant_url.port');
+
+        $url = $scheme.'://'.$domain;
+        if ($port) {
+            $url .= ':'.$port;
+        }
+
+        return rtrim($url, '/').'/'.ltrim($path, '/');
+    }
 }
 

@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Landlord\SuperAdminController;
+use App\Http\Controllers\PricingController;
 
 /*
 |--------------------------------------------------------------------------
@@ -15,6 +16,20 @@ use App\Http\Controllers\Landlord\SuperAdminController;
 | These central routes are accessible only via the central domains (localhost, 127.0.0.1).
 |
 */
+
+/*
+|--------------------------------------------------------------------------
+| Public Marketing Routes
+|--------------------------------------------------------------------------
+|
+| These routes are PUBLIC — no auth, no tenant context — meant to be served
+| on a dedicated subdomain (e.g. pricing.kayyan.com) and/or the /pricing path
+| on any central domain. They are NOT inside the super-admin group so they
+| remain reachable from outside the dashboard.
+|
+*/
+
+Route::get('/pricing', [PricingController::class, 'index'])->name('pricing.public');
 
 Route::prefix('super-admin')->name('super-admin.')->group(function () {
     Route::get('/dashboard', [SuperAdminController::class, 'dashboard'])->name('dashboard');

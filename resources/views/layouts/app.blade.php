@@ -24,7 +24,12 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
     <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&family=Tajawal:wght@300;400;500;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600;700;800;900&family=Tajawal:wght@300;400;500;700;800;900&family=Cairo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+    <!-- Magzani Design System (Inlined to bypass tenant asset loading issues) -->
+    <style>
+        @include('layouts.theme-css')
+    </style>
 
     <style>
         :root {
@@ -46,7 +51,14 @@
             --sidebar-sm:  72px;
         }
 
-        * { font-family: 'Cairo', 'Tajawal', sans-serif; box-sizing: border-box; }
+        body, p, span, div, td, th, h1, h2, h3, h4, h5, h6, input, select, textarea, button, a {
+            font-family: 'Rubik', 'Tajawal', 'Cairo', sans-serif !important;
+        }
+
+        /* Reset for Font Awesome Icons */
+        i, .fa, .fas, .far, .fab {
+            font-family: 'Font Awesome 6 Free', 'Font Awesome 6 Brands', 'Font Awesome 5 Free', 'Font Awesome 5 Brands', sans-serif !important;
+        }
 
         body {
             background: var(--surface);
@@ -54,6 +66,20 @@
                 radial-gradient(circle at 20% 20%, rgba(99,102,241,0.06) 0%, transparent 50%),
                 radial-gradient(circle at 80% 80%, rgba(59,130,246,0.05) 0%, transparent 50%);
             min-height: 100vh;
+            font-size: 16px !important; /* Larger readable ERP font size */
+            color: #0b1120;
+        }
+
+        /* Make headings, labels and table headers rich dark navy */
+        h1, h2, h3, h4, h5, h6, th, .page-header-left h2, .section-title, .stat-val, .stat-lbl {
+            color: #0b1120 !important;
+            font-weight: 700 !important;
+        }
+
+        /* Glowing Blue Accent for active elements, numbers and prices */
+        .text-blue-600, .text-primary, a:hover {
+            color: #2563eb !important;
+            text-shadow: 0 0 1px rgba(37, 99, 235, 0.2) !important;
         }
 
         /* ── Sidebar ── */
@@ -805,7 +831,7 @@
     @stack('styles')
     @livewireStyles
 </head>
-<body>
+<body class="magzani-v3">
 
 <!-- ══════════════════════════════════════
      SHARED SVG DEFS (sparkle filter used by logos)
@@ -840,33 +866,50 @@
 
 <!-- Bottom Brand Bar -->
 <div class="bottom-brand-bar">
-    <div class="bar-logo-wrap">
-        <!-- Enhanced small badge logo -->
-        <svg class="logo-sparkle-anim" width="40" height="40" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="50" cy="50" r="48" fill="url(#badge-bg)"/>
-            <circle cx="50" cy="50" r="46" stroke="#bdc5e0" stroke-width="0.9" fill="none" opacity="0.55"/>
-            <circle cx="50" cy="50" r="43" stroke="#bdc5e0" stroke-width="0.4" stroke-dasharray="2.5,4" fill="none" opacity="0.3"/>
-            <circle cx="50" cy="50" r="40" stroke="#5572ff" stroke-width="0.3" stroke-dasharray="1,8" fill="none" opacity="0.28"/>
-            <polyline points="14,72 14,32 50,52 86,32 86,72"
-                fill="none" stroke="url(#m-grad-s)" stroke-width="11"
-                stroke-linejoin="miter" stroke-miterlimit="10" stroke-linecap="butt"/>
-            <!-- Blue peaks -->
-            <polyline points="9,31 14,22 19,31" fill="none" stroke="#5572ff" stroke-width="2" stroke-linejoin="round" filter="url(#blue-pk)"/>
-            <polyline points="81,31 86,22 91,31" fill="none" stroke="#5572ff" stroke-width="2" stroke-linejoin="round" filter="url(#blue-pk)"/>
-            <!-- Diamond sparkles -->
-            <path d="M 79,13 L 81,19 L 87,21 L 81,23 L 79,29 L 77,23 L 71,21 L 77,19 Z" fill="white" opacity="0.92" filter="url(#spk)"/>
-            <path d="M 21,13 L 23,19 L 29,21 L 23,23 L 21,29 L 19,23 L 13,21 L 19,19 Z" fill="white" opacity="0.92" filter="url(#spk)"/>
-            <path d="M 50,5 L 51.5,9.5 L 56,11 L 51.5,12.5 L 50,17 L 48.5,12.5 L 44,11 L 48.5,9.5 Z" fill="white" opacity="0.82" filter="url(#spk)"/>
-            <path d="M 13,54 L 14.2,58 L 18,59.2 L 14.2,60.4 L 13,64.4 L 11.8,60.4 L 8,59.2 L 11.8,58 Z" fill="white" opacity="0.62" filter="url(#spk)"/>
-            <path d="M 87,54 L 88.2,58 L 92,59.2 L 88.2,60.4 L 87,64.4 L 85.8,60.4 L 82,59.2 L 85.8,58 Z" fill="white" opacity="0.62" filter="url(#spk)"/>
-            <!-- Micro dots -->
-            <path d="M 39,14 L 39.8,16.5 L 42,17.3 L 39.8,18 L 39,20.5 L 38.2,18 L 36,17.3 L 38.2,16.5 Z" fill="white" opacity="0.55"/>
-            <path d="M 61,14 L 61.8,16.5 L 64,17.3 L 61.8,18 L 61,20.5 L 60.2,18 L 58,17.3 L 60.2,16.5 Z" fill="white" opacity="0.55"/>
-            <circle cx="37" cy="57" r="1.2" fill="#7b92ff" opacity="0.6"/>
-            <circle cx="63" cy="57" r="1.2" fill="#7b92ff" opacity="0.6"/>
+    <div class="bar-logo-wrap" style="width:40px;height:40px;display:flex;align-items:center;justify-content:center;">
+        <!-- Premium Kayan 3D Glowing SVG Logo (White Bg, Blue K) -->
+        <svg class="logo-sparkle-anim" width="34" height="34" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style="filter: drop-shadow(0 0 5px rgba(37, 99, 235, 0.45));">
+            <defs>
+                <radialGradient id="kayanWhiteBgSmall" cx="40%" cy="30%" r="75%">
+                    <stop offset="0%" stop-color="#ffffff" />
+                    <stop offset="100%" stop-color="#f8fafc" />
+                </radialGradient>
+                <linearGradient id="glowingBlueBorderSmall" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#60a5fa" />
+                    <stop offset="100%" stop-color="#1d4ed8" />
+                </linearGradient>
+                <linearGradient id="kStem3DSmall" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stop-color="#3b82f6" />
+                    <stop offset="100%" stop-color="#1d4ed8" />
+                </linearGradient>
+                <linearGradient id="kBranchTop3DSmall" x1="0%" y1="100%" x2="100%" y2="0%">
+                    <stop offset="0%" stop-color="#00d2ff" />
+                    <stop offset="100%" stop-color="#0066ff" />
+                </linearGradient>
+                <linearGradient id="kBranchBottom3DSmall" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#1d4ed8" />
+                    <stop offset="100%" stop-color="#0b2545" />
+                </linearGradient>
+                <filter id="blueKglowSmall" x="-20%" y="-20%" width="140%" height="140%">
+                    <feGaussianBlur stdDeviation="2.5" result="blur" />
+                    <feMerge>
+                        <feMergeNode in="blur"/>
+                        <feMergeNode in="SourceGraphic"/>
+                    </feMerge>
+                </filter>
+            </defs>
+            <rect x="4" y="4" width="92" height="92" rx="26" fill="url(#kayanWhiteBgSmall)" stroke="url(#glowingBlueBorderSmall)" stroke-width="2.5" />
+            <rect x="8" y="8" width="84" height="84" rx="22" fill="none" stroke="rgba(59, 130, 246, 0.08)" stroke-width="1.5" />
+            <g filter="url(#blueKglowSmall)">
+                <path d="M 32 24 C 32 22.895 32.895 22 34 22 L 44 22 C 45.105 22 46 22.895 46 24 L 46 76 C 46 77.105 45.105 78 44 78 L 34 78 C 32.895 78 32 77.105 32 76 Z" fill="url(#kStem3DSmall)" />
+                <path d="M 44 46 L 68 22 C 68.8 21.2 70 21.2 70.8 22 L 76 27.2 C 76.8 28 76.8 29.2 76 30 L 53 52 Z" fill="url(#kBranchTop3DSmall)" />
+                <path d="M 46 48 L 71 74 C 71.8 74.8 71.8 76 71 76.8 L 65.8 82 C 65 82.8 63.8 82.8 63 82 L 44 58 Z" fill="url(#kBranchBottom3DSmall)" />
+                <path d="M 44 46 L 53 50 L 44 54 Z" fill="#e0f2fe" opacity="0.9" />
+            </g>
+            <circle cx="70" cy="25" r="2" fill="#00d2ff" />
         </svg>
     </div>
-    <span class="bar-brand-text">MAGZANI</span>
+    <span class="bar-brand-text">KAYAN</span>
     <div class="pulse-dot"></div>
 </div>
 
@@ -878,37 +921,51 @@
 
     <!-- Logo -->
     <div class="sidebar-logo">
-        @if(isset($company) && $company->logo && file_exists(public_path('storage/' . $company->logo)))
-            <div class="logo-icon" style="background: white; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
-                <img src="{{ asset('storage/' . $company->logo) }}"
-                     alt="{{ $company->name }}"
-                     style="width: 100%; height: 100%; object-fit: contain; border-radius: 12px;">
-            </div>
-        @else
-            <div class="logo-icon" style="background:transparent;box-shadow:none;">
-                <svg class="logo-sparkle-anim" width="40" height="40" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-                    <circle cx="50" cy="50" r="48" fill="url(#badge-bg)"/>
-                    <circle cx="50" cy="50" r="46" stroke="#bdc5e0" stroke-width="0.9" fill="none" opacity="0.55"/>
-                    <circle cx="50" cy="50" r="43" stroke="#bdc5e0" stroke-width="0.4" stroke-dasharray="2.5,4" fill="none" opacity="0.3"/>
-                    <polyline points="14,72 14,32 50,52 86,32 86,72"
-                        fill="none" stroke="url(#m-grad-s)" stroke-width="11"
-                        stroke-linejoin="miter" stroke-miterlimit="10" stroke-linecap="butt"/>
-                    <polyline points="9,31 14,22 19,31" fill="none" stroke="#5572ff" stroke-width="2" stroke-linejoin="round" filter="url(#blue-pk)"/>
-                    <polyline points="81,31 86,22 91,31" fill="none" stroke="#5572ff" stroke-width="2" stroke-linejoin="round" filter="url(#blue-pk)"/>
-                    <path d="M 79,13 L 81,19 L 87,21 L 81,23 L 79,29 L 77,23 L 71,21 L 77,19 Z" fill="white" opacity="0.92" filter="url(#spk)"/>
-                    <path d="M 21,13 L 23,19 L 29,21 L 23,23 L 21,29 L 19,23 L 13,21 L 19,19 Z" fill="white" opacity="0.92" filter="url(#spk)"/>
-                    <path d="M 50,5 L 51.5,9.5 L 56,11 L 51.5,12.5 L 50,17 L 48.5,12.5 L 44,11 L 48.5,9.5 Z" fill="white" opacity="0.82" filter="url(#spk)"/>
-                    <path d="M 13,54 L 14.2,58 L 18,59.2 L 14.2,60.4 L 13,64.4 L 11.8,60.4 L 8,59.2 L 11.8,58 Z" fill="white" opacity="0.62" filter="url(#spk)"/>
-                    <path d="M 87,54 L 88.2,58 L 92,59.2 L 88.2,60.4 L 87,64.4 L 85.8,60.4 L 82,59.2 L 85.8,58 Z" fill="white" opacity="0.62" filter="url(#spk)"/>
-                    <path d="M 39,14 L 39.8,16.5 L 42,17.3 L 39.8,18 L 39,20.5 L 38.2,18 L 36,17.3 L 38.2,16.5 Z" fill="white" opacity="0.55"/>
-                    <path d="M 61,14 L 61.8,16.5 L 64,17.3 L 61.8,18 L 61,20.5 L 60.2,18 L 58,17.3 L 60.2,16.5 Z" fill="white" opacity="0.55"/>
-                    <circle cx="37" cy="57" r="1.2" fill="#7b92ff" opacity="0.6"/>
-                    <circle cx="63" cy="57" r="1.2" fill="#7b92ff" opacity="0.6"/>
-                </svg>
-            </div>
-        @endif
+        <div class="logo-icon" style="background:transparent;box-shadow:none;display:flex;align-items:center;justify-content:center;">
+            <!-- Premium Kayan 3D Glowing SVG Logo (White Bg, Blue K) -->
+            <svg class="logo-sparkle-anim" width="46" height="46" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style="filter: drop-shadow(0 0 8px rgba(37, 99, 235, 0.45));">
+                <defs>
+                    <radialGradient id="kayanWhiteBg" cx="40%" cy="30%" r="75%">
+                        <stop offset="0%" stop-color="#ffffff" />
+                        <stop offset="100%" stop-color="#f8fafc" />
+                    </radialGradient>
+                    <linearGradient id="glowingBlueBorder" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#60a5fa" />
+                        <stop offset="100%" stop-color="#1d4ed8" />
+                    </linearGradient>
+                    <linearGradient id="kStem3D" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" stop-color="#3b82f6" />
+                        <stop offset="100%" stop-color="#1d4ed8" />
+                    </linearGradient>
+                    <linearGradient id="kBranchTop3D" x1="0%" y1="100%" x2="100%" y2="0%">
+                        <stop offset="0%" stop-color="#00d2ff" />
+                        <stop offset="100%" stop-color="#0066ff" />
+                    </linearGradient>
+                    <linearGradient id="kBranchBottom3D" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#1d4ed8" />
+                        <stop offset="100%" stop-color="#0b2545" />
+                    </linearGradient>
+                    <filter id="blueKglow" x="-20%" y="-20%" width="140%" height="140%">
+                        <feGaussianBlur stdDeviation="3" result="blur" />
+                        <feMerge>
+                            <feMergeNode in="blur"/>
+                            <feMergeNode in="SourceGraphic"/>
+                        </feMerge>
+                    </filter>
+                </defs>
+                <rect x="4" y="4" width="92" height="92" rx="26" fill="url(#kayanWhiteBg)" stroke="url(#glowingBlueBorder)" stroke-width="2.5" />
+                <rect x="8" y="8" width="84" height="84" rx="22" fill="none" stroke="rgba(59, 130, 246, 0.08)" stroke-width="1.5" />
+                <g filter="url(#blueKglow)">
+                    <path d="M 32 24 C 32 22.895 32.895 22 34 22 L 44 22 C 45.105 22 46 22.895 46 24 L 46 76 C 46 77.105 45.105 78 44 78 L 34 78 C 32.895 78 32 77.105 32 76 Z" fill="url(#kStem3D)" />
+                    <path d="M 44 46 L 68 22 C 68.8 21.2 70 21.2 70.8 22 L 76 27.2 C 76.8 28 76.8 29.2 76 30 L 53 52 Z" fill="url(#kBranchTop3D)" />
+                    <path d="M 46 48 L 71 74 C 71.8 74.8 71.8 76 71 76.8 L 65.8 82 C 65 82.8 63.8 82.8 63 82 L 44 58 Z" fill="url(#kBranchBottom3D)" />
+                    <path d="M 44 46 L 53 50 L 44 54 Z" fill="#e0f2fe" opacity="0.9" />
+                </g>
+                <circle cx="70" cy="25" r="2" fill="#00d2ff" />
+            </svg>
+        </div>
         <div class="logo-text">
-            <h2>{{ $company->name ?? 'MAGZANI' }}</h2>
+            <h2>{{ $company->name ?? 'KAYAN' }}</h2>
             <p>{{ $company->email ?? 'نظام إدارة المخازن' }}</p>
         </div>
         <button class="toggle-btn" onclick="toggleSidebar()" id="toggleBtn">
@@ -1089,6 +1146,37 @@
             <div class="icon"><i class="fas fa-coins"></i></div>
             <span class="label">الحسابات</span>
             <span class="badge-upgrade">ترقية الباقة</span>
+        </div>
+        @endif
+
+        @if($planFeatures->contains('accounting_advanced'))
+        <div x-data="{ open: {{ request()->routeIs('accounting.dashboard') || request()->routeIs('accounting.coa.*') || request()->routeIs('accounting.journal.*') || request()->routeIs('accounting.vouchers.*') || request()->routeIs('accounting.fiscal.*') || request()->routeIs('accounting.fixed-assets.*') || request()->routeIs('accounting.settings.*') || request()->routeIs('accounting.reports.*') ? 'true' : 'false' }} }">
+            <button class="nav-item {{ request()->routeIs('accounting.*') && !request()->routeIs('accounting.treasury') && !request()->routeIs('accounting.payments') && !request()->routeIs('accounting.expenses.*') ? 'active' : '' }}"
+                    @click="open = !open" data-tip="المحاسبة المتقدمة">
+                <div class="icon"><i class="fas fa-calculator"></i></div>
+                <span class="label">المحاسبة المتقدمة</span>
+                <i class="fas fa-chevron-down chevron" :class="open ? 'open' : ''"></i>
+            </button>
+            <div class="sub-menu" :class="open ? 'open' : ''">
+                <a href="{{ route('accounting.dashboard') }}" class="sub-item {{ request()->routeIs('accounting.dashboard') ? 'active' : '' }}"><span class="dot"></span>لوحة التحكم</a>
+                <a href="{{ route('accounting.coa.index') }}" class="sub-item {{ request()->routeIs('accounting.coa.*') ? 'active' : '' }}"><span class="dot"></span>دليل الحسابات</a>
+                <a href="{{ route('accounting.journal.index') }}" class="sub-item {{ request()->routeIs('accounting.journal.*') ? 'active' : '' }}"><span class="dot"></span>قيود اليومية</a>
+                <a href="{{ route('accounting.vouchers.receipt.index') }}" class="sub-item {{ request()->routeIs('accounting.vouchers.receipt.*') ? 'active' : '' }}"><span class="dot"></span>سندات القبض</a>
+                <a href="{{ route('accounting.vouchers.payment.index') }}" class="sub-item {{ request()->routeIs('accounting.vouchers.payment.*') ? 'active' : '' }}"><span class="dot"></span>سندات الصرف</a>
+                <a href="{{ route('accounting.fiscal.index') }}" class="sub-item {{ request()->routeIs('accounting.fiscal.*') ? 'active' : '' }}"><span class="dot"></span>الفترات المالية</a>
+                <a href="{{ route('accounting.fixed-assets.index') }}" class="sub-item {{ request()->routeIs('accounting.fixed-assets.*') ? 'active' : '' }}"><span class="dot"></span>الأصول الثابتة</a>
+                <a href="{{ route('accounting.settings.index') }}" class="sub-item {{ request()->routeIs('accounting.settings.*') ? 'active' : '' }}"><span class="dot"></span>الإعدادات المحاسبية</a>
+                
+                <div class="nav-divider" style="margin: 4px 10px; opacity: 0.3;"></div>
+                <div class="nav-section-label" style="padding: 6px 14px 4px; font-size: 8px;">التقارير المالية</div>
+                <a href="{{ route('accounting.reports.trial-balance') }}" class="sub-item {{ request()->routeIs('accounting.reports.trial-balance') ? 'active' : '' }}"><span class="dot"></span>ميزان المراجعة</a>
+                <a href="{{ route('accounting.reports.income-statement') }}" class="sub-item {{ request()->routeIs('accounting.reports.income-statement') ? 'active' : '' }}"><span class="dot"></span>قائمة الدخل</a>
+                <a href="{{ route('accounting.reports.balance-sheet') }}" class="sub-item {{ request()->routeIs('accounting.reports.balance-sheet') ? 'active' : '' }}"><span class="dot"></span>الميزانية العمومية</a>
+                <a href="{{ route('accounting.reports.general-ledger') }}" class="sub-item {{ request()->routeIs('accounting.reports.general-ledger') ? 'active' : '' }}"><span class="dot"></span>دفتر الأستاذ العام</a>
+                <a href="{{ route('accounting.reports.partner-ledger') }}" class="sub-item {{ request()->routeIs('accounting.reports.partner-ledger') ? 'active' : '' }}"><span class="dot"></span>كشف حساب شريك</a>
+                <a href="{{ route('accounting.reports.audit-trail') }}" class="sub-item {{ request()->routeIs('accounting.reports.audit-trail') ? 'active' : '' }}"><span class="dot"></span>سجل الرقابة والتدقيق</a>
+                <a href="{{ route('accounting.reports.aging') }}" class="sub-item {{ request()->routeIs('accounting.reports.aging') ? 'active' : '' }}"><span class="dot"></span>تقادم الديون</a>
+            </div>
         </div>
         @endif
 
@@ -1285,49 +1373,50 @@
 
     <!-- ═══ LOGO BANNER — Enhanced Full Logo ═══ -->
     <div class="logo-banner">
-        <!-- Enhanced full logo with sparkles and text -->
-        <svg style="position:relative;z-index:1;" width="90" height="90" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+        <!-- Premium Kayan 3D Glowing SVG Logo (White Bg, Blue K - Large) -->
+        <svg style="position:relative;z-index:1;filter: drop-shadow(0 0 12px rgba(37, 99, 235, 0.45));" width="90" height="90" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
             <defs>
-                <filter id="bspk" x="-120%" y="-120%" width="340%" height="340%">
-                    <feGaussianBlur in="SourceGraphic" stdDeviation="1.8" result="b1"/>
-                    <feMerge><feMergeNode in="b1"/><feMergeNode in="SourceGraphic"/></feMerge>
-                </filter>
-                <filter id="bblu" x="-80%" y="-80%" width="260%" height="260%">
-                    <feGaussianBlur in="SourceGraphic" stdDeviation="2.5" result="b"/>
-                    <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
-                </filter>
-                <radialGradient id="bnrbg" cx="45%" cy="32%" r="68%">
-                    <stop offset="0%" stop-color="#1f2b78"/>
-                    <stop offset="55%" stop-color="#151c55"/>
-                    <stop offset="100%" stop-color="#090d22"/>
+                <radialGradient id="kayanWhiteBgLarge" cx="40%" cy="30%" r="75%">
+                    <stop offset="0%" stop-color="#ffffff" />
+                    <stop offset="100%" stop-color="#f8fafc" />
                 </radialGradient>
+                <linearGradient id="glowingBlueBorderLarge" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#60a5fa" />
+                    <stop offset="100%" stop-color="#1d4ed8" />
+                </linearGradient>
+                <linearGradient id="kStem3DLarge" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stop-color="#3b82f6" />
+                    <stop offset="100%" stop-color="#1d4ed8" />
+                </linearGradient>
+                <linearGradient id="kBranchTop3DLarge" x1="0%" y1="100%" x2="100%" y2="0%">
+                    <stop offset="0%" stop-color="#00d2ff" />
+                    <stop offset="100%" stop-color="#0066ff" />
+                </linearGradient>
+                <linearGradient id="kBranchBottom3DLarge" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#1d4ed8" />
+                    <stop offset="100%" stop-color="#0b2545" />
+                </linearGradient>
+                <filter id="blueKglowLarge" x="-20%" y="-20%" width="140%" height="140%">
+                    <feGaussianBlur stdDeviation="3" result="blur" />
+                    <feMerge>
+                        <feMergeNode in="blur"/>
+                        <feMergeNode in="SourceGraphic"/>
+                    </feMerge>
+                </filter>
             </defs>
-            <circle cx="50" cy="50" r="48" fill="url(#bnrbg)"/>
-            <circle cx="50" cy="50" r="46" stroke="#c0cae0" stroke-width="1" fill="none" opacity="0.5"/>
-            <circle cx="50" cy="50" r="43" stroke="#c0cae0" stroke-width="0.5" fill="none" opacity="0.2"/>
-            <circle cx="50" cy="50" r="40" stroke="#c0cae0" stroke-width="0.4" stroke-dasharray="2.5,5" fill="none" opacity="0.2"/>
-            <polyline points="14,72 14,32 50,52 86,32 86,72"
-                fill="none" stroke="#dde3f4" stroke-width="11"
-                stroke-linejoin="miter" stroke-miterlimit="10" stroke-linecap="butt"/>
-            <polyline points="9,31 14,22 19,31" fill="none" stroke="#5572ff" stroke-width="2" stroke-linejoin="round" filter="url(#bblu)"/>
-            <polyline points="81,31 86,22 91,31" fill="none" stroke="#5572ff" stroke-width="2" stroke-linejoin="round" filter="url(#bblu)"/>
-            <!-- Diamond sparkles -->
-            <path d="M 79,13 L 81,19 L 87,21 L 81,23 L 79,29 L 77,23 L 71,21 L 77,19 Z" fill="white" opacity="0.92" filter="url(#bspk)"/>
-            <path d="M 21,13 L 23,19 L 29,21 L 23,23 L 21,29 L 19,23 L 13,21 L 19,19 Z" fill="white" opacity="0.92" filter="url(#bspk)"/>
-            <path d="M 50,4 L 51.8,9.5 L 57,11.3 L 51.8,13 L 50,18.5 L 48.2,13 L 43,11.3 L 48.2,9.5 Z" fill="white" opacity="0.85" filter="url(#bspk)"/>
-            <path d="M 12,53 L 13.5,57.5 L 18,59 L 13.5,60.5 L 12,65 L 10.5,60.5 L 6,59 L 10.5,57.5 Z" fill="white" opacity="0.65" filter="url(#bspk)"/>
-            <path d="M 88,53 L 89.5,57.5 L 94,59 L 89.5,60.5 L 88,65 L 86.5,60.5 L 82,59 L 86.5,57.5 Z" fill="white" opacity="0.65" filter="url(#bspk)"/>
-            <path d="M 38,13 L 39,16 L 42,17 L 39,18 L 38,21 L 37,18 L 34,17 L 37,16 Z" fill="white" opacity="0.55"/>
-            <path d="M 62,13 L 63,16 L 66,17 L 63,18 L 62,21 L 61,18 L 58,17 L 61,16 Z" fill="white" opacity="0.55"/>
-            <path d="M 25,74 L 26,77 L 29,78 L 26,79 L 25,82 L 24,79 L 21,78 L 24,77 Z" fill="white" opacity="0.4"/>
-            <path d="M 75,74 L 76,77 L 79,78 L 76,79 L 75,82 L 74,79 L 71,78 L 74,77 Z" fill="white" opacity="0.4"/>
-            <circle cx="37" cy="57" r="1.2" fill="#7b92ff" opacity="0.6"/>
-            <circle cx="63" cy="57" r="1.2" fill="#7b92ff" opacity="0.6"/>
+            <rect x="4" y="4" width="92" height="92" rx="26" fill="url(#kayanWhiteBgLarge)" stroke="url(#glowingBlueBorderLarge)" stroke-width="2.5" />
+            <rect x="8" y="8" width="84" height="84" rx="22" fill="none" stroke="rgba(59, 130, 246, 0.08)" stroke-width="1.5" />
+            <g filter="url(#blueKglowLarge)">
+                <path d="M 32 24 C 32 22.895 32.895 22 34 22 L 44 22 C 45.105 22 46 22.895 46 24 L 46 76 C 46 77.105 45.105 78 44 78 L 34 78 C 32.895 78 32 77.105 32 76 Z" fill="url(#kStem3DLarge)" />
+                <path d="M 44 46 L 68 22 C 68.8 21.2 70 21.2 70.8 22 L 76 27.2 C 76.8 28 76.8 29.2 76 30 L 53 52 Z" fill="url(#kBranchTop3DLarge)" />
+                <path d="M 46 48 L 71 74 C 71.8 74.8 71.8 76 71 76.8 L 65.8 82 C 65 82.8 63.8 82.8 63 82 L 44 58 Z" fill="url(#kBranchBottom3DLarge)" />
+                <path d="M 44 46 L 53 50 L 44 54 Z" fill="#e0f2fe" opacity="0.9" />
+            </g>
+            <circle cx="70" cy="25" r="2" fill="#00d2ff" />
         </svg>
-
         <div class="logo-banner-text" style="position:relative;z-index:1;">
-            <h3>MAGZANI</h3>
-            <p>WAREHOUSES &amp; INVOICES</p>
+            <h3>KAYAN</h3>
+            <p>نظام إدارة المخازن والمبيعات</p>
         </div>
         <div class="logo-banner-glow"></div>
     </div>

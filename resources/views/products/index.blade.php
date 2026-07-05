@@ -12,20 +12,20 @@
         --tf-border:      #e4eaf7;
         --tf-border-soft: #edf0f9;
 
-        --tf-indigo:      #4f63d2;
-        --tf-indigo-light:#7088e8;
-        --tf-indigo-soft: #eef0fc;
+        --tf-indigo:      #0b1120;
+        --tf-indigo-light:#1a2540;
+        --tf-indigo-soft: #f1f5f9;
 
-        --tf-blue:        #3a8ef0;
-        --tf-blue-soft:   #e8f2ff;
-        --tf-green:       #0faa7e;
-        --tf-green-soft:  #e6f8f3;
-        --tf-red:         #dc2626;
-        --tf-red-soft:    #fee2e2;
-        --tf-amber:       #e8930a;
-        --tf-amber-soft:  #fff4e0;
-        --tf-violet:      #7c5cec;
-        --tf-violet-soft: #f0ecff;
+        --tf-blue:        #0b1120;
+        --tf-blue-soft:   #f1f5f9;
+        --tf-green:       #0b1120;
+        --tf-green-soft:  #f1f5f9;
+        --tf-red:         #0b1120;
+        --tf-red-soft:    #f1f5f9;
+        --tf-amber:       #0b1120;
+        --tf-amber-soft:  #f1f5f9;
+        --tf-violet:      #0b1120;
+        --tf-violet-soft: #f1f5f9;
 
         --tf-text-h:      #1a2140;
         --tf-text-b:      #3d4f72;
@@ -173,9 +173,10 @@
 
     /* Badges */
     .badge {
-        display: inline-flex; align-items: center; gap: 4px;
+        display: inline-block; vertical-align: middle;
         padding: 4px 10px; border-radius: 50px;
         font-size: 11px; font-weight: 700; white-space: nowrap;
+        max-width: 100%; text-overflow: ellipsis; overflow: hidden;
     }
     .badge-green  { background: var(--tf-green-soft); color: var(--tf-green); }
     .badge-yellow { background: var(--tf-amber-soft); color: var(--tf-amber); }
@@ -342,11 +343,11 @@
         <table class="prod-table">
             <thead>
                 <tr>
-                    <th style="width:100px;">الكود</th>
+                    <th style="width:80px;">الكود</th>
                     <th>الاسم</th>
-                    <th style="width:120px;">التصنيف</th>
-                    <th style="width:110px;">سعر الشراء</th>
-                    <th style="width:110px;">سعر البيع</th>
+                    <th style="width:160px;">التصنيف</th>
+                    <th style="width:100px;">سعر الشراء</th>
+                    <th style="width:100px;">سعر البيع</th>
                     <th style="width:110px;">المخزون</th>
                     <th style="width:90px;">الحالة</th>
                     <th style="width:130px;" class="text-center">إجراءات</th>
@@ -361,7 +362,7 @@
                 <tr>
                     {{-- الكود --}}
                     <td>
-                        <span class="font-bold text-blue-600 text-xs" style="letter-spacing:0.5px;">#{{ $product->code }}</span>
+                        <span class="font-bold text-blue-600 text-sm" style="letter-spacing:0.5px; color:#2563eb !important;">#{{ $product->code }}</span>
                     </td>
 
                     {{-- الاسم --}}
@@ -376,7 +377,7 @@
                                 </div>
                             @endif
                             <div class="min-w-0">
-                                <p class="font-bold text-slate-800 text-sm truncate">{{ $product->name }}</p>
+                                <p class="font-bold text-slate-800 text-base truncate" style="color:#0b1120 !important;">{{ $product->name }}</p>
                                 @if($product->sku)
                                     <p class="text-[10px] text-slate-400 font-semibold">SKU: {{ $product->sku }}</p>
                                 @endif
@@ -400,7 +401,7 @@
 
                     {{-- سعر البيع --}}
                     <td>
-                        <span class="font-bold text-blue-600 text-sm">{{ number_format($product->selling_price, 2) }}</span>
+                        <span class="font-bold text-blue-600 text-base" style="color:#2563eb !important;">{{ number_format($product->selling_price, 2) }}</span>
                         <span class="text-slate-400 text-xs">ج.م</span>
                     </td>
 

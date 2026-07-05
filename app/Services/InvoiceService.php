@@ -9,6 +9,7 @@ use App\Models\PurchaseInvoiceItem;
 use App\Models\Product;
 use App\Models\ProductSellingUnit;
 use App\Models\ProductPurchaseUnit;
+use App\Models\Payment;
 use App\Models\Customer;
 use App\Models\Supplier;
 use Illuminate\Support\Facades\DB;
@@ -570,12 +571,16 @@ class InvoiceService
             // ==================== 1️⃣3️⃣ مسح الـ Cache ====================
             $this->clearSalesInvoiceCache($data['customer_id']);
             
-            return $invoice->fresh([
+            $invoiceFresh = $invoice->fresh([
                 'items.product', 
                 'items.sellingUnit', 
                 'customer', 
                 'warehouse'
             ]);
+
+            event(new \App\Events\Invoice\SalesInvoiceConfirmed($invoiceFresh));
+
+            return $invoiceFresh;
         });
     }
 
@@ -788,6 +793,8 @@ class InvoiceService
             
             // مسح الـ Cache
             $this->clearSalesInvoiceCache($invoice->customer_id);
+
+            event(new \App\Events\Invoice\SalesInvoiceCancelled($invoice, $cancellationReason));
             
             return true;
         });
@@ -1116,7 +1123,11 @@ class InvoiceService
                 'items_count' => count($data['items'])
             ]);
             
-            return $invoice->fresh(['items.product', 'items.purchaseUnit', 'supplier', 'warehouse']);
+            $invoiceFresh = $invoice->fresh(['items.product', 'items.purchaseUnit', 'supplier', 'warehouse']);
+
+            event(new \App\Events\Invoice\PurchaseInvoiceConfirmed($invoiceFresh));
+
+            return $invoiceFresh;
         });
     }
 
@@ -1198,6 +1209,8 @@ class InvoiceService
             $this->logInvoiceActivity($invoice->id, 'purchase', 'cancelled', [
                 'reason' => $cancellationReason
             ]);
+
+            event(new \App\Events\Invoice\PurchaseInvoiceCancelled($invoice, $cancellationReason));
             
             return true;
         });

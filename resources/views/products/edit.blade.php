@@ -8,15 +8,15 @@
     @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&display=swap');
 
     :root {
-        --primary:       #1e40af;
-        --primary-light: #3b82f6;
+        --primary:       #0b1120;
+        --primary-light: #0b1120;
         --primary-soft:  #eff6ff;
-        --accent:        #f59e0b;
-        --accent-soft:   #fffbeb;
-        --danger:        #ef4444;
-        --danger-soft:   #fef2f2;
-        --success:       #10b981;
-        --success-soft:  #ecfdf5;
+        --accent:        #0b1120;
+        --accent-soft:   #f1f5f9;
+        --danger:        #0b1120;
+        --danger-soft:   #f1f5f9;
+        --success:       #0b1120;
+        --success-soft:  #f1f5f9;
         --surface:       #ffffff;
         --surface-2:     #f8fafc;
         --border:        #e2e8f0;

@@ -42,6 +42,8 @@ class SupplierPaymentController extends Controller
         try {
             $payment = SupplierPayment::create($request->validated());
 
+            event(new \App\Events\Payment\SupplierPaymentCreated($payment));
+
             return back()->with('success', 'تم تسجيل السداد بنجاح');
 
         } catch (\Exception $e) {

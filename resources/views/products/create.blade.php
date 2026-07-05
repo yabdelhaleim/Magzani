@@ -13,20 +13,20 @@
         --tf-border:      #e4eaf7;
         --tf-border-soft: #edf0f9;
 
-        --tf-indigo:      #4f63d2;
-        --tf-indigo-light:#7088e8;
-        --tf-indigo-soft: #eef0fc;
+        --tf-indigo:      #0b1120;
+        --tf-indigo-light:#1a2540;
+        --tf-indigo-soft: #f1f5f9;
 
-        --tf-blue:        #3a8ef0;
-        --tf-blue-soft:   #e8f2ff;
-        --tf-green:       #0faa7e;
-        --tf-green-soft:  #e6f8f3;
-        --tf-red:         #dc2626;
-        --tf-red-soft:    #fee2e2;
-        --tf-amber:       #e8930a;
-        --tf-amber-soft:  #fff4e0;
-        --tf-violet:      #7c5cec;
-        --tf-violet-soft: #f0ecff;
+        --tf-blue:        #0b1120;
+        --tf-blue-soft:   #f1f5f9;
+        --tf-green:       #0b1120;
+        --tf-green-soft:  #f1f5f9;
+        --tf-red:         #0b1120;
+        --tf-red-soft:    #f1f5f9;
+        --tf-amber:       #0b1120;
+        --tf-amber-soft:  #f1f5f9;
+        --tf-violet:      #0b1120;
+        --tf-violet-soft: #f1f5f9;
 
         --tf-text-h:      #1a2140;
         --tf-text-b:      #3d4f72;

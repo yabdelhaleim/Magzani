@@ -37,6 +37,7 @@ class PurchaseInvoice extends Model
         'cancelled_by',
         'cancelled_at',
         'cancellation_reason',
+        'journal_entry_id',
     ];
 
     protected $casts = [
@@ -60,6 +61,11 @@ class PurchaseInvoice extends Model
     public function supplier(): BelongsTo
     {
         return $this->belongsTo(Supplier::class);
+    }
+    
+    public function journalEntry(): BelongsTo
+    {
+        return $this->belongsTo(JournalEntry::class);
     }
     
     public function warehouse(): BelongsTo

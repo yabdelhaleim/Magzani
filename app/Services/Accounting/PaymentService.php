@@ -116,6 +116,8 @@ class PaymentService
             ])
             ->log('payment_created');
 
+        event(new \App\Events\Payment\PaymentReceived($payment));
+
         return $payment;
     }
 

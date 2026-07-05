@@ -5,62 +5,37 @@
 
 @push('styles')
 <style>
-    :root {
+        :root {
         --tf-bg:          transparent;
-        --tf-surface:     rgba(22, 33, 56, 0.6);
-        --tf-surface2:    rgba(10, 16, 28, 0.55);
-        --tf-border:      rgba(255, 255, 255, 0.06);
-        --tf-indigo:      #6366f1;
-        --tf-indigo-soft: rgba(99, 102, 241, 0.15);
-        --tf-green:       #10b981;
-        --tf-green-soft:  rgba(16, 185, 129, 0.15);
+        --tf-surface:     #ffffff;
+        --tf-surface2:    #f8fafc;
+        --tf-border:      #e2e8f0;
+        --tf-border-soft: #f1f5f9;
+        --tf-indigo:      #2563eb;
+        --tf-indigo-light:#3b82f6;
+        --tf-indigo-soft: rgba(37, 99, 235, 0.1);
+        --tf-blue:        #3b82f6;
+        --tf-blue-soft:   rgba(37, 99, 235, 0.1);
+        --tf-green:       #2563eb;
+        --tf-green-soft:  rgba(37, 99, 235, 0.1);
         --tf-red:         #ef4444;
         --tf-red-soft:    rgba(239, 68, 68, 0.15);
         --tf-amber:       #f59e0b;
         --tf-amber-soft:  rgba(245, 158, 11, 0.15);
-        --tf-text-h:      #f1f5f9;
-        --tf-text-b:      #cbd5e1;
-        --tf-text-m:      #94a3b8;
-        --tf-shadow-card: 0 8px 32px 0 rgba(0, 0, 0, 0.25);
-        --radius-md:      16px;
+        --tf-text-h:      #0f172a;
+        --tf-text-b:      #334155;
+        --tf-text-m:      #64748b;
+        --tf-text-d:      #94a3b8;
+        --tf-text-s:      #475569;
+        --tf-shadow-sm:   0 2px 12px rgba(0,0,0,0.05);
+        --tf-shadow-card: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+        --tf-shadow-lg:   0 10px 25px -5px rgba(0, 0, 0, 0.05);
+        --radius-lg:      20px;
+        --radius-md:      14px;
+        --radius-sm:      8px;
     }
 
-    /* Scoped Dark Mode Overrides for Immersive Cashier Experience */
-    body, .main-content, #mainContent {
-        background: radial-gradient(circle at top right, #131e35, #080d1a) !important;
-        color: #e2e8f0 !important;
-    }
-    .sidebar {
-        background: #070b14 !important;
-        border-left: 1px solid rgba(255, 255, 255, 0.03) !important;
-    }
-    .sidebar * {
-        color: rgba(226, 232, 240, 0.65) !important;
-    }
-    .sidebar .nav-item.active, .sidebar .nav-item.active * {
-        background: rgba(16, 185, 129, 0.1) !important;
-        color: #10b981 !important;
-        border-right: 3px solid #10b981 !important;
-    }
-    .sidebar .nav-section-label {
-        color: rgba(226, 232, 240, 0.3) !important;
-    }
-    .sidebar .nav-divider {
-        border-color: rgba(255, 255, 255, 0.03) !important;
-    }
-    .main-header {
-        background: #070b14 !important;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.03) !important;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25) !important;
-    }
-    .main-header * {
-        color: #e2e8f0 !important;
-    }
-    .main-footer {
-        background: #070b14 !important;
-        border-top: 1px solid rgba(255, 255, 255, 0.03) !important;
-        color: rgba(226, 232, 240, 0.35) !important;
-    }
+    
 
     @keyframes fadeUp { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)} }
     .animated { animation: fadeUp 0.35s ease both; }
@@ -69,14 +44,14 @@
         max-width: 820px;
         margin: 0 auto;
         padding: 28px 20px;
-        backdrop-filter: blur(12px) !important;
-        -webkit-backdrop-filter: blur(12px) !important;
+        
+        -webkit-
     }
 
     /* Header Banner */
     .report-banner {
-        background: radial-gradient(circle at top right, #1f2937, #111827) !important;
-        border: 1px solid rgba(255, 255, 255, 0.08) !important;
+        background: linear-gradient(135deg, var(--navy) 0%, var(--navy-3) 100%) !important;
+        border: 1px solid #cbd5e1 !important;
         border-radius: 20px; padding: 24px 28px;
         display: flex; align-items: center; justify-content: space-between;
         margin-bottom: 24px; gap: 16px; flex-wrap: wrap;
@@ -101,7 +76,7 @@
     }
     .btn-print:hover {
         background: #4f46e5 !important;
-        box-shadow: 0 0 12px rgba(99, 102, 241, 0.3) !important;
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15) !important;
     }
 
     /* Stats grid */
@@ -164,15 +139,15 @@
     /* Back button */
     .btn-back {
         display: inline-flex; align-items: center; gap: 8px;
-        background: rgba(255, 255, 255, 0.04) !important; border: 1px solid rgba(255, 255, 255, 0.08) !important;
+        background: #f8fafc !important; border: 1px solid #cbd5e1 !important;
         border-radius: 12px; padding: 10px 18px; font-size: 13px; font-weight: 800;
         color: var(--tf-text-b); text-decoration: none; transition: all 0.2s;
         margin-bottom: 20px;
     }
     .btn-back:hover {
         border-color: rgba(255, 255, 255, 0.2) !important;
-        background: rgba(255, 255, 255, 0.08) !important;
-        color: #f1f5f9 !important;
+        background: #cbd5e1 !important;
+        color: #0f172a !important;
     }
 
     @media print {

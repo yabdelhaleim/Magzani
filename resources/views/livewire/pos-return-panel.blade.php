@@ -5,68 +5,29 @@
 <style>
     :root {
         --tf-bg:          transparent;
-        --tf-surface:     rgba(22, 33, 56, 0.6);
-        --tf-surface2:    rgba(10, 16, 28, 0.55);
-        --tf-border:      rgba(255, 255, 255, 0.06);
-        --tf-indigo:      #6366f1;
-        --tf-indigo-soft: rgba(99, 102, 241, 0.15);
-        --tf-green:       #10b981;
-        --tf-green-soft:  rgba(16, 185, 129, 0.15);
+        --tf-surface:     #ffffff;
+        --tf-surface2:    #f8fafc;
+        --tf-border:      #e2e8f0;
+        --tf-indigo:      #2563eb;
+        --tf-indigo-soft: rgba(37, 99, 235, 0.1);
+        --tf-green:       #2563eb;
+        --tf-green-soft:  rgba(37, 99, 235, 0.1);
         --tf-red:         #ef4444;
         --tf-red-soft:    rgba(239, 68, 68, 0.15);
         --tf-amber:       #f59e0b;
         --tf-amber-soft:  rgba(245, 158, 11, 0.15);
-        --tf-text-h:      #f1f5f9;
-        --tf-text-b:      #cbd5e1;
-        --tf-text-m:      #94a3b8;
-        --tf-shadow-card: 0 8px 32px 0 rgba(0, 0, 0, 0.25);
+        --tf-text-h:      #0f172a;
+        --tf-text-b:      #334155;
+        --tf-text-m:      #64748b;
+        --tf-shadow-card: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
         --radius-lg:      24px;
         --radius-md:      16px;
-    }
-
-    /* Scoped Dark Mode Overrides for Immersive Cashier Experience */
-    body, .main-content, #mainContent {
-        background: radial-gradient(circle at top right, #131e35, #080d1a) !important;
-        color: #e2e8f0 !important;
-    }
-    .sidebar {
-        background: #070b14 !important;
-        border-left: 1px solid rgba(255, 255, 255, 0.03) !important;
-    }
-    .sidebar * {
-        color: rgba(226, 232, 240, 0.65) !important;
-    }
-    .sidebar .nav-item.active, .sidebar .nav-item.active * {
-        background: rgba(16, 185, 129, 0.1) !important;
-        color: #10b981 !important;
-        border-right: 3px solid #10b981 !important;
-    }
-    .sidebar .nav-section-label {
-        color: rgba(226, 232, 240, 0.3) !important;
-    }
-    .sidebar .nav-divider {
-        border-color: rgba(255, 255, 255, 0.03) !important;
-    }
-    .main-header {
-        background: #070b14 !important;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.03) !important;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25) !important;
-    }
-    .main-header * {
-        color: #e2e8f0 !important;
-    }
-    .main-footer {
-        background: #070b14 !important;
-        border-top: 1px solid rgba(255, 255, 255, 0.03) !important;
-        color: rgba(226, 232, 240, 0.35) !important;
     }
 
     .pos-returns-page {
         min-height: 100vh;
         background: var(--tf-bg);
         padding: 24px;
-        backdrop-filter: blur(12px) !important;
-        -webkit-backdrop-filter: blur(12px) !important;
     }
 
     @keyframes fadeUp {
@@ -93,20 +54,20 @@
     .search-input-group { flex: 1; }
     .search-input-group label { display: block; font-size: 12px; font-weight: 800; color: var(--tf-text-b); margin-bottom: 8px; }
     .search-input-group input {
-        width: 100%; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px;
-        padding: 12px 16px; font-size: 16px; font-weight: 700; color: #f1f5f9;
-        background: rgba(10, 16, 28, 0.65) !important;
+        width: 100%; border: 1px solid #cbd5e1; border-radius: 12px;
+        padding: 12px 16px; font-size: 16px; font-weight: 700; color: #0f172a;
+        background: #f8fafc !important;
         outline: none; transition: all 0.2s ease-in-out;
     }
     .search-input-group input:focus {
         border-color: var(--tf-indigo);
-        box-shadow: 0 0 12px rgba(99, 102, 241, 0.3) !important;
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15) !important;
     }
     .btn-search {
         padding: 13px 24px; background: var(--tf-indigo); color: white; border: none; border-radius: 12px;
         font-size: 14px; font-weight: 900; cursor: pointer; transition: all 0.2s; white-space: nowrap;
     }
-    .btn-search:hover { background: #3d51c5; }
+    .btn-search:hover { background: #1d4ed8; }
 
     /* Invoice Details */
     .invoice-card {
@@ -122,48 +83,48 @@
     }
     .invoice-header h2 { font-size: 15px; font-weight: 900; color: var(--tf-text-h); margin: 0; }
     .invoice-meta { display: flex; gap: 16px; font-size: 12px; font-weight: 700; color: var(--tf-text-m); }
-    .invoice-meta span { background: rgba(255, 255, 255, 0.04); padding: 4px 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.06); color: #cbd5e1; }
+    .invoice-meta span { background: #f1f5f9; padding: 4px 10px; border-radius: 8px; border: 1px solid #e2e8f0; color: #475569; }
 
     table { width: 100%; border-collapse: collapse; }
     thead th { background: var(--tf-surface2); padding: 12px 16px; text-align: right; font-size: 11px; font-weight: 800; color: var(--tf-text-m); border-bottom: 2px solid var(--tf-border); }
     tbody td { padding: 16px; border-bottom: 1px solid var(--tf-border); font-size: 13px; font-weight: 700; color: var(--tf-text-b); }
     
     .invoice-card input[type="text"] {
-        background: rgba(10, 16, 28, 0.65) !important;
-        border: 1px solid rgba(255, 255, 255, 0.08) !important;
-        color: #f1f5f9 !important;
+        background: #f8fafc !important;
+        border: 1px solid #cbd5e1 !important;
+        color: #0f172a !important;
         outline: none;
     }
     .invoice-card input[type="text"]:focus {
         border-color: var(--tf-indigo) !important;
-        box-shadow: 0 0 12px rgba(99, 102, 241, 0.3) !important;
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15) !important;
     }
 
     .qty-input {
-        width: 80px; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 8px; padding: 8px;
-        background: rgba(10, 16, 28, 0.65) !important;
-        text-align: center; font-size: 14px; font-weight: 900; color: #f1f5f9; outline: none;
+        width: 80px; border: 1px solid #cbd5e1; border-radius: 8px; padding: 8px;
+        background: #f8fafc !important;
+        text-align: center; font-size: 14px; font-weight: 900; color: #0f172a; outline: none;
     }
     .qty-input:focus {
         border-color: var(--tf-red);
-        box-shadow: 0 0 12px rgba(239, 68, 68, 0.3) !important;
+        box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15) !important;
     }
     .btn-confirm {
         background: linear-gradient(135deg, #dc2626, #b91c1c); color: white; border: none; border-radius: 12px;
         padding: 16px 32px; font-size: 15px; font-weight: 900; cursor: pointer; transition: all 0.2s; width: 100%;
         display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 16px;
     }
-    .btn-confirm:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(220,38,38,0.3); }
+    .btn-confirm:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(220,38,38,0.25); }
 
     /* Alert overlay */
     .toast-alert {
         position: fixed; bottom: 30px; left: 30px; z-index: 9999;
         padding: 16px 24px; border-radius: 12px; font-size: 14px; font-weight: 800;
-        display: flex; align-items: center; gap: 12px; box-shadow: 0 12px 40px rgba(0,0,0,0.35);
+        display: flex; align-items: center; gap: 12px; box-shadow: 0 12px 40px rgba(0,0,0,0.1);
         animation: fadeUp 0.3s ease both;
     }
-    .toast-alert.error { background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); color: #f87171; }
-    .toast-alert.success { background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); color: #34d399; }
+    .toast-alert.error { background: #fef2f2; border: 1px solid #fee2e2; color: #dc2626; }
+    .toast-alert.success { background: #f0fdf4; border: 1px solid #dcfce7; color: #16a34a; }
 </style>
 @endpush
 
@@ -190,9 +151,9 @@
         <div class="invoice-header">
             <h2>تفاصيل الفاتورة: {{ $invoiceDetails['invoice_number'] }}</h2>
             <div class="invoice-meta">
-                <span><i class="fas fa-user ml-1 text-indigo-500"></i> {{ $invoiceDetails['customer_name'] }}</span>
-                <span><i class="fas fa-calendar-alt ml-1 text-indigo-500"></i> {{ \Carbon\Carbon::parse($invoiceDetails['date'])->format('d/m/Y') }}</span>
-                <span><i class="fas fa-money-bill-wave ml-1 text-green-500"></i> الإجمالي: {{ number_format($invoiceDetails['total'], 2) }} ج.م</span>
+                <span><i class="fas fa-user ml-1 text-blue-600"></i> {{ $invoiceDetails['customer_name'] }}</span>
+                <span><i class="fas fa-calendar-alt ml-1 text-blue-600"></i> {{ \Carbon\Carbon::parse($invoiceDetails['date'])->format('d/m/Y') }}</span>
+                <span><i class="fas fa-money-bill-wave ml-1 text-blue-600"></i> الإجمالي: {{ number_format($invoiceDetails['total'], 2) }} ج.م</span>
             </div>
         </div>
         <div style="padding: 20px;">

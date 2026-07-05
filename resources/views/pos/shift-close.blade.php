@@ -7,70 +7,31 @@
 <style>
     :root {
         --tf-bg:          transparent;
-        --tf-surface:     rgba(22, 33, 56, 0.6);
-        --tf-surface2:    rgba(10, 16, 28, 0.55);
-        --tf-border:      rgba(255, 255, 255, 0.06);
-        --tf-border-soft: rgba(255, 255, 255, 0.04);
-        --tf-indigo:      #6366f1;
-        --tf-indigo-soft: rgba(99, 102, 241, 0.15);
-        --tf-green:       #10b981;
-        --tf-green-soft:  rgba(16, 185, 129, 0.15);
+        --tf-surface:     #ffffff;
+        --tf-surface2:    #f8fafc;
+        --tf-border:      #e2e8f0;
+        --tf-border-soft: #f1f5f9;
+        --tf-indigo:      #2563eb;
+        --tf-indigo-soft: rgba(37, 99, 235, 0.1);
+        --tf-green:       #2563eb;
+        --tf-green-soft:  rgba(37, 99, 235, 0.1);
         --tf-red:         #ef4444;
         --tf-red-soft:    rgba(239, 68, 68, 0.15);
         --tf-amber:       #f59e0b;
         --tf-amber-soft:  rgba(245, 158, 11, 0.15);
-        --tf-text-h:      #f1f5f9;
-        --tf-text-b:      #cbd5e1;
-        --tf-text-m:      #94a3b8;
-        --tf-shadow-card: 0 8px 32px 0 rgba(0, 0, 0, 0.25);
-        --tf-shadow-lg:   0 12px 40px rgba(0, 0, 0, 0.35);
+        --tf-text-h:      #0f172a;
+        --tf-text-b:      #334155;
+        --tf-text-m:      #64748b;
+        --tf-shadow-card: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+        --tf-shadow-lg:   0 10px 25px -5px rgba(0, 0, 0, 0.05);
         --radius-lg:      24px;
         --radius-md:      16px;
-    }
-
-    /* Scoped Dark Mode Overrides for Immersive Cashier Experience */
-    body, .main-content, #mainContent {
-        background: radial-gradient(circle at top right, #131e35, #080d1a) !important;
-        color: #e2e8f0 !important;
-    }
-    .sidebar {
-        background: #070b14 !important;
-        border-left: 1px solid rgba(255, 255, 255, 0.03) !important;
-    }
-    .sidebar * {
-        color: rgba(226, 232, 240, 0.65) !important;
-    }
-    .sidebar .nav-item.active, .sidebar .nav-item.active * {
-        background: rgba(16, 185, 129, 0.1) !important;
-        color: #10b981 !important;
-        border-right: 3px solid #10b981 !important;
-    }
-    .sidebar .nav-section-label {
-        color: rgba(226, 232, 240, 0.3) !important;
-    }
-    .sidebar .nav-divider {
-        border-color: rgba(255, 255, 255, 0.03) !important;
-    }
-    .main-header {
-        background: #070b14 !important;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.03) !important;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25) !important;
-    }
-    .main-header * {
-        color: #e2e8f0 !important;
-    }
-    .main-footer {
-        background: #070b14 !important;
-        border-top: 1px solid rgba(255, 255, 255, 0.03) !important;
-        color: rgba(226, 232, 240, 0.35) !important;
     }
 
     .shift-close-page {
         min-height: 100vh;
         background: var(--tf-bg);
         padding: 32px 20px;
-        backdrop-filter: blur(12px) !important;
-        -webkit-backdrop-filter: blur(12px) !important;
     }
 
     @keyframes fadeUp {
@@ -88,7 +49,7 @@
     }
     .close-header h1 .icon-wrap {
         width: 44px; height: 44px; border-radius: 12px;
-        background: rgba(239, 68, 68, 0.15) !important; color: #f87171 !important;
+        background: rgba(239, 68, 68, 0.15) !important; color: #ef4444 !important;
         display: flex; align-items: center; justify-content: center;
         font-size: 18px;
     }
@@ -143,7 +104,7 @@
     .summary-row:last-child { border-bottom: none; }
     .summary-row .s-label { font-size: 12px; font-weight: 700; color: var(--tf-text-m); }
     .summary-row .s-value { font-size: 14px; font-weight: 900; color: var(--tf-text-h); }
-    .summary-row .s-value.green { color: var(--tf-green); }
+    .summary-row .s-value.green { color: #2563eb; }
     .summary-row .s-value.red   { color: var(--tf-red); }
     .summary-row .s-value.large { font-size: 18px; }
 
@@ -168,51 +129,51 @@
 
     /* Input counter styling */
     .close-card input[type="number"], .close-card textarea {
-        background: rgba(10, 16, 28, 0.65) !important;
-        border: 1px solid rgba(255, 255, 255, 0.08) !important;
-        color: #f1f5f9 !important;
+        background: #f8fafc !important;
+        border: 1px solid #cbd5e1 !important;
+        color: #0f172a !important;
         outline: none;
     }
     .close-card input[type="number"]:focus, .close-card textarea:focus {
         border-color: var(--tf-indigo) !important;
-        box-shadow: 0 0 12px rgba(99, 102, 241, 0.3) !important;
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15) !important;
     }
 
     /* Denomination Total card override */
     .close-card-body div[style*="linear-gradient"] {
-        background: rgba(16, 185, 129, 0.15) !important;
-        border: 1.5px solid rgba(16, 185, 129, 0.3) !important;
+        background: rgba(37, 99, 235, 0.08) !important;
+        border: 1.5px solid rgba(37, 99, 235, 0.2) !important;
     }
     .close-card-body div[style*="linear-gradient"] span {
-        color: #34d399 !important;
+        color: #2563eb !important;
     }
 
     /* Actual Balance Input */
     .actual-input-group {
         display: flex;
-        border: 1px solid rgba(255, 255, 255, 0.08) !important;
+        border: 1px solid #cbd5e1 !important;
         border-radius: 14px;
         overflow: hidden;
-        background: rgba(10, 16, 28, 0.65) !important;
+        background: #f8fafc !important;
         transition: all 0.2s;
     }
     .actual-input-group:focus-within {
         border-color: var(--tf-indigo) !important;
-        box-shadow: 0 0 12px rgba(99, 102, 241, 0.3) !important;
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15) !important;
     }
     .actual-input-group .currency-tag {
-        background: rgba(99, 102, 241, 0.15) !important;
-        color: #818cf8 !important;
+        background: rgba(37, 99, 235, 0.08) !important;
+        color: #2563eb !important;
         font-weight: 900; font-size: 14px;
         padding: 14px 18px;
-        border-left: 1px solid rgba(255, 255, 255, 0.06) !important;
+        border-left: 1px solid #cbd5e1 !important;
         display: flex; align-items: center;
     }
     .actual-input-group input {
         flex: 1; border: none; outline: none;
         padding: 14px 18px;
         font-size: 20px; font-weight: 900;
-        color: #f1f5f9 !important;
+        color: #0f172a !important;
         background: transparent;
         text-align: left; direction: ltr;
     }
@@ -223,17 +184,17 @@
         display: flex; align-items: center; gap: 12px;
         margin-top: 12px;
     }
-    .diff-display.ok     { background: rgba(16, 185, 129, 0.15) !important; }
-    .diff-display.over   { background: rgba(245, 158, 11, 0.15) !important; }
-    .diff-display.under  { background: rgba(239, 68, 68, 0.15) !important; }
+    .diff-display.ok     { background: #f0fdf4 !important; border: 1px solid #bbf7d0 !important; }
+    .diff-display.over   { background: #fffbeb !important; border: 1px solid #fef3c7 !important; }
+    .diff-display.under  { background: #fef2f2 !important; border: 1px solid #fecaca !important; }
     .diff-icon { font-size: 22px; }
-    .diff-display.ok    .diff-icon { color: var(--tf-green) !important; }
-    .diff-display.over  .diff-icon { color: var(--tf-amber) !important; }
-    .diff-display.under .diff-icon { color: var(--tf-red) !important; }
+    .diff-display.ok    .diff-icon { color: #16a34a !important; }
+    .diff-display.over  .diff-icon { color: #d97706 !important; }
+    .diff-display.under .diff-icon { color: #dc2626 !important; }
     .diff-text { font-size: 13px; font-weight: 700; }
-    .diff-display.ok    .diff-text { color: #34d399 !important; }
-    .diff-display.over  .diff-text { color: #fbbf24 !important; }
-    .diff-display.under .diff-text { color: #f87171 !important; }
+    .diff-display.ok    .diff-text { color: #16a34a !important; }
+    .diff-display.over  .diff-text { color: #d97706 !important; }
+    .diff-display.under .diff-text { color: #dc2626 !important; }
     .diff-num { font-size: 18px; font-weight: 900; }
 
     /* Buttons */
@@ -247,21 +208,21 @@
     }
     .btn-close-shift:hover {
         transform: translateY(-2px);
-        box-shadow: 0 8px 20px rgba(239, 68, 68, 0.35) !important;
+        box-shadow: 0 8px 20px rgba(239, 68, 68, 0.25) !important;
     }
 
     .btn-back {
         display: block; width: 100%; padding: 13px;
-        background: transparent; border: 1px solid rgba(255, 255, 255, 0.08) !important;
+        background: transparent; border: 1px solid #cbd5e1 !important;
         border-radius: 12px; color: var(--tf-text-m) !important;
         font-size: 13px; font-weight: 700;
         cursor: pointer; text-align: center; text-decoration: none;
         margin-top: 10px; transition: all 0.2s;
     }
     .btn-back:hover {
-        border-color: rgba(255, 255, 255, 0.2) !important;
-        background: rgba(255, 255, 255, 0.05) !important;
-        color: #f1f5f9 !important;
+        border-color: #cbd5e1 !important;
+        background: #f1f5f9 !important;
+        color: #0f172a !important;
     }
 
     .duration-badge {

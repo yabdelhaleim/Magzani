@@ -142,7 +142,7 @@
 
     <!-- Header / Store Info -->
     <div class="header text-center">
-        <h1 class="company-name">{{ $company->name ?? 'مخزني' }}</h1>
+        <h1 class="company-name">{{ $company->name ?? 'كيان' }}</h1>
         @if(!empty($company->address))
             <p class="company-info">{{ $company->address }}</p>
         @endif
@@ -261,10 +261,10 @@
     <!-- Footer message -->
     <div class="footer text-center">
         <div class="qr-code" style="margin-bottom: 4mm;">
-            <img src="https://api.qrserver.com/v1/create-qr-code/?size=120x120&data={{ urlencode("المتجر: " . ($company->name ?? 'مخزني') . "\nرقم الفاتورة: " . $invoice->invoice_number . "\nالتاريخ: " . $invoice->invoice_date->format('Y-m-d H:i') . "\nالإجمالي: " . number_format($invoice->total, 2) . " ج.م") }}" alt="QR Code" style="width: 30mm; height: 30mm; display: block; margin: 0 auto;" />
+            <img src="https://api.qrserver.com/v1/create-qr-code/?size=120x120&data={{ urlencode("المتجر: " . ($company->name ?? 'كيان') . "\nرقم الفاتورة: " . $invoice->invoice_number . "\nالتاريخ: " . $invoice->invoice_date->format('Y-m-d H:i') . "\nالإجمالي: " . number_format($invoice->total, 2) . " ج.م") }}" alt="QR Code" style="width: 30mm; height: 30mm; display: block; margin: 0 auto;" />
         </div>
         <p>شكراً لتعاملكم معنا لزيارتكم القادمة!</p>
-        <p style="margin-top: 1mm; font-size: 8.5px; color: #555;">برمجيات مخزني السحابية Magzany SaaS</p>
+        <p style="margin-top: 1mm; font-size: 8.5px; color: #555;">برمجيات كيان السحابية Kayan SaaS</p>
         
         <!-- Auto trigger print script -->
         <script>
