@@ -120,11 +120,11 @@
     </div>
 </header>
 
-{{-- ===================== SECTION 2: HERO ===================== --}}
-<section class="relative py-16 sm:py-24 lg:py-32 overflow-hidden">
+{{-- ===================== SECTION 2: HERO (compact v2) ===================== --}}
+<section class="relative py-10 sm:py-14 lg:py-20 overflow-hidden">
     {{-- Drifting background blobs --}}
-    <div class="drift-blob absolute top-20 right-10 w-72 h-72 bg-indigo-500/20 rounded-full blur-[100px] pointer-events-none"></div>
-    <div class="drift-blob absolute bottom-20 left-10 w-72 h-72 bg-purple-500/20 rounded-full blur-[100px] pointer-events-none" style="animation-delay:-7s"></div>
+    <div class="drift-blob absolute top-10 right-10 w-60 h-60 bg-indigo-500/15 rounded-full blur-[100px] pointer-events-none"></div>
+    <div class="drift-blob absolute bottom-10 left-10 w-60 h-60 bg-purple-500/15 rounded-full blur-[100px] pointer-events-none" style="animation-delay:-7s"></div>
 
     <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
 
@@ -135,30 +135,30 @@
             </span>
         </div>
 
-        <h1 class="k-h k-h-1 mb-6 k-reveal bg-gradient-to-l from-white via-slate-100 to-slate-300 bg-clip-text text-transparent" style="transition-delay:80ms">
-            نظام إدارة الأعمال<br class="sm:hidden"> والمخازن الذكي
+        <h1 class="k-h text-3xl sm:text-4xl lg:text-5xl xl:text-6xl mb-3 k-reveal bg-gradient-to-l from-white via-slate-100 to-slate-300 bg-clip-text text-transparent leading-tight" style="transition-delay:80ms">
+            نظام إدارة الأعمال والمخازن الذكي
         </h1>
 
-        <p class="k-reveal text-base sm:text-lg lg:text-xl text-slate-300 max-w-3xl mx-auto mb-10 leading-relaxed" style="transition-delay:160ms">
+        <p class="k-reveal text-sm sm:text-base lg:text-lg text-slate-300 max-w-3xl mx-auto mb-6 leading-relaxed" style="transition-delay:160ms">
             منصة متكاملة لإدارة <span class="text-amber-400 font-bold">نقاط البيع</span>، و<span class="text-emerald-400 font-bold">المخزون</span>، و<span class="text-cyan-400 font-bold">المحاسبة</span>، و<span class="text-purple-400 font-bold">التصنيع</span> — كل ما يحتاجه عملك في مكان واحد، بتجربة استخدام عربية أصيلة.
         </p>
 
-        <div class="k-reveal flex flex-col sm:flex-row gap-4 justify-center items-center mb-12" style="transition-delay:240ms">
-            <a href="{{ $primaryCtaUrl }}" class="k-btn k-btn-primary text-base px-8 py-4 w-full sm:w-auto">
+        <div class="k-reveal flex flex-col sm:flex-row gap-3 justify-center items-center mb-6" style="transition-delay:240ms">
+            <a href="{{ $primaryCtaUrl }}" class="k-btn k-btn-primary text-sm sm:text-base px-6 sm:px-8 py-3 sm:py-4 w-full sm:w-auto">
                 <span>ابدأ تجربتك المجانية</span>
                 <i class="fas fa-arrow-left"></i>
             </a>
-            <a href="{{ $secondaryCtaUrl }}" target="_blank" rel="noopener" class="k-btn k-btn-ghost text-base px-8 py-4 w-full sm:w-auto">
+            <a href="{{ $secondaryCtaUrl }}" target="_blank" rel="noopener" class="k-btn k-btn-ghost text-sm sm:text-base px-6 sm:px-8 py-3 sm:py-4 w-full sm:w-auto">
                 <i class="fas fa-calendar-check"></i>
                 <span>احجز ديمو</span>
             </a>
         </div>
 
-        <div class="k-reveal-stagger flex flex-wrap justify-center gap-x-6 gap-y-3 text-sm text-slate-400 max-w-3xl mx-auto" style="transition-delay:320ms">
-            <span class="flex items-center gap-2 whitespace-nowrap"><i class="fas fa-check-circle text-emerald-400"></i> 14 يوم تجربة مجانية</span>
-            <span class="flex items-center gap-2 whitespace-nowrap"><i class="fas fa-check-circle text-emerald-400"></i> بدون بطاقة ائتمان</span>
-            <span class="flex items-center gap-2 whitespace-nowrap"><i class="fas fa-check-circle text-emerald-400"></i> دعم فني عربي</span>
-            <span class="flex items-center gap-2 whitespace-nowrap"><i class="fas fa-check-circle text-emerald-400"></i> إلغاء في أي وقت</span>
+        <div class="k-reveal-stagger flex flex-wrap justify-center gap-x-4 gap-y-2 text-xs sm:text-sm text-slate-400 max-w-3xl mx-auto" style="transition-delay:320ms">
+            <span class="flex items-center gap-1.5 whitespace-nowrap"><i class="fas fa-check-circle text-emerald-400 text-xs"></i> 14 يوم تجربة مجانية</span>
+            <span class="flex items-center gap-1.5 whitespace-nowrap"><i class="fas fa-check-circle text-emerald-400 text-xs"></i> بدون بطاقة ائتمان</span>
+            <span class="flex items-center gap-1.5 whitespace-nowrap"><i class="fas fa-check-circle text-emerald-400 text-xs"></i> دعم فني عربي</span>
+            <span class="flex items-center gap-1.5 whitespace-nowrap"><i class="fas fa-check-circle text-emerald-400 text-xs"></i> إلغاء في أي وقت</span>
         </div>
     </div>
 </section>
