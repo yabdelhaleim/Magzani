@@ -243,21 +243,39 @@
             margin-bottom: 1.25rem;
         }
 
-        /* ===== SCROLL REVEAL ANIMATIONS ===== */
+        /* ===== SCROLL REVEAL ANIMATIONS — v2 (robust) =====
+           - Initial state: opacity 0 + small Y offset
+           - When .is-visible is added: animate to visible
+           - Failsafe: if JS doesn't fire, elements still show after 1.2s (no-JS fallback)
+           - Honors prefers-reduced-motion
+        */
+        @keyframes kRevealIn {
+            from { opacity: 0; transform: translateY(24px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes kStaggerIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
         .k-reveal {
             opacity: 0;
             transform: translateY(24px);
-            transition: opacity .8s cubic-bezier(.16, 1, .3, 1), transform .8s cubic-bezier(.16, 1, .3, 1);
+            transition: opacity .7s cubic-bezier(.16, 1, .3, 1), transform .7s cubic-bezier(.16, 1, .3, 1);
+            will-change: opacity, transform;
         }
         .k-reveal.is-visible {
             opacity: 1;
             transform: translateY(0);
         }
+        /* Failsafe: after 1.5s without .is-visible, show anyway */
+        .k-reveal:not(.is-visible) { animation: kRevealIn 0s 1.5s forwards; }
+
         /* Stagger children */
         .k-reveal-stagger > * {
             opacity: 0;
             transform: translateY(20px);
-            transition: opacity .7s cubic-bezier(.16, 1, .3, 1), transform .7s cubic-bezier(.16, 1, .3, 1);
+            transition: opacity .65s cubic-bezier(.16, 1, .3, 1), transform .65s cubic-bezier(.16, 1, .3, 1);
         }
         .k-reveal-stagger.is-visible > * {
             opacity: 1;
@@ -267,6 +285,12 @@
         .k-reveal-stagger.is-visible > *:nth-child(2) { transition-delay: 80ms; }
         .k-reveal-stagger.is-visible > *:nth-child(3) { transition-delay: 160ms; }
         .k-reveal-stagger.is-visible > *:nth-child(4) { transition-delay: 240ms; }
+        .k-reveal-stagger.is-visible > *:nth-child(5) { transition-delay: 320ms; }
+        .k-reveal-stagger.is-visible > *:nth-child(6) { transition-delay: 400ms; }
+        .k-reveal-stagger.is-visible > *:nth-child(7) { transition-delay: 480ms; }
+        .k-reveal-stagger.is-visible > *:nth-child(8) { transition-delay: 560ms; }
+        /* Failsafe */
+        .k-reveal-stagger:not(.is-visible) > * { animation: kStaggerIn 0s 1.6s forwards; }
 
         /* Floating animation */
         @keyframes pulseGlow {
@@ -380,28 +404,56 @@
 
     @yield('content')
 
-    {{-- ===== SCROLL REVEAL OBSERVER ===== --}}
+    {{-- ===== SCROLL REVEAL OBSERVER (v2 — robust) ===== --}}
     <script>
-        // Scroll-reveal: uses IntersectionObserver to add 'is-visible' class when in view
+        // Scroll-reveal: uses IntersectionObserver + requestAnimationFrame for smooth first-paint
         (function() {
-            if (typeof IntersectionObserver === 'undefined') {
-                // Fallback for old browsers — show everything immediately
-                document.querySelectorAll('.k-reveal, .k-reveal-stagger').forEach(function(el) {
-                    el.classList.add('is-visible');
-                });
+            var elements = document.querySelectorAll('.k-reveal, .k-reveal-stagger');
+            if (!elements.length) return;
+
+            // No-JS / no-IO fallback: show everything after a short delay
+            if (typeof IntersectionObserver === 'undefined' || !('IntersectionObserver' in window)) {
+                setTimeout(function() {
+                    elements.forEach(function(el) { el.classList.add('is-visible'); });
+                }, 50);
                 return;
             }
-            const observer = new IntersectionObserver(function(entries) {
+
+            // Skip if user prefers reduced motion
+            if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                elements.forEach(function(el) { el.classList.add('is-visible'); });
+                return;
+            }
+
+            // Use rAF + setTimeout to ensure elements already in viewport
+            // become visible even if observer hasn't fired yet
+            var showImmediate = function() {
+                requestAnimationFrame(function() {
+                    elements.forEach(function(el) {
+                        var rect = el.getBoundingClientRect();
+                        if (rect.top < window.innerHeight && rect.bottom > 0) {
+                            el.classList.add('is-visible');
+                        }
+                    });
+                });
+            };
+
+            // Initial sweep (covers already-visible elements)
+            showImmediate();
+
+            var observer = new IntersectionObserver(function(entries) {
                 entries.forEach(function(entry) {
                     if (entry.isIntersecting) {
                         entry.target.classList.add('is-visible');
                         observer.unobserve(entry.target);
                     }
                 });
-            }, { threshold: 0.12, rootMargin: '0px 0px -60px 0px' });
-            document.querySelectorAll('.k-reveal, .k-reveal-stagger').forEach(function(el) {
-                observer.observe(el);
+            }, {
+                threshold: 0.08,
+                rootMargin: '0px 0px -40px 0px'
             });
+
+            elements.forEach(function(el) { observer.observe(el); });
         })();
 
         // Mobile menu toggle
