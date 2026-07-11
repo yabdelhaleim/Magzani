@@ -22,7 +22,7 @@ class PricingController extends Controller
     {
         $plans = Plan::where('is_active', true)
             ->with(['featuresList' => fn ($q) => $q->where('is_enabled', true)])
-            ->orderBy('sort_order')
+            ->orderByRaw("FIELD(slug, 'starter', 'pro', 'enterprise') ASC")
             ->orderBy('price')
             ->get();
 
