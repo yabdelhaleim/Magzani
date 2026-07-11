@@ -41,16 +41,20 @@
 <header class="k-topbar">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
 
-        {{-- Brand --}}
-        <a href="/pricing" class="flex items-center gap-3 group shrink-0">
-            <svg width="34" height="34" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-label="{{ config('pricing.brand_name') }}">
-                <rect x="5" y="5" width="90" height="90" rx="26" fill="url(#kayanBgSmall)" />
-                <path d="M 34 26 L 46 18 L 46 71 L 34 79 Z" fill="url(#kLeftSmall)" filter="url(#glowSmall)" />
-                <path d="M 46 44 L 68 20 L 78 20 L 53 47 Z" fill="url(#kRightTopSmall)" />
-                <path d="M 50 44 L 75 72 L 64 72 L 46 51 Z" fill="url(#kRightBottomSmall)" />
-                <path d="M 46 44 L 56 48 L 46 52 Z" fill="#e0f2fe" opacity="0.9" />
-            </svg>
-            <span class="text-xl font-black bg-gradient-to-l from-blue-400 to-cyan-400 bg-clip-text text-transparent">{{ config('pricing.brand_name') }}</span>
+        {{-- Brand — Kayyan SaaS Logo (the new design) --}}
+        <a href="/pricing" class="flex items-center gap-2.5 group shrink-0" style="color:#f8fafc">
+            {{-- Icon-only (K) for tight spaces (header, mobile) --}}
+            <img src="/images/kayan-icon.svg"
+                 alt="{{ config('pricing.brand_name') }}"
+                 class="h-9 sm:h-10 w-auto transition-transform group-hover:scale-105"
+                 width="40" height="40">
+
+            {{-- Wordmark (K + كيان + tagline) for desktop --}}
+            <div class="hidden sm:flex items-center gap-2">
+                <span class="text-xl font-black tracking-tight leading-none">
+                    {{ config('pricing.brand_name') }}
+                </span>
+            </div>
         </a>
 
         {{-- Desktop nav --}}
@@ -443,16 +447,13 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-14">
         <div class="grid grid-cols-2 md:grid-cols-4 gap-8 sm:gap-10 mb-10">
 
-            <div class="col-span-2 md:col-span-1">
+            <div class="col-span-2 md:col-span-1" style="color:#f8fafc">
                 <div class="flex items-center gap-3 mb-4">
-                    <svg width="32" height="32" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-                        <rect x="5" y="5" width="90" height="90" rx="26" fill="url(#kayanBgSmall)" />
-                        <path d="M 34 26 L 46 18 L 46 71 L 34 79 Z" fill="url(#kLeftSmall)" filter="url(#glowSmall)" />
-                        <path d="M 46 44 L 68 20 L 78 20 L 53 47 Z" fill="url(#kRightTopSmall)" />
-                        <path d="M 50 44 L 75 72 L 64 72 L 46 51 Z" fill="url(#kRightBottomSmall)" />
-                        <path d="M 46 44 L 56 48 L 46 52 Z" fill="#e0f2fe" opacity="0.9" />
-                    </svg>
-                    <span class="text-lg font-black bg-gradient-to-l from-blue-400 to-cyan-400 bg-clip-text text-transparent">{{ config('pricing.brand_name') }}</span>
+                    <img src="/images/kayan-icon.svg"
+                         alt="{{ config('pricing.brand_name') }}"
+                         class="h-9 w-auto"
+                         width="36" height="36">
+                    <span class="text-lg font-black tracking-tight">{{ config('pricing.brand_name') }}</span>
                 </div>
                 <p class="text-sm text-slate-400 leading-relaxed">{{ config('pricing.brand_tagline') }}.</p>
 

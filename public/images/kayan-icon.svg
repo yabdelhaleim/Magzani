@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120" role="img" aria-label="كيان">
+  <title>Kayyan Icon</title>
+  <defs>
+    <linearGradient id="ki-blue" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#3b82f6"/>
+      <stop offset="100%" stop-color="#2563eb"/>
+    </linearGradient>
+    <linearGradient id="ki-purple" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#8b5cf6"/>
+      <stop offset="100%" stop-color="#7c3aed"/>
+    </linearGradient>
+    <linearGradient id="ki-teal" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#14b8a6"/>
+      <stop offset="100%" stop-color="#06b6d4"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Vertical bar (blue) -->
+  <rect x="10" y="10" width="22" height="100" rx="6" fill="url(#ki-blue)"/>
+  <!-- Upper diagonal (purple) -->
+  <path d="M 32 60 L 80 18 L 100 18 L 52 65 Z" fill="url(#ki-purple)" opacity="0.95"/>
+  <!-- Lower diagonal (teal) -->
+  <path d="M 38 65 L 86 102 L 65 102 L 32 73 Z" fill="url(#ki-teal)" opacity="0.95"/>
+  <!-- Center overlap -->
+  <path d="M 32 55 L 52 65 L 32 75 Z" fill="#a78bfa" opacity="0.5"/>
+</svg>

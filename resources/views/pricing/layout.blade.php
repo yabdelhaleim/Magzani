@@ -378,33 +378,6 @@
 </head>
 <body>
 
-    {{-- ===== KAYYAN SVG DEFS ===== --}}
-    <svg width="0" height="0" style="position:absolute;" aria-hidden="true">
-        <defs>
-            <radialGradient id="kayanBgSmall" cx="40%" cy="30%" r="75%">
-                <stop offset="0%" stop-color="#2563eb" />
-                <stop offset="60%" stop-color="#1d4ed8" />
-                <stop offset="100%" stop-color="#0b132b" />
-            </radialGradient>
-            <linearGradient id="kLeftSmall" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stop-color="#60a5fa" />
-                <stop offset="100%" stop-color="#2563eb" />
-            </linearGradient>
-            <linearGradient id="kRightTopSmall" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stop-color="#38bdf8" />
-                <stop offset="100%" stop-color="#0284c7" />
-            </linearGradient>
-            <linearGradient id="kRightBottomSmall" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stop-color="#0284c7" />
-                <stop offset="100%" stop-color="#1e3a8a" />
-            </linearGradient>
-            <filter id="glowSmall" x="-20%" y="-20%" width="140%" height="140%">
-                <feGaussianBlur stdDeviation="2" result="blur" />
-                <feComposite in="SourceGraphic" in2="blur" operator="over" />
-            </filter>
-        </defs>
-    </svg>
-
     @yield('content')
 
     {{-- ===== SCROLL REVEAL OBSERVER ===== --}}

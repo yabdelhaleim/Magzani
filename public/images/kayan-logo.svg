@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 140" width="420" height="140" role="img" aria-label="كيان SaaS - نظام متكامل لإدارة أعمالك">
+  <title>كيان SaaS</title>
+  <desc>نظام متكامل لإدارة أعمالك</desc>
+
+  <defs>
+    <!-- K-letter brand gradients (always vibrant) -->
+    <linearGradient id="k-blue" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#3b82f6"/>
+      <stop offset="100%" stop-color="#2563eb"/>
+    </linearGradient>
+    <linearGradient id="k-purple" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#8b5cf6"/>
+      <stop offset="100%" stop-color="#7c3aed"/>
+    </linearGradient>
+    <linearGradient id="k-teal" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#14b8a6"/>
+      <stop offset="100%" stop-color="#06b6d4"/>
+    </linearGradient>
+  </defs>
+
+  <!--
+    USAGE NOTES:
+    - The "كيان" text color is controlled via CSS `color` property on the parent (uses currentColor).
+    - Use `color: #0f172a;` on white backgrounds.
+    - Use `color: #f8fafc;` on dark backgrounds (slate-950).
+    - The K colors stay vibrant on any background.
+  -->
+
+  <!-- ===== K LETTERMARK (left side) ===== -->
+  <g transform="translate(8, 15)">
+    <!-- Vertical bar (blue) — left side of K -->
+    <rect x="10" y="10" width="22" height="90" rx="6" fill="url(#k-blue)"/>
+
+    <!-- Upper diagonal (purple) — top arm of K -->
+    <path d="M 32 55 L 72 18 L 90 18 L 50 60 Z" fill="url(#k-purple)" opacity="0.95"/>
+
+    <!-- Lower diagonal (teal) — bottom arm of K -->
+    <path d="M 38 60 L 78 92 L 60 92 L 32 68 Z" fill="url(#k-teal)" opacity="0.95"/>
+
+    <!-- Center connector (overlap) -->
+    <path d="M 32 50 L 50 60 L 32 70 Z" fill="#a78bfa" opacity="0.5"/>
+  </g>
+
+  <!-- ===== WORDMARK (right side) ===== -->
+  <g transform="translate(140, 0)">
+    <!-- "كيان" — main brand name (color set by CSS currentColor) -->
+    <text x="0" y="78"
+          font-family="'Cairo', 'Tajawal', 'Noto Sans Arabic', system-ui, sans-serif"
+          font-size="64"
+          font-weight="900"
+          fill="currentColor"
+          letter-spacing="-1">كيان</text>
+
+    <!-- 2 small dots below "ك" — decorative diacritics / brand mark -->
+    <g transform="translate(8, 92)">
+      <circle cx="14" cy="0" r="4.5" fill="url(#k-teal)"/>
+      <circle cx="30" cy="0" r="4.5" fill="url(#k-teal)"/>
+    </g>
+
+    <!-- Tagline: "نظام متكامل لإدارة أعمالك" -->
+    <text x="60" y="118"
+          font-family="'Cairo', 'Tajawal', system-ui, sans-serif"
+          font-size="14"
+          font-weight="500"
+          fill="#14b8a6"
+          letter-spacing="0">
+      <tspan fill="#14b8a6">—</tspan>
+      <tspan dx="6" fill="currentColor" opacity="0.6">نظام متكامل لإدارة أعمالك</tspan>
+    </text>
+  </g>
+</svg>
