@@ -37,10 +37,6 @@
 
 @section('content')
 
-                            <p class="text-[10px] sm:text-xs text-slate-300 mt-1.5 leading-tight">{{ $s['label'] }}</p>
-                        </div>
-                    @endforeach
-                </div>
 
                 {{-- 4 Feature pills --}}
                 <div class="k-reveal-stagger flex flex-wrap gap-2">
