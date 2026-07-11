@@ -326,6 +326,57 @@ class PermissionAndRoleSeeder extends Seeder
                 'module' => 'manufacturing',
                 'action' => 'complete',
             ],
+            // Gap 2: Standard Costing permissions
+            [
+                'name' => 'manufacturing.standard_cost.manage',
+                'display_name' => 'إدارة التكلفة المعيارية للتصنيع',
+                'description' => 'القدرة على تعيين/تعديل التكلفة المعيارية على قوائم المواد (BOMs)',
+                'module' => 'manufacturing',
+                'action' => 'update',
+            ],
+            [
+                'name' => 'accounting.standard_costing.toggle',
+                'display_name' => 'تفعيل/تعطيل نظام التكلفة المعيارية',
+                'description' => 'القدرة على تفعيل أو تعطيل نظام التكلفة المعيارية على مستوى الـ Tenant',
+                'module' => 'accounting',
+                'action' => 'update',
+            ],
+            [
+                'name' => 'reports.cost_variance.view',
+                'display_name' => 'تقرير انحرافات التكلفة',
+                'description' => 'القدرة على عرض تقرير تحليل انحرافات التكلفة المعيارية عن الفعلية',
+                'module' => 'reports',
+                'action' => 'read',
+            ],
+            // Gap 4 — Batch/Lot Tracking permissions
+            [
+                'name' => 'manufacturing.batch_genealogy.view',
+                'display_name' => 'عرض تتبع الدفعات (Genealogy)',
+                'description' => 'القدرة على عرض تتبع الدفعات الخام إلى المنتجات التامة والعكس',
+                'module' => 'manufacturing',
+                'action' => 'read',
+            ],
+            [
+                'name' => 'inventory.batch_tracking.manage',
+                'display_name' => 'إدارة أرقام الدفعات',
+                'description' => 'القدرة على إنشاء/تعديل أرقام الدفعات على دفعات المواد الخام والمنتجات التامة',
+                'module' => 'inventory',
+                'action' => 'manage',
+            ],
+            [
+                'name' => 'purchase.price_adjustment.create',
+                'display_name' => 'تسوية أسعار الفواتير المتأخرة',
+                'description' => 'القدرة على تسجيل تسوية سعر متأخرة لفاتورة شراء وربطها بدفعة المواد الخام',
+                'module' => 'purchases',
+                'action' => 'create',
+            ],
+            [
+                'name' => 'reports.batch_traceability.view',
+                'display_name' => 'تقرير تتبع الدفعات',
+                'description' => 'القدرة على عرض تقرير تتبع الدفعات الخام والمنتجات التامة في الاتجاهين',
+                'module' => 'reports',
+                'action' => 'read',
+            ],
         ];
 
         // صلاحيات التقارير
@@ -396,6 +447,20 @@ class PermissionAndRoleSeeder extends Seeder
                 'description' => 'القدرة على عرض الإحصائيات المالية',
                 'module' => 'accounting',
                 'action' => 'read',
+            ],
+            [
+                'name' => 'accounting.posting-failures.read',
+                'display_name' => 'عرض الترحيلات الفاشلة',
+                'description' => 'القدرة على عرض الترحيلات الفاشلة والتحذيرات المعلقة',
+                'module' => 'accounting',
+                'action' => 'read',
+            ],
+            [
+                'name' => 'accounting.posting-failures.manage',
+                'display_name' => 'إدارة الترحيلات الفاشلة',
+                'description' => 'القدرة على إعادة محاولة الترحيل أو تحديد السجل كمحلول',
+                'module' => 'accounting',
+                'action' => 'update',
             ],
         ];
 

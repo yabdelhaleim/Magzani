@@ -168,7 +168,7 @@ class InventoryMovementService
             'purchase', 'sale', 'return_in', 'return_out',
             'transfer_in', 'transfer_out', 'adjustment',
             'damage', 'expired', 'production', 'consumption',
-            'wood_stock_in', 'wood_stock_out',
+            'material_in', 'material_out',
             'adjustment_in', 'adjustment_out',
         ];
 
@@ -201,8 +201,8 @@ class InventoryMovementService
             'expired' => 'EXP',
             'production' => 'PRD',
             'consumption' => 'CON',
-            'wood_stock_in' => 'WSI',
-            'wood_stock_out' => 'WSO',
+            'material_in' => 'MATIN',
+            'material_out' => 'MATOUT',
             default => 'MOV',
         };
 

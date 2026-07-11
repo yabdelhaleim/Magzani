@@ -133,20 +133,23 @@ Route::middleware([
             Route::post('/', [ManufacturingCostController::class, 'store'])->name('store');
             Route::post('/calculate', [ManufacturingCostController::class, 'calculateAjax'])->name('calculate');
 
-            // Wood Inventory
-            Route::get('wood-stocks', [\App\Http\Controllers\WoodStockController::class, 'index'])->name('wood-stocks.index');
-            Route::get('wood-stocks/create', [\App\Http\Controllers\WoodStockController::class, 'create'])->name('wood-stocks.create');
-            Route::post('wood-stocks', [\App\Http\Controllers\WoodStockController::class, 'store'])->name('wood-stocks.store');
-            Route::get('wood-dispensings', [\App\Http\Controllers\WoodDispensingController::class, 'index'])->name('wood-dispensings.index');
-            Route::get('wood-stocks/{woodStock}/dispense', [\App\Http\Controllers\WoodDispensingController::class, 'create'])->name('wood-dispensings.create');
-            Route::post('wood-dispensings', [\App\Http\Controllers\WoodDispensingController::class, 'store'])->name('wood-dispensings.store');
-            Route::get('wood-dispensings/{dispensing}/create-invoice', [\App\Http\Controllers\WoodDispensingController::class, 'createInvoice'])->name('wood-dispensings.create-invoice');
+            // Material Inventory Batches
+            Route::get('material-batches', [\App\Http\Controllers\MaterialBatchController::class, 'index'])->name('material-batches.index');
+            Route::get('material-batches/create', [\App\Http\Controllers\MaterialBatchController::class, 'create'])->name('material-batches.create');
+            Route::post('material-batches', [\App\Http\Controllers\MaterialBatchController::class, 'store'])->name('material-batches.store');
+            Route::get('material-dispensings', [\App\Http\Controllers\MaterialDispensingController::class, 'index'])->name('material-dispensings.index');
+            Route::get('material-batches/{batch}/dispense', [\App\Http\Controllers\MaterialDispensingController::class, 'create'])->name('material-dispensings.create');
+            Route::post('material-dispensings', [\App\Http\Controllers\MaterialDispensingController::class, 'store'])->name('material-dispensings.store');
+            Route::get('material-dispensings/{dispensing}/create-invoice', [\App\Http\Controllers\MaterialDispensingController::class, 'createInvoice'])->name('material-dispensings.create-invoice');
 
             Route::get('/{manufacturingCost}', [ManufacturingCostController::class, 'show'])->name('show');
             Route::get('/{manufacturingCost}/edit', [ManufacturingCostController::class, 'edit'])->name('edit');
             Route::put('/{manufacturingCost}', [ManufacturingCostController::class, 'update'])->name('update');
             Route::delete('/{manufacturingCost}', [ManufacturingCostController::class, 'destroy'])->name('destroy');
             Route::post('/{manufacturingCost}/confirm', [ManufacturingCostController::class, 'confirm'])->name('confirm');
+            // Gap 2 — Standard Cost on BOM
+            Route::patch('/{manufacturingCost}/standard-cost', [ManufacturingCostController::class, 'updateStandardCost'])
+                ->name('standard-cost.update');
         });
 
         // Manufacturing Orders
@@ -221,11 +224,35 @@ Route::middleware([
             Route::get('/profit-loss', [ReportingController::class, 'profitLoss'])->name('profit-loss');
             Route::get('/profit-loss/export', [ReportingController::class, 'exportProfitLoss'])->name('profit-loss.export');
 
-            // Wood Reports
-            Route::get('/wood-stock', [ReportingController::class, 'woodStock'])->name('wood-stock');
-            Route::get('/wood-movement', [ReportingController::class, 'woodMovement'])->name('wood-movement');
-            Route::get('/wood-cost-production', [ReportingController::class, 'woodCostProduction'])->name('wood-cost-production');
+            // Material Reports
+            Route::get('/material-stock', [ReportingController::class, 'materialStock'])->name('material-stock');
+            Route::get('/material-movement', [ReportingController::class, 'materialMovement'])->name('material-movement');
+            Route::get('/material-cost-production', [ReportingController::class, 'materialCostProduction'])->name('material-cost-production');
+
+            // Gap 2 — Cost Variance Report (Standard Costing)
+            Route::get('/cost-variance', [\App\Http\Controllers\Reports\CostVarianceReportController::class, 'index'])
+                ->name('cost-variance');
+            Route::get('/cost-variance/export', [\App\Http\Controllers\Reports\CostVarianceReportController::class, 'exportCsv'])
+                ->name('cost-variance.export');
+
+            // Gap 4 — Batch Traceability Report
+            Route::get('/batch-traceability', [\App\Http\Controllers\Reports\BatchTraceabilityReportController::class, 'index'])
+                ->name('batch-traceability');
         });
+    });
+
+    /*
+    |--------------------------------------------------------------------------
+    | Purchase Invoice Price Adjustment (Gap 4)
+    |--------------------------------------------------------------------------
+    | Routes for late-invoice batch price adjustments. Per Q5: each item
+    | produces its own dedicated journal entry.
+    */
+    Route::prefix('purchase/invoices/{invoice}/items/{item}')->name('purchase.price-adjustment.')->group(function () {
+        Route::get('/price-adjustment', [\App\Http\Controllers\Purchase\PurchaseInvoicePriceAdjustmentController::class, 'show'])
+            ->name('show');
+        Route::post('/price-adjustment', [\App\Http\Controllers\Purchase\PurchaseInvoicePriceAdjustmentController::class, 'apply'])
+            ->name('apply');
     });
 
     /*
@@ -593,13 +620,6 @@ Route::middleware([
                 Route::post('/periods/{period}/close',             [FiscalPeriodController::class, 'closePeriod'])->name('period.close');
             });
 
-            // ── الترحيلات الفاشلة (Posting Failures) ──
-            Route::prefix('posting-failures')->name('posting-failures.')->group(function () {
-                Route::get('/',                  [PostingFailureController::class, 'index'])->name('index');
-                Route::post('/{failure}/retry',  [PostingFailureController::class, 'retry'])->name('retry');
-                Route::post('/{failure}/resolve',[PostingFailureController::class, 'resolve'])->name('resolve');
-            });
-
             // ── الأصول الثابتة (Fixed Assets) ──
             Route::prefix('fixed-assets')->name('fixed-assets.')->group(function () {
                 Route::get('/',              [FixedAssetController::class, 'index'])->name('index');
@@ -614,6 +634,18 @@ Route::middleware([
             // ── الإعدادات المحاسبية ──
             Route::get('/settings',  [AccountingSettingsController::class, 'index'])->name('settings.index');
             Route::put('/settings',  [AccountingSettingsController::class, 'update'])->name('settings.update');
+        });
+
+    // ── الترحيلات الفاشلة (Posting Failures) - accessible by accountants/employees with permissions ──
+    Route::middleware(['auth', 'feature:accounting_advanced'])
+        ->prefix('accounting')
+        ->name('accounting.')
+        ->group(function () {
+            Route::prefix('posting-failures')->name('posting-failures.')->group(function () {
+                Route::get('/',                  [PostingFailureController::class, 'index'])->name('index');
+                Route::post('/{failure}/retry',  [PostingFailureController::class, 'retry'])->name('retry');
+                Route::post('/{failure}/resolve',[PostingFailureController::class, 'resolve'])->name('resolve');
+            });
         });
 
 });

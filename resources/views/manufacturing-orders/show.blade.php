@@ -399,52 +399,37 @@
         </div>
     </div>
 
-    <!-- Wood Components -->
+    <!-- Components -->
     <div class="mfg-card mfg-section">
         <div class="mfg-card-header">
             <i class="fas fa-cubes" style="color: var(--tf-green);"></i>
-            <h3 class="mfg-card-title">مكونات الخشب</h3>
+            <h3 class="mfg-card-title">مكونات أمر التصنيع</h3>
         </div>
         <div class="mfg-card-body">
             <div class="table-responsive">
                 <table class="mfg-table">
                     <thead>
                         <tr>
-                            <th>دفعة الخشب</th>
-                            <th>النوع</th>
-                            <th>الأبعاد (سم)</th>
-                            <th>العدد</th>
-                            <th>م³</th>
-                            <th>م²</th>
-                            <th>ج.م/م³</th>
-                            <th>التكلفة</th>
+                            <th>المكوّن</th>
+                            <th>الكمية المطلوبة (لكل وحدة)</th>
+                            <th>وحدة القياس</th>
+                            <th>تكلفة الوحدة وقت الصرف</th>
+                            <th>إجمالي التكلفة</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach($manufacturingOrder->components as $component)
-                        @php
-                            $vM3 = ($component->volume_cm3 ?? 0) / 1_000_000;
-                            $tM = ((float) $component->thickness_cm) / 100;
-                            $m2 = $tM > 0 ? $vM3 / $tM : 0;
-                        @endphp
                         <tr>
                             <td>
-                                @if($component->woodStock)
-                                    <a href="{{ route('manufacturing.wood-stocks.index') }}" style="color:var(--tf-indigo); font-weight:700;" title="مخزون الخشب">
-                                        #{{ $component->wood_stock_id }}
-                                    </a>
-                                    <div style="font-size:11px;color:var(--tf-text-m);">{{ $component->woodStock->supplier?->name ?? '—' }}</div>
-                                @else
-                                    —
+                                <strong>{{ $component->component_name }}</strong>
+                                @if($component->material_batch_id)
+                                    <div style="font-size:11px;color:var(--tf-text-m);">دفعة مادة خام #{{ $component->material_batch_id }}</div>
                                 @endif
                             </td>
-                            <td>{{ $component->component_type }}</td>
-                            <td>{{ number_format($component->thickness_cm, 1) }}×{{ number_format($component->width_cm, 1) }}×{{ number_format($component->length_cm, 1) }}</td>
-                            <td>{{ number_format($component->quantity) }}</td>
-                            <td>{{ number_format($vM3, 4) }}</td>
-                            <td>{{ number_format($m2, 4) }}</td>
-                            <td>{{ number_format($component->price_per_cubic_meter, 2) }}</td>
-                            <td><strong>{{ number_format($component->total_cost, 2) }} ج.م</strong></td>
+                            <td>{{ number_format($component->quantity, 4) }}</td>
+                            <td>{{ $component->uom->name ?? '—' }}</td>
+                            <td>{{ number_format($component->unit_cost, 2) }} د.إ</td>
+                            <td><strong>{{ number_format($component->total_cost, 2) }} د.إ</strong></td>
                         </tr>
                         @endforeach
                     </tbody>
@@ -453,31 +438,36 @@
         </div>
     </div>
 
-    <!-- Additional Components -->
-    @if($manufacturingOrder->additionalComponents && $manufacturingOrder->additionalComponents->count() > 0)
+    <!-- Extra Costs -->
+    @if($manufacturingOrder->extraCosts && $manufacturingOrder->extraCosts->count() > 0)
     <div class="mfg-card mfg-section">
         <div class="mfg-card-header">
-            <i class="fas fa-tools" style="color: var(--tf-amber);"></i>
-            <h3 class="mfg-card-title">مكونات إضافية</h3>
+            <i class="fas fa-hand-holding-dollar" style="color: var(--tf-amber);"></i>
+            <h3 class="mfg-card-title">التكاليف الإضافية (مصاريف التشغيل)</h3>
         </div>
         <div class="mfg-card-body">
             <div class="table-responsive">
                 <table class="mfg-table">
                     <thead>
                         <tr>
-                            <th>المكون</th>
-                            <th>العدد</th>
-                            <th>السعر</th>
-                            <th>التكلفة</th>
+                            <th>نوع المصروف</th>
+                            <th>الوصف</th>
+                            <th>المبلغ</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach($manufacturingOrder->additionalComponents as $component)
+                        @foreach($manufacturingOrder->extraCosts as $extra)
                         <tr>
-                            <td>{{ $component->component_name }}</td>
-                            <td>{{ number_format($component->quantity) }}</td>
-                            <td>{{ number_format($component->unit_price, 2) }} ج.م</td>
-                            <td><strong>{{ number_format($component->total_cost, 2) }} ج.م</strong></td>
+                            <td>
+                                @switch($extra->cost_type)
+                                    @case('labor') عمالة وأجور @break
+                                    @case('transport') شحن ونقل @break
+                                    @case('waste') هدر تالف @break
+                                    @default {{ $extra->cost_type }}
+                                @endswitch
+                            </td>
+                            <td>{{ $extra->description ?: '—' }}</td>
+                            <td><strong>{{ number_format($extra->amount, 2) }} د.إ</strong></td>
                         </tr>
                         @endforeach
                     </tbody>
@@ -497,31 +487,31 @@
             <div class="grid-2">
                 <div class="summary-box">
                     <div class="summary-row">
-                        <span>تكلفة الخشب للبالة:</span>
-                        <strong>{{ number_format($manufacturingOrder->getComponentsTotalCost(), 2) }} ج.م</strong>
+                        <span>تكلفة المكونات للوحدة:</span>
+                        <strong>{{ number_format($manufacturingOrder->getComponentsTotalCost(), 2) }} د.إ</strong>
                     </div>
                     <div class="summary-row">
-                        <span>المكونات الإضافية للبالة:</span>
-                        <strong>{{ number_format($manufacturingOrder->waste_cost + $manufacturingOrder->labor_cost + $manufacturingOrder->nails_cost + $manufacturingOrder->tips_cost + $manufacturingOrder->transport_cost + $manufacturingOrder->fumigation_cost, 2) }} ج.م</strong>
+                        <span>التكاليف الإضافية والتشغيلية للوحدة:</span>
+                        <strong>{{ number_format($manufacturingOrder->extraCosts->sum('amount') + $manufacturingOrder->labor_cost, 2) }} د.إ</strong>
                     </div>
                     <div class="summary-row">
-                        <span>إجمالي التكلفة لكل بالة:</span>
-                        <strong>{{ number_format($manufacturingOrder->cost_per_unit, 2) }} ج.م</strong>
+                        <span>إجمالي التكلفة للوحدة المنتجة:</span>
+                        <strong>{{ number_format($manufacturingOrder->cost_per_unit, 2) }} د.إ</strong>
                     </div>
                     <div class="summary-row total">
                         <span>الإجمالي الكلي (للكمية كلها):</span>
-                        <strong>{{ number_format($manufacturingOrder->total_cost, 2) }} ج.م</strong>
+                        <strong>{{ number_format($manufacturingOrder->total_cost, 2) }} د.إ</strong>
                     </div>
                 </div>
 
                 <div class="summary-box" style="background: linear-gradient(135deg, var(--tf-green), #059669);">
                     <div class="summary-row">
-                        <span>عدد البالات المنتجة:</span>
+                        <span>عدد الوحدات المنتجة:</span>
                         <strong>{{ number_format($manufacturingOrder->quantity_produced, 2) }}</strong>
                     </div>
                     <div class="summary-row">
-                        <span>التكلفة لكل بالة:</span>
-                        <strong>{{ number_format($manufacturingOrder->cost_per_unit, 2) }} ج.م</strong>
+                        <span>التكلفة لكل وحدة:</span>
+                        <strong>{{ number_format($manufacturingOrder->cost_per_unit, 2) }} د.إ</strong>
                     </div>
                     <div class="summary-row">
                         <span>نسبة هامش الربح:</span>
@@ -529,19 +519,96 @@
                     </div>
                     <div class="summary-row total">
                         <span>سعر البيع المقترح:</span>
-                        <strong>{{ number_format($manufacturingOrder->selling_price_per_unit, 2) }} ج.م</strong>
+                        <strong>{{ number_format($manufacturingOrder->selling_price_per_unit, 2) }} د.إ</strong>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Wood Dispensings (الخشب المستخدم) -->
-    @if($manufacturingOrder->woodDispensings && $manufacturingOrder->woodDispensings->count() > 0)
+    {{-- Gap 2 — Cost Variance Analysis --}}
+    @php
+        $standardCostingOn = (bool) (\App\Models\AccountingSetting::first()?->standard_costing_enabled ?? false);
+        $hasVarianceData   = $manufacturingOrder->total_variance !== null;
+        $varianceType      = $manufacturingOrder->variance_type;
+    @endphp
+    @if($standardCostingOn && $manufacturingOrder->is_completed && $hasVarianceData)
+    <div class="mfg-card mfg-section" style="border-color: {{ $varianceType === 'unfavorable' ? '#fecaca' : ($varianceType === 'favorable' ? '#bbf7d0' : '#fde68a') }};">
+        <div class="mfg-card-header" style="background: {{ $varianceType === 'unfavorable' ? 'linear-gradient(135deg,#fee2e2 0%,#fef2f2 100%)' : ($varianceType === 'favorable' ? 'linear-gradient(135deg,#dcfce7 0%,#f0fdf4 100%)' : 'linear-gradient(135deg,#fef3c7 0%,#fff7ed 100%)') }};">
+            <i class="fas fa-balance-scale" style="color: {{ $varianceType === 'unfavorable' ? '#dc2626' : ($varianceType === 'favorable' ? '#0faa7e' : '#e8930a') }};"></i>
+            <h3 class="mfg-card-title">تحليل انحرافات التكلفة — Standard Costing</h3>
+            <span style="margin-inline-start:auto; padding: 4px 12px; border-radius: 999px; font-weight: 800; font-size: 12px; color: #fff; background: {{ $varianceType === 'unfavorable' ? '#dc2626' : ($varianceType === 'favorable' ? '#0faa7e' : '#e8930a') }};">
+                @if($varianceType === 'unfavorable') غير مواتٍ
+                @elseif($varianceType === 'favorable') مواتٍ
+                @else تطابق تام
+                @endif
+            </span>
+        </div>
+        <div class="mfg-card-body">
+            <div class="grid-2">
+                <div class="summary-box">
+                    <div class="summary-row">
+                        <span>التكلفة المعيارية (Snapshot):</span>
+                        <strong>{{ number_format($manufacturingOrder->standard_cost_at_completion, 2) }} د.إ</strong>
+                    </div>
+                    <div class="summary-row">
+                        <span>التكلفة الفعلية (Snapshot):</span>
+                        <strong>{{ number_format($manufacturingOrder->actual_cost_at_completion, 2) }} د.إ</strong>
+                    </div>
+                    <div class="summary-row total">
+                        <span>إجمالي الانحراف:</span>
+                        <strong style="color: {{ $varianceType === 'unfavorable' ? '#dc2626' : ($varianceType === 'favorable' ? '#0faa7e' : '#374151') }};">
+                            {{ $varianceType === 'favorable' ? '−' : ($varianceType === 'unfavorable' ? '+' : '') }}
+                            {{ number_format(abs((float) $manufacturingOrder->total_variance), 2) }} د.إ
+                        </strong>
+                    </div>
+                </div>
+                <div class="summary-box" style="background: linear-gradient(135deg,#f8fafc 0%,#f1f5f9 100%);">
+                    <div class="summary-row">
+                        <span>انحراف المواد الخام:</span>
+                        <strong class="{{ (float) $manufacturingOrder->material_variance > 0 ? 'text-red-600' : ((float) $manufacturingOrder->material_variance < 0 ? 'text-green-600' : '') }}">
+                            {{ number_format($manufacturingOrder->material_variance, 2) }} د.إ
+                        </strong>
+                    </div>
+                    <div class="summary-row">
+                        <span>انحراف العمالة / المصاريف الإضافية:</span>
+                        <strong class="{{ (float) $manufacturingOrder->labor_overhead_variance > 0 ? 'text-red-600' : ((float) $manufacturingOrder->labor_overhead_variance < 0 ? 'text-green-600' : '') }}">
+                            {{ number_format($manufacturingOrder->labor_overhead_variance, 2) }} د.إ
+                        </strong>
+                    </div>
+                    <div class="summary-row">
+                        <span>قيد الترحيل:</span>
+                        <strong>
+                            @if($manufacturingOrder->variance_journal_entry_id)
+                                <a href="#" class="font-mono text-blue-600 underline">#{{ $manufacturingOrder->variance_journal_entry_id }}</a>
+                                <span class="text-xs text-gray-500 block">5160 Manufacturing Cost Variance</span>
+                            @else
+                                <span class="text-gray-500">لم يُنشأ (تطابق تام)</span>
+                            @endif
+                        </strong>
+                    </div>
+                </div>
+            </div>
+
+            <p class="text-xs text-gray-500 mt-3">
+                <i class="fas fa-info-circle"></i>
+                تم ترحيل هذا الانحراف عند إكمال الأمر في
+                <span class="font-mono">{{ $manufacturingOrder->variance_posted_at?->format('Y-m-d H:i') }}</span>
+                (السجل مقفل ضد التعديل).
+            </p>
+        </div>
+    </div>
+    @endif
+
+    {{-- Gap 4 — Batch Genealogy Section --}}
+    @include('manufacturing-orders.partials.genealogy-section')
+
+    <!-- Material Dispensings (المواد الخام المصروفة) -->
+    @if($manufacturingOrder->materialDispensings && $manufacturingOrder->materialDispensings->count() > 0)
     <div class="mfg-card mfg-section">
         <div class="mfg-card-header">
-            <i class="fas fa-tree" style="color: #8B4513;"></i>
-            <h3 class="mfg-card-title">الخشب المستخدم</h3>
+            <i class="fas fa-hand-holding-hand" style="color: #4f63d2;"></i>
+            <h3 class="mfg-card-title">المواد الخام المصروفة فعلياً للأمر</h3>
         </div>
         <div class="mfg-card-body">
             <div class="table-responsive">
@@ -549,48 +616,29 @@
                     <thead>
                         <tr>
                             <th>التاريخ</th>
-                            <th>دفعة الخشب</th>
-                            <th>الأبعاد</th>
-                            <th>الكمية (م³)</th>
-                            <th>المساحة (م²)</th>
-                            <th>الموظف</th>
-                            <th>العميل</th>
+                            <th>دفعة المادة الخام</th>
+                            <th>الكمية الصادرة</th>
+                            <th>الموظف المسؤول</th>
                             <th>ملاحظات</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach($manufacturingOrder->woodDispensings as $dispensing)
+                        @foreach($manufacturingOrder->materialDispensings as $dispensing)
                         <tr>
                             <td>{{ $dispensing->dispensed_at?->format('Y-m-d') }}</td>
                             <td>
-                                @if($dispensing->woodStock)
-                                    <span class="badge" style="background: #f0f0f0; color: #333;">
-                                        {{ $dispensing->woodStock->purchase_reference ?? 'دفعة #' . $dispensing->woodStock->id }}
+                                @if($dispensing->batch)
+                                    <span class="badge" style="background: #f0f0f0; color: #333; padding: 4px 8px; border-radius: 4px;">
+                                        {{ $dispensing->batch->purchase_reference ?? 'دفعة #' . $dispensing->batch->id }}
                                     </span>
                                 @else
                                     <span class="text-muted">-</span>
                                 @endif
                             </td>
-                            <td dir="ltr">
-                                @if($dispensing->woodStock)
-                                    {{ $dispensing->woodStock->length_cm }}×{{ $dispensing->woodStock->width_cm }}×{{ $dispensing->woodStock->thickness_cm }} سم
-                                @else
-                                    -
-                                @endif
-                            </td>
                             <td>
-                                <strong>{{ number_format($dispensing->volume_cm3_taken / 1000000, 4) }}</strong> م³
-                            </td>
-                            <td>
-                                @php
-                                    $dM3 = $dispensing->volume_cm3_taken / 1_000_000;
-                                    $dThM = $dispensing->woodStock ? ((float) $dispensing->woodStock->thickness_cm) / 100 : 0;
-                                    $dM2 = $dThM > 0 ? $dM3 / $dThM : 0;
-                                @endphp
-                                <strong>{{ number_format($dM2, 4) }}</strong> م²
+                                <strong>{{ number_format($dispensing->quantity_taken, 2) }}</strong> {{ $dispensing->batch->uom->name ?? '' }}
                             </td>
                             <td>{{ $dispensing->user?->name ?? '-' }}</td>
-                            <td>{{ $dispensing->client?->name ?? '-' }}</td>
                             <td>{{ $dispensing->notes ?? '-' }}</td>
                         </tr>
                         @endforeach

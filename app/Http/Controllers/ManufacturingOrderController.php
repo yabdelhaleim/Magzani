@@ -74,9 +74,8 @@ class ManufacturingOrderController extends Controller
         $warehouses = \App\Models\Warehouse::where('is_active', true)->get();
         $rawMaterials = \App\Models\RawMaterialTemplate::with('warehouse:id,name')->latest()->get();
         $customers = \App\Models\Customer::where('is_active', true)->orderBy('name')->get(['id', 'name', 'phone']);
-        $woodLots = $this->woodLotsForManufacturingForm();
 
-        return view('manufacturing-orders.create', compact('warehouses', 'rawMaterials', 'woodLots', 'customers'));
+        return view('manufacturing-orders.create', compact('warehouses', 'rawMaterials', 'customers'));
     }
 
     /**
@@ -101,7 +100,6 @@ class ManufacturingOrderController extends Controller
             'notes' => 'nullable|string',
             'components' => 'required|array|min:1',
             'components.*.component_type' => 'required|string|max:50',
-            'components.*.wood_stock_id' => 'nullable|exists:wood_stocks,id',
             'components.*.quantity' => 'required|numeric|min:0.0001',
             'components.*.thickness_cm' => 'required|numeric|min:0',
             'components.*.width_cm' => 'required|numeric|min:0',
@@ -148,7 +146,6 @@ class ManufacturingOrderController extends Controller
             'notes' => 'nullable|string',
             'components' => 'required|array|min:1',
             'components.*.component_type' => 'required|string|max:50',
-            'components.*.wood_stock_id' => 'nullable|exists:wood_stocks,id',
             'components.*.quantity' => 'required|numeric|min:0.0001',
             'components.*.thickness_cm' => 'required|numeric|min:0',
             'components.*.width_cm' => 'required|numeric|min:0',
@@ -222,13 +219,12 @@ class ManufacturingOrderController extends Controller
      */
     public function edit(string $id)
     {
-        $order = \App\Models\ManufacturingOrder::with(['components.woodStock', 'product', 'warehouse', 'customer'])->findOrFail($id);
+        $order = \App\Models\ManufacturingOrder::with(['product', 'warehouse', 'customer'])->findOrFail($id);
         $warehouses = \App\Models\Warehouse::where('is_active', true)->get();
         $rawMaterials = \App\Models\RawMaterialTemplate::with('warehouse:id,name')->latest()->get();
         $customers = \App\Models\Customer::where('is_active', true)->orderBy('name')->get(['id', 'name', 'phone']);
-        $woodLots = $this->woodLotsForManufacturingForm();
 
-        return view('manufacturing-orders.edit', compact('order', 'warehouses', 'rawMaterials', 'woodLots', 'customers'));
+        return view('manufacturing-orders.edit', compact('order', 'warehouses', 'rawMaterials', 'customers'));
     }
 
     /**
@@ -259,7 +255,6 @@ class ManufacturingOrderController extends Controller
             'notes' => 'nullable|string',
             'components' => 'sometimes|array|min:1',
             'components.*.component_type' => 'required|string|max:50',
-            'components.*.wood_stock_id' => 'nullable|exists:wood_stocks,id',
             'components.*.quantity' => 'required|numeric|min:0.0001',
             'components.*.thickness_cm' => 'required|numeric|min:0',
             'components.*.width_cm' => 'required|numeric|min:0',
@@ -314,7 +309,6 @@ class ManufacturingOrderController extends Controller
             'notes' => 'nullable|string',
             'components' => 'sometimes|array|min:1',
             'components.*.component_type' => 'required|string|max:50',
-            'components.*.wood_stock_id' => 'nullable|exists:wood_stocks,id',
             'components.*.quantity' => 'required|numeric|min:0.0001',
             'components.*.thickness_cm' => 'required|numeric|min:0',
             'components.*.width_cm' => 'required|numeric|min:0',
@@ -594,7 +588,6 @@ class ManufacturingOrderController extends Controller
     {
         $validated = $request->validate([
             'components' => 'required|array|min:1',
-            'components.*.wood_stock_id' => 'nullable|exists:wood_stocks,id',
             'components.*.quantity' => 'required|numeric|min:0.0001',
             'components.*.thickness_cm' => 'required|numeric|min:0',
             'components.*.width_cm' => 'required|numeric|min:0',
@@ -619,31 +612,6 @@ class ManufacturingOrderController extends Controller
 
     /**
      * دفعات خشب متاحة لنماذج إنشاء/تعديل أمر التصنيع (مع ربط المستودع للتصفية في الواجهة)
+     * — REMOVED in Gap 4c. The legacy `wood_stocks` table is gone.
      */
-    private function woodLotsForManufacturingForm(): Collection
-    {
-        return \App\Models\WoodStock::query()
-            ->with(['supplier:id,name', 'warehouse:id,name', 'product:id,name'])
-            ->orderByDesc('id')
-            ->get()
-            ->filter(fn (\App\Models\WoodStock $w) => $w->remaining_cm3 > 0.0001)
-            ->values()
-            ->map(function (\App\Models\WoodStock $w) {
-                return [
-                    'id' => $w->id,
-                    'warehouse_id' => $w->warehouse_id,
-                    'unit_cost' => (float) $w->unit_cost,
-                    'remaining_m3' => round($w->remaining_cm3 / 1_000_000, 4),
-                    'remaining_m2' => round((float) $w->remaining_m2, 4),
-                    'supplier_name' => $w->supplier?->name,
-                    'warehouse_name' => $w->warehouse?->name,
-                    'purchase_reference' => $w->purchase_reference,
-                    'product_name' => $w->product?->name,
-                    'label' => '#'.$w->id.' — '.($w->warehouse?->name ?? 'مخزن')
-                        .' — '.($w->supplier?->name ?? 'بدون مورد')
-                        .' — متبقي '.round($w->remaining_cm3 / 1_000_000, 3).' م³'
-                        .($w->purchase_reference ? ' — '.$w->purchase_reference : ''),
-                ];
-            });
-    }
 }

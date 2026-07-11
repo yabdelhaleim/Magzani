@@ -632,6 +632,61 @@ class PostingService
         );
     }
 
+    /**
+     * Gap 4 — Post a late-invoice batch price adjustment.
+     *
+     * Called by LateInvoicePriceAdjustmentService — does the idempotent
+     * GL post for a single PurchaseInvoiceItem. Three-line shape:
+     *
+     *   DR  Inventory   (raw stock + finished stock portion)  inventory_impact
+     *   DR  COGS        (sold-thru portion)                   cogs_impact
+     *     CR  AP        (always inverse of total)             inventory + cogs
+     *
+     * Or, in fallback mode (entire diff to 5160):
+     *
+     *   DR  5160 Variance Account     total_impact
+     *     CR  AP                       total_impact
+     *
+     * The orchestrator (LateInvoicePriceAdjustmentService) builds the
+     * exact lines and invokes this helper just for the safePost +
+     * atomic-lock + failure-capture machinery.
+     *
+     * Idempotency key is the caller's `source_event_key` (the orchestrator
+     * decides what that is per item / fallback path).
+     */
+    public function postBatchPriceAdjustment(
+        string $sourceEventKey,
+        string $description,
+        array $lines,
+        ?int $purchaseInvoiceItemId = null,
+    ): ?JournalEntry {
+        $productionCost = array_sum(array_map(fn ($l) => (float) $l['debit'], $lines));
+        $creditTotal = array_sum(array_map(fn ($l) => (float) $l['credit'], $lines));
+        if (abs($productionCost - $creditTotal) > 0.01) {
+            Log::warning('[PostingService] postBatchPriceAdjustment unbalanced', [
+                'source_event_key' => $sourceEventKey,
+                'debits'           => $productionCost,
+                'credits'          => $creditTotal,
+            ]);
+            return null;
+        }
+
+        return $this->safePost(
+            key: $sourceEventKey,
+            description: $description,
+            callback: function () use ($sourceEventKey, $description, $lines, $purchaseInvoiceItemId) {
+                return $this->journalService->createAndPost([
+                    'entry_date'       => now()->toDateString(),
+                    'description'      => $description,
+                    'source_type'      => JournalEntrySource::MANUAL->value,
+                    'source_id'        => $purchaseInvoiceItemId,
+                    'source_event_key' => $sourceEventKey,
+                    'lines'            => $lines,
+                ]);
+            }
+        );
+    }
+
     // ═══════════════════════════════════════════════════════════
     // PRIVATE HELPERS
     // ═══════════════════════════════════════════════════════════

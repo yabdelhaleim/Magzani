@@ -3,6 +3,9 @@
 @section('title', 'مراجعة الترحيلات الفاشلة')
 
 @section('content')
+@php
+    $defaultCurrency = \App\Models\AccountingSetting::value('default_currency') ?? 'SAR';
+@endphp
 <div class="space-y-6">
     <div class="flex justify-between items-center bg-white p-6 rounded-xl shadow-sm border border-gray-100">
         <div>
@@ -44,6 +47,8 @@
                     <tr class="bg-gray-50 border-b border-gray-200">
                         <th class="px-4 py-3 text-right font-semibold text-gray-700">#</th>
                         <th class="px-4 py-3 text-right font-semibold text-gray-700">المفتاح</th>
+                        <th class="px-4 py-3 text-right font-semibold text-gray-700">نوع العملية</th>
+                        <th class="px-4 py-3 text-right font-semibold text-gray-700">المبلغ المتأثر</th>
                         <th class="px-4 py-3 text-right font-semibold text-gray-700">الوصف</th>
                         <th class="px-4 py-3 text-right font-semibold text-gray-700">الخطأ</th>
                         <th class="px-4 py-3 text-center font-semibold text-gray-700">المحاولات</th>
@@ -58,6 +63,14 @@
                         <td class="px-4 py-3 text-gray-500">{{ $failure->id }}</td>
                         <td class="px-4 py-3 font-mono text-xs text-gray-700 max-w-[200px] truncate" title="{{ $failure->source_event_key ?? $failure->event_key }}">
                             {{ $failure->source_event_key ?? $failure->event_key }}
+                        </td>
+                        <td class="px-4 py-3 text-gray-800">
+                            <span class="px-2.5 py-1 bg-indigo-50 text-indigo-700 rounded-lg text-xs font-semibold border border-indigo-100">
+                                {{ $failure->transaction_type_label }}
+                            </span>
+                        </td>
+                        <td class="px-4 py-3 font-bold font-mono text-gray-900">
+                            {{ $failure->affected_amount !== null ? number_format($failure->affected_amount, 2) . ' ' . $defaultCurrency : '—' }}
                         </td>
                         <td class="px-4 py-3 text-gray-800">{{ $failure->description ?? '—' }}</td>
                         <td class="px-4 py-3 text-red-600 text-xs max-w-[250px] truncate" title="{{ $failure->error_message }}">

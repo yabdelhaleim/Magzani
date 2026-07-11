@@ -245,6 +245,9 @@
         </div>
     </div>
 
+    <!-- Gap 2 — Standard Costing Section -->
+    @include('manufacturing.partials.standard-cost-section')
+
     <!-- Metadata -->
     <div class="mfg-section">
         <div class="mfg-card">

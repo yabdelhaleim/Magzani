@@ -324,16 +324,14 @@ public function profitLossReport($startDate, $endDate)
                 // الخزينة
                 'cash_balance' => $this->getCashBalance(),
 
-                // الخشب 🪵
-                'wood_total_m3' => DB::table('wood_stocks')->sum('volume_cm3') / 1000000,
-                'wood_remaining_m3' => DB::table('wood_stocks')
-                    ->selectRaw('SUM(volume_cm3 - COALESCE((SELECT SUM(volume_cm3_taken) FROM wood_dispensings WHERE wood_dispensings.wood_stock_id = wood_stocks.id), 0)) as remaining')
-                    ->value('remaining') / 1000000,
-                'wood_batches_count' => DB::table('wood_stocks')->count(),
-                'wood_last_received' => DB::table('wood_stocks')->max('received_at'),
-                'wood_dispensed_today' => DB::table('wood_dispensings')
+                // المواد الخام 📦
+                'material_total_qty' => DB::table('material_batches')->sum('quantity'),
+                'material_remaining_qty' => DB::table('material_batches')->sum('remaining_qty'),
+                'material_batches_count' => DB::table('material_batches')->count(),
+                'material_last_received' => DB::table('material_batches')->max('received_at'),
+                'material_dispensed_today' => DB::table('material_dispensings')
                     ->whereDate('dispensed_at', $today)
-                    ->sum('volume_cm3_taken') / 1000000,
+                    ->sum('quantity_taken'),
 
                 // آخر الفواتير
                 'recent_invoices' => SalesInvoice::with('customer')
@@ -375,158 +373,136 @@ public function profitLossReport($startDate, $endDate)
     }
 
     /**
-     * Wood Stock Report - مخزون الخشب الحالي
+     * Material Stock Report - مخزون المواد الخام الحالي
      */
-    public function woodStockReport(array $filters = [])
+    public function materialStockReport(array $filters = [])
     {
-        $query = DB::table('wood_stocks')
-            ->join('suppliers', 'suppliers.id', '=', 'wood_stocks.supplier_id')
-            ->leftJoin('warehouses', 'warehouses.id', '=', 'wood_stocks.warehouse_id')
+        $query = DB::table('material_batches')
+            ->join('products', 'products.id', '=', 'material_batches.product_id')
+            ->join('units_of_measure', 'units_of_measure.id', '=', 'material_batches.uom_id')
+            ->leftJoin('suppliers', 'suppliers.id', '=', 'material_batches.supplier_id')
+            ->leftJoin('warehouses', 'warehouses.id', '=', 'material_batches.warehouse_id')
             ->select(
-                'wood_stocks.id',
-                'wood_stocks.purchase_reference',
+                'material_batches.id',
+                'material_batches.purchase_reference',
+                'products.name as product_name',
+                'products.code as product_code',
+                'units_of_measure.name as uom_name',
                 'suppliers.name as supplier_name',
                 'warehouses.name as warehouse_name',
-                'wood_stocks.length_cm',
-                'wood_stocks.width_cm',
-                'wood_stocks.thickness_cm',
-                'wood_stocks.quantity',
-                'wood_stocks.volume_cm3',
-                'wood_stocks.unit_cost',
-                'wood_stocks.total_cost',
-                'wood_stocks.received_at',
-                DB::raw('(wood_stocks.volume_cm3 - COALESCE((SELECT SUM(volume_cm3_taken) FROM wood_dispensings WHERE wood_dispensings.wood_stock_id = wood_stocks.id), 0)) as remaining_cm3')
+                'material_batches.quantity',
+                'material_batches.remaining_qty',
+                'material_batches.unit_cost',
+                'material_batches.received_at'
             );
 
-        // Apply filters
         if (!empty($filters['supplier_id'])) {
-            $query->where('wood_stocks.supplier_id', $filters['supplier_id']);
+            $query->where('material_batches.supplier_id', $filters['supplier_id']);
         }
 
         if (!empty($filters['warehouse_id'])) {
-            $query->where('wood_stocks.warehouse_id', $filters['warehouse_id']);
+            $query->where('material_batches.warehouse_id', $filters['warehouse_id']);
         }
 
         if (!empty($filters['date_from'])) {
-            $query->whereDate('wood_stocks.received_at', '>=', $filters['date_from']);
+            $query->whereDate('material_batches.received_at', '>=', $filters['date_from']);
         }
 
         if (!empty($filters['date_to'])) {
-            $query->whereDate('wood_stocks.received_at', '<=', $filters['date_to']);
+            $query->whereDate('material_batches.received_at', '<=', $filters['date_to']);
         }
 
-        // Filter by minimum remaining stock
-        if (!empty($filters['min_remaining_m3'])) {
-            $query->havingRaw('(wood_stocks.volume_cm3 - COALESCE((SELECT SUM(volume_cm3_taken) FROM wood_dispensings WHERE wood_dispensings.wood_stock_id = wood_stocks.id), 0)) / 1000000 >= ?', [$filters['min_remaining_m3']]);
-        }
+        $stocks = $query->orderBy('material_batches.received_at', 'desc')->get();
 
-        $stocks = $query->orderBy('wood_stocks.received_at', 'desc')->get();
-
-        // Calculate additional fields
         return $stocks->map(function ($stock) {
-            $remainingCm3 = $stock->remaining_cm3;
-            $remainingM3 = $remainingCm3 / 1000000;
-            $remainingM2 = $stock->thickness_cm > 0 ? $remainingCm3 / $stock->thickness_cm / 10000 : 0;
+            $totalCost = $stock->quantity * $stock->unit_cost;
+            $remainingValue = $stock->remaining_qty * $stock->unit_cost;
 
             return [
                 'id' => $stock->id,
                 'purchase_reference' => $stock->purchase_reference,
+                'product_name' => $stock->product_name,
+                'product_code' => $stock->product_code,
+                'uom_name' => $stock->uom_name,
                 'supplier_name' => $stock->supplier_name,
                 'warehouse_name' => $stock->warehouse_name,
-                'dimensions' => "{$stock->length_cm}×{$stock->width_cm}×{$stock->thickness_cm} سم",
-                'total_m3' => round($stock->volume_cm3 / 1000000, 4),
-                'dispensed_m3' => round(($stock->volume_cm3 - $remainingCm3) / 1000000, 4),
-                'remaining_m3' => round($remainingM3, 4),
-                'remaining_m2' => round($remainingM2, 4),
+                'total_qty' => $stock->quantity,
+                'remaining_qty' => $stock->remaining_qty,
                 'unit_cost' => $stock->unit_cost,
-                'total_cost' => $stock->total_cost,
-                'remaining_value' => round($remainingM3 * $stock->unit_cost, 2),
+                'total_cost' => $totalCost,
+                'remaining_value' => $remainingValue,
                 'received_at' => $stock->received_at,
             ];
         });
     }
 
     /**
-     * Wood Movement Report - حركة الخشب
+     * Material Movement Report - حركة المواد الخام
      */
-    public function woodMovementReport(array $filters = [])
+    public function materialMovementReport(array $filters = [])
     {
-        $query = DB::table('wood_dispensings')
-            ->join('wood_stocks', 'wood_stocks.id', '=', 'wood_dispensings.wood_stock_id')
-            ->leftJoin('users', 'users.id', '=', 'wood_dispensings.user_id')
-            ->leftJoin('customers', 'customers.id', '=', 'wood_dispensings.client_id')
-            ->leftJoin('manufacturing_orders', 'manufacturing_orders.id', '=', 'wood_dispensings.manufacturing_order_id')
-            ->leftJoin('sales_invoices', 'sales_invoices.id', '=', 'wood_dispensings.sales_invoice_id')
+        $query = DB::table('material_dispensings')
+            ->join('material_batches', 'material_batches.id', '=', 'material_dispensings.material_batch_id')
+            ->join('products', 'products.id', '=', 'material_batches.product_id')
+            ->join('units_of_measure', 'units_of_measure.id', '=', 'material_batches.uom_id')
+            ->leftJoin('users', 'users.id', '=', 'material_dispensings.user_id')
+            ->leftJoin('manufacturing_orders', 'manufacturing_orders.id', '=', 'material_dispensings.manufacturing_order_id')
             ->select(
-                'wood_dispensings.id',
-                'wood_dispensings.dispensed_at',
-                'wood_dispensings.volume_cm3_taken',
-                'wood_dispensings.notes',
-                'wood_stocks.length_cm',
-                'wood_stocks.width_cm',
-                'wood_stocks.thickness_cm',
-                'wood_stocks.purchase_reference',
+                'material_dispensings.id',
+                'material_dispensings.dispensed_at',
+                'material_dispensings.quantity_taken',
+                'material_dispensings.notes',
+                'products.name as product_name',
+                'units_of_measure.name as uom_name',
+                'material_batches.purchase_reference',
                 'users.name as user_name',
-                'customers.name as client_name',
-                'manufacturing_orders.order_number',
-                'sales_invoices.invoice_number as sales_invoice_number'
+                'manufacturing_orders.order_number'
             );
 
-        // Apply filters
         if (!empty($filters['date_from'])) {
-            $query->whereDate('wood_dispensings.dispensed_at', '>=', $filters['date_from']);
+            $query->whereDate('material_dispensings.dispensed_at', '>=', $filters['date_from']);
         }
 
         if (!empty($filters['date_to'])) {
-            $query->whereDate('wood_dispensings.dispensed_at', '<=', $filters['date_to']);
+            $query->whereDate('material_dispensings.dispensed_at', '<=', $filters['date_to']);
         }
 
-        if (!empty($filters['user_id'])) {
-            $query->where('wood_dispensings.user_id', $filters['user_id']);
-        }
-
-        if (!empty($filters['client_id'])) {
-            $query->where('wood_dispensings.client_id', $filters['client_id']);
-        }
-
-        return $query->orderBy('wood_dispensings.dispensed_at', 'desc')
+        return $query->orderBy('material_dispensings.dispensed_at', 'desc')
             ->get()
             ->map(function ($dispensing) {
                 return [
                     'id' => $dispensing->id,
                     'date' => $dispensing->dispensed_at,
-                    'dimensions' => "{$dispensing->length_cm}×{$dispensing->width_cm}×{$dispensing->thickness_cm} سم",
-                    'volume_m3' => round($dispensing->volume_cm3_taken / 1000000, 4),
+                    'product_name' => $dispensing->product_name,
+                    'uom_name' => $dispensing->uom_name,
+                    'quantity' => $dispensing->quantity_taken,
                     'user_name' => $dispensing->user_name,
-                    'client_name' => $dispensing->client_name,
                     'order_number' => $dispensing->order_number,
-                    'invoice_number' => $dispensing->sales_invoice_number,
                     'notes' => $dispensing->notes,
                 ];
             });
     }
 
     /**
-     * Wood Cost in Production Report - تكلفة الخشب في الإنتاج
+     * Material Cost in Production Report - تكلفة المواد الخام في الإنتاج
      */
-    public function woodCostInProductionReport(array $filters = [])
+    public function materialCostInProductionReport(array $filters = [])
     {
         $query = DB::table('manufacturing_orders')
-            ->leftJoin('wood_dispensings', 'wood_dispensings.manufacturing_order_id', '=', 'manufacturing_orders.id')
-            ->leftJoin('wood_stocks', 'wood_stocks.id', '=', 'wood_dispensings.wood_stock_id')
+            ->leftJoin('material_dispensings', 'material_dispensings.manufacturing_order_id', '=', 'manufacturing_orders.id')
+            ->leftJoin('material_batches', 'material_batches.id', '=', 'material_dispensings.material_batch_id')
             ->select(
                 'manufacturing_orders.id',
                 'manufacturing_orders.order_number',
                 'manufacturing_orders.product_name',
                 'manufacturing_orders.quantity_produced',
                 'manufacturing_orders.total_cost',
-                DB::raw('COUNT(DISTINCT wood_dispensings.id) as wood_batches_count'),
-                DB::raw('COALESCE(SUM(wood_dispensings.volume_cm3_taken), 0) as total_wood_cm3'),
-                DB::raw('COALESCE(SUM(wood_dispensings.volume_cm3_taken * wood_stocks.unit_cost / 1000000), 0) as total_wood_cost')
+                DB::raw('COUNT(DISTINCT material_dispensings.id) as batches_count'),
+                DB::raw('COALESCE(SUM(material_dispensings.quantity_taken), 0) as total_qty'),
+                DB::raw('COALESCE(SUM(material_dispensings.quantity_taken * material_batches.unit_cost), 0) as total_material_cost')
             )
             ->groupBy('manufacturing_orders.id', 'manufacturing_orders.order_number', 'manufacturing_orders.product_name', 'manufacturing_orders.quantity_produced', 'manufacturing_orders.total_cost');
 
-        // Apply filters
         if (!empty($filters['date_from'])) {
             $query->whereDate('manufacturing_orders.created_at', '>=', $filters['date_from']);
         }
@@ -546,11 +522,11 @@ public function profitLossReport($startDate, $endDate)
                     'order_number' => $order->order_number,
                     'product_name' => $order->product_name,
                     'quantity_produced' => $order->quantity_produced,
-                    'wood_batches_used' => $order->wood_batches_count,
-                    'total_wood_m3' => round($order->total_wood_cm3 / 1000000, 4),
-                    'wood_cost' => round($order->total_wood_cost, 2),
+                    'batches_used' => $order->batches_count,
+                    'total_qty' => $order->total_qty,
+                    'material_cost' => round($order->total_material_cost, 2),
                     'total_cost' => $order->total_cost,
-                    'wood_cost_percentage' => $order->total_cost > 0 ? round(($order->total_wood_cost / $order->total_cost) * 100, 1) : 0,
+                    'material_cost_percentage' => $order->total_cost > 0 ? round(($order->total_material_cost / $order->total_cost) * 100, 1) : 0,
                 ];
             });
     }

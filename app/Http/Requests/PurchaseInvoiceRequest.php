@@ -10,24 +10,10 @@ class PurchaseInvoiceRequest extends FormRequest
     protected function prepareForValidation(): void
     {
         $items = collect((array) $this->input('items', []))
-            ->map(function ($item, $idx) {
+            ->map(function ($item) {
                 if (empty($item['storage_type'])) {
                     $item['storage_type'] = 'general';
                 }
-                if (empty($item['tilde_number'])) {
-                    $item['tilde_number'] = 'TILDA-'.date('Ymd').'-'.($idx + 1);
-                }
-
-                $detailQty = collect((array) ($item['tilde_details'] ?? []))
-                    ->sum(function ($row) {
-                        $q = (float) ($row['quantity'] ?? 0);
-
-                        return $q > 0 ? $q : 0;
-                    });
-                if ($detailQty > 0) {
-                    $item['qty'] = $detailQty;
-                }
-
                 return $item;
             })
             ->values()
@@ -60,12 +46,6 @@ class PurchaseInvoiceRequest extends FormRequest
             'items' => ['required', 'array', 'min:1'],
             'items.*.product_id' => ['required', 'exists:products,id'],
             'items.*.storage_type' => ['required', 'in:general,manufactured,raw_material'],
-            'items.*.tilde_number' => ['required', 'string', 'max:120'],
-            'items.*.tilde_details' => ['nullable', 'array'],
-            'items.*.tilde_details.*.quantity' => ['nullable', 'numeric', 'min:0.001'],
-            'items.*.tilde_details.*.length' => ['nullable', 'numeric', 'min:0'],
-            'items.*.tilde_details.*.width' => ['nullable', 'numeric', 'min:0'],
-            'items.*.tilde_details.*.thickness' => ['nullable', 'numeric', 'min:0'],
             'items.*.qty' => ['required', 'numeric', 'min:0.01'],
             'items.*.price' => ['required', 'numeric', 'min:0'],
 
@@ -88,7 +68,6 @@ class PurchaseInvoiceRequest extends FormRequest
             'items' => 'الأصناف',
             'items.*.product_id' => 'الصنف',
             'items.*.storage_type' => 'نوع التخزين',
-            'items.*.tilde_number' => 'رقم التيلدا',
             'items.*.qty' => 'الكمية',
             'items.*.price' => 'السعر',
             'notes' => 'الملاحظات',

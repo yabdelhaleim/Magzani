@@ -4,6 +4,10 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
+/**
+ * @mixin \Illuminate\Database\Eloquent\Builder
+ */
+
 class AccountingSetting extends Model
 {
     protected $fillable = [
@@ -35,7 +39,11 @@ class AccountingSetting extends Model
         'auto_post_payments',
         'auto_post_expenses',
         'auto_post_manufacturing',
+        'standard_costing_enabled',
+        'variance_posting_account_id',
         'numbering_prefix_je',
+        'strict_posting_mode',
+        'max_posting_failures',
     ];
 
     protected $casts = [
@@ -46,7 +54,27 @@ class AccountingSetting extends Model
         'auto_post_payments' => 'boolean',
         'auto_post_expenses' => 'boolean',
         'auto_post_manufacturing' => 'boolean',
+        'standard_costing_enabled' => 'boolean',
+        'strict_posting_mode' => 'boolean',
+        'max_posting_failures' => 'integer',
     ];
+
+    /**
+     * Check if the tenant is blocking new entries due to strict posting mode
+     *
+     * @throws \Exception
+     */
+    public static function checkStrictPostingLimit(): void
+    {
+        $settings = self::first();
+        if ($settings && $settings->strict_posting_mode) {
+            $unresolvedCount = \App\Models\AccountingPostingFailure::where('resolved', false)->count();
+            $maxFailures = $settings->max_posting_failures ?? 5;
+            if ($unresolvedCount > $maxFailures) {
+                throw new \Exception("❌ لا يمكن إكمال هذه العملية بسبب وجود قيود محاسبية معلّقة لم يتم ترحيلها بنجاح (وضع الصرامة مفعل). يرجى مراجعة صفحة 'إدارة الترحيلات الفاشلة' أو التواصل مع المحاسب لحل المشاكل قبل المحاولة مجدداً.");
+            }
+        }
+    }
 
     public function taxOutputAccount()
     {
@@ -136,5 +164,28 @@ class AccountingSetting extends Model
     public function advanceSupplierAccount()
     {
         return $this->belongsTo(Account::class, 'advance_supplier_account_id');
+    }
+
+    /**
+     * Gap 2 — Manufacturing Cost Variance account (5160 by default).
+     * Resolves the account the tenant wants variance entries posted to.
+     * Falls back to whatever account carries code 5160 in the COA if no
+     * override is configured.
+     */
+    public function variancePostingAccount()
+    {
+        return $this->belongsTo(Account::class, 'variance_posting_account_id');
+    }
+
+    /**
+     * Convenience: returns the resolved variance account row.
+     */
+    public function getResolvedVarianceAccount(): ?Account
+    {
+        if ($this->variance_posting_account_id) {
+            return $this->variancePostingAccount;
+        }
+
+        return Account::where('code', '5160')->first();
     }
 }

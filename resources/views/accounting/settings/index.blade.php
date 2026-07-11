@@ -205,11 +205,11 @@
                 </div>
             </div>
 
-            <!-- Section 4: Auto-Posting Configuration -->
+            <!-- Section 4: Auto-Posting & Control Configuration -->
             <div>
                 <h3 class="text-lg font-bold text-gray-800 mb-4 pb-2 border-b border-gray-100 flex items-center gap-2">
                     <i class="fas fa-toggle-on text-blue-600"></i>
-                    <span>إعدادات الترحيل التلقائي لدفتر الأستاذ العام (GL)</span>
+                    <span>إعدادات الترحيل والتحكم لدفتر الأستاذ العام (GL)</span>
                 </h3>
                 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 pt-2">
@@ -243,6 +243,72 @@
                         <div>
                             <label for="auto_post_expenses" class="font-semibold text-gray-800 text-sm block cursor-pointer">ترحيل عمليات الصندوق تلقائياً</label>
                             <span class="text-xs text-gray-500">ترحيل حركات السحب والإيداع النقدية والمصروفات.</span>
+                        </div>
+                    </div>
+
+                    <!-- Post Manufacturing -->
+                    <div class="flex items-start gap-3 p-4 bg-gray-50 rounded-lg border border-gray-100">
+                        <input type="checkbox" name="auto_post_manufacturing" id="auto_post_manufacturing" value="1" 
+                               {{ optional($settings)->auto_post_manufacturing ? 'checked' : '' }}
+                               class="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500 mt-0.5">
+                        <div>
+                            <label for="auto_post_manufacturing" class="font-semibold text-gray-800 text-sm block cursor-pointer">ترحيل عمليات التصنيع تلقائياً</label>
+                            <span class="text-xs text-gray-500">ترحيل قيود أوامر التصنيع وتكاليف التشغيل تلقائياً.</span>
+                        </div>
+                    </div>
+
+                    <!-- Strict Posting Mode -->
+                    <div class="flex items-start gap-3 p-4 bg-gray-50 rounded-lg border border-gray-100">
+                        <input type="checkbox" name="strict_posting_mode" id="strict_posting_mode" value="1" 
+                               {{ optional($settings)->strict_posting_mode ? 'checked' : '' }}
+                               class="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500 mt-0.5">
+                        <div>
+                            <label for="strict_posting_mode" class="font-semibold text-gray-800 text-sm block cursor-pointer text-red-700">تفعيل وضع الصرامة المحاسبي</label>
+                            <span class="text-xs text-gray-500">منع الفواتير والتصنيع عند تخطي حد القيود الفاشلة المعلقة.</span>
+                        </div>
+                    </div>
+
+                    <!-- Max Posting Failures -->
+                    <div class="flex items-start gap-3 p-4 bg-gray-50 rounded-lg border border-gray-100">
+                        <div class="w-full">
+                            <label for="max_posting_failures" class="font-semibold text-gray-800 text-sm block mb-1">الحد الأقصى لأخطاء الترحيل المعلقة</label>
+                            <input type="number" name="max_posting_failures" id="max_posting_failures" min="0" value="{{ optional($settings)->max_posting_failures ?? 5 }}" 
+                                   class="w-full px-3 py-1.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-semibold">
+                            <span class="text-[10px] text-gray-500">عدد الأخطاء المسموح بها قبل الإغلاق.</span>
+                        </div>
+                    </div>
+
+                    <!-- Gap 2 — Standard Costing Toggle -->
+                    <div class="flex items-start gap-3 p-4 bg-amber-50 rounded-lg border border-amber-200">
+                        <input type="checkbox" name="standard_costing_enabled" id="standard_costing_enabled" value="1"
+                               {{ optional($settings)->standard_costing_enabled ? 'checked' : '' }}
+                               class="w-5 h-5 text-amber-600 border-gray-300 rounded focus:ring-amber-500 mt-0.5">
+                        <div class="w-full">
+                            <label for="standard_costing_enabled" class="font-semibold text-gray-800 text-sm block cursor-pointer">تفعيل نظام التكلفة المعيارية (Standard Costing)</label>
+                            <span class="text-xs text-gray-600 block mt-1">
+                                عند التفعيل، تُقارن التكلفة الفعلية لكل أمر تصنيع بالتكلفة المعيارية المسجّلة مسبقاً،
+                                ويُرحَّل الفرق إلى <span class="font-semibold">حساب 5160 (انحراف تكلفة التصنيع)</span> في قائمة الدخل.
+                            </span>
+                            <span class="text-[10px] text-amber-700 block mt-1">⚠️ Tenants الحاليون يستمرون بسلوك Actual Costing افتراضياً — لا تأثير على القيود القائمة.</span>
+                        </div>
+                    </div>
+
+                    <!-- Variance Posting Account Override -->
+                    <div class="flex items-start gap-3 p-4 bg-amber-50 rounded-lg border border-amber-200">
+                        <div class="w-full">
+                            <label for="variance_posting_account_id" class="font-semibold text-gray-800 text-sm block mb-1">
+                                حساب ترحيل الانحراف (اختياري)
+                            </label>
+                            <select name="variance_posting_account_id" id="variance_posting_account_id"
+                                    class="w-full px-3 py-1.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 font-semibold">
+                                <option value="">— الافتراضي: 5160 (انحراف تكلفة التصنيع) —</option>
+                                @foreach($accounts->whereIn('code', ['5160','5161','5162','5163']) as $acc)
+                                    <option value="{{ $acc->id }}" {{ (optional($settings)->variance_posting_account_id == $acc->id) ? 'selected' : '' }}>
+                                        {{ $acc->code }} - {{ $acc->name_ar }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            <span class="text-[10px] text-gray-500">اتركه فارغاً لاستخدام الحساب الافتراضي 5160.</span>
                         </div>
                     </div>
                 </div>

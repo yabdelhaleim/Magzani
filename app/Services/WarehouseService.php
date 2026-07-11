@@ -5,7 +5,6 @@ namespace App\Services;
 use App\Models\Product;
 use App\Models\ProductWarehouse;
 use App\Models\Warehouse;
-use App\Models\WoodStock;
 use Exception;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -192,15 +191,6 @@ class WarehouseService
                 return $p->product_type !== 'manufactured' && ! $p->is_manufactured;
             })->values();
 
-            $woodStocks = WoodStock::query()
-                ->where('warehouse_id', $warehouseId)
-                ->with([
-                    'product:id,name,code',
-                    'supplier:id,name',
-                ])
-                ->orderByDesc('id')
-                ->get();
-
             $stats = [
                 'total_products' => $products->count(),
                 'active_products' => $products->filter(fn ($p) => $p->product?->is_active)->count(),
@@ -210,7 +200,6 @@ class WarehouseService
                 'low_stock_items' => $products->filter(fn ($p) => $p->quantity <= $p->min_stock)->count(),
                 'out_of_stock_items' => $products->filter(fn ($p) => $p->quantity <= 0)->count(),
                 'total_value' => (float) $products->sum(fn ($p) => (float) $p->quantity * (float) $p->average_cost),
-                'wood_stock_batches' => $woodStocks->count(),
             ];
 
             $lowStockProducts = $products->filter(function ($p) {
@@ -223,7 +212,6 @@ class WarehouseService
                 'productsManufactured' => $productsManufactured,
                 'productsRawMaterial' => $productsRawMaterial,
                 'productsGeneral' => $productsGeneral,
-                'woodStocks' => $woodStocks,
                 'stats' => $stats,
                 'lowStock' => $lowStockProducts,
             ];

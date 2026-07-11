@@ -44,6 +44,10 @@ class Handler extends ExceptionHandler
      */
     public function render($request, Throwable $e)
     {
+        if ($e instanceof \Illuminate\Auth\Access\AuthorizationException) {
+            $e = new \Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException($e->getMessage(), $e);
+        }
+
         // معالجة أخطاء التحقق من البيانات
         if ($e instanceof ValidationException) {
             return back()

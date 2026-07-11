@@ -1066,8 +1066,8 @@
                 <a href="{{ route('manufacturing.index') }}"  class="sub-item {{ request()->routeIs('manufacturing.index')  ? 'active' : '' }}"><span class="dot"></span>حسابات التكلفة</a>
                 <a href="{{ route('manufacturing.create') }}" class="sub-item {{ request()->routeIs('manufacturing.create') ? 'active' : '' }}"><span class="dot"></span>حساب جديد</a>
                 <div style="height:1px;background:rgba(255,255,255,0.08);margin:6px 0;"></div>
-                <a href="{{ route('manufacturing.wood-stocks.index') }}" class="sub-item {{ request()->routeIs('manufacturing.wood-stocks.*') ? 'active' : '' }}"><span class="dot"></span>مخزون الخشب الخام</a>
-                <a href="{{ route('manufacturing.wood-dispensings.index') }}" class="sub-item {{ request()->routeIs('manufacturing.wood-dispensings.*') ? 'active' : '' }}"><span class="dot"></span>سجل الصرف</a>
+                <a href="{{ route('manufacturing.material-batches.index') }}" class="sub-item {{ request()->routeIs('manufacturing.material-batches.*') ? 'active' : '' }}"><span class="dot"></span>دفاتر المواد الخام</a>
+                <a href="{{ route('manufacturing.material-dispensings.index') }}" class="sub-item {{ request()->routeIs('manufacturing.material-dispensings.*') ? 'active' : '' }}"><span class="dot"></span>سجل صرف التصنيع</a>
             </div>
         </div>
         @else
@@ -1192,6 +1192,10 @@
                 <a href="{{ route('reports.inventory') }}"   class="sub-item {{ request()->routeIs('reports.inventory')   ? 'active' : '' }}"><span class="dot"></span>تقرير المخزون</a>
                 <a href="{{ route('reports.financial') }}"   class="sub-item {{ request()->routeIs('reports.financial')   ? 'active' : '' }}"><span class="dot"></span>التقرير المالي</a>
                 <a href="{{ route('reports.profit-loss') }}" class="sub-item {{ request()->routeIs('reports.profit-loss') ? 'active' : '' }}"><span class="dot"></span>الأرباح والخسائر</a>
+                {{-- Gap 2 — Cost Variance Report --}}
+                <a href="{{ route('reports.cost-variance') }}" class="sub-item {{ request()->routeIs('reports.cost-variance*') ? 'active' : '' }}"><span class="dot"></span><i class="fas fa-balance-scale ml-1 text-amber-500"></i> انحرافات التكلفة</a>
+                {{-- Gap 4 — Batch Traceability Report --}}
+                <a href="{{ route('reports.batch-traceability') }}" class="sub-item {{ request()->routeIs('reports.batch-traceability*') ? 'active' : '' }}"><span class="dot"></span><i class="fas fa-project-diagram ml-1 text-purple-500"></i> تتبع الدفعات</a>
             </div>
         </div>
         @else
@@ -1364,6 +1368,29 @@
                 <p style="margin:0;font-weight:400;opacity:0.8;font-size:13px;">{{ session('info') }}</p>
             </div>
             <button class="toast-close" onclick="this.closest('.toast').remove()"><i class="fas fa-times"></i></button>
+        </div>
+        @endif
+
+        @php
+            $unresolvedCount = \Illuminate\Support\Facades\Cache::remember('posting_failures_count', 60, function () {
+                return \App\Models\AccountingPostingFailure::where('resolved', false)->count();
+            });
+        @endphp
+
+        @if($unresolvedCount > 0)
+        <div class="alert alert-danger d-flex align-items-center justify-content-between p-4 mb-4" role="alert" style="background: #fef2f2; border: 1px solid #fee2e2; border-radius: 12px; box-shadow: 0 4px 15px rgba(220, 38, 38, 0.05);">
+            <div class="d-flex align-items-center gap-3">
+                <div class="toast-icon bg-red-100 text-red-600 rounded-lg p-2" style="width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; background: #fee2e2; color: #dc2626; font-size: 18px; border-radius: 8px;">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <div>
+                    <h4 class="alert-heading h6 mb-1 text-red-800" style="color: #991b1b; font-weight: 700; margin: 0; font-size: 14px;">يوجد قيود محاسبية معلّقة لم يتم ترحيلها!</h4>
+                    <p class="mb-0 text-red-700" style="color: #b91c1c; font-size: 12.5px; margin: 0;">هناك <strong>{{ $unresolvedCount }}</strong> قيد محاسبي فشل ترحيله تلقائياً. يرجى مراجعة المشاكل وإعادة المحاولة لتجنب عدم اتساق التقارير المالية.</p>
+                </div>
+            </div>
+            @if(Auth::check() && (Auth::user()->isAdmin() || Auth::user()->hasPermission('accounting.posting-failures.read')))
+                <a href="{{ route('accounting.posting-failures.index') }}" class="btn btn-danger btn-sm" style="background: #dc2626; border-color: #dc2626; color: #fff; padding: 6px 14px; border-radius: 8px; font-weight: 500; font-size: 12px; text-decoration: none;">إدارة أخطاء الترحيل</a>
+            @endif
         </div>
         @endif
 

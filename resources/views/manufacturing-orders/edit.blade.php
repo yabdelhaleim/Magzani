@@ -117,7 +117,7 @@
                     </div>
                     <div class="form-group">
                         <label class="form-label">المستودع</label>
-                        <select name="warehouse_id" id="warehouse_id" class="form-control" onchange="refreshAllWoodStockSelects()" @disabled(!$order->can_edit)>
+                        <select name="warehouse_id" id="warehouse_id" class="form-control" @disabled(!$order->can_edit)>
                             <option value="">— اختياري —</option>
                             @foreach($warehouses as $w)
                             <option value="{{ $w->id }}" @selected(old('warehouse_id', $order->warehouse_id) == $w->id)>{{ $w->name }}</option>
@@ -173,14 +173,6 @@
                         <tbody id="components-body">
                             @foreach($order->components as $idx => $component)
                             <tr>
-                                <td data-label="دفعة الخشب">
-                                    <select name="components[{{ $idx }}][wood_stock_id]" class="form-control wood-stock-select" style="padding:8px 12px;" onchange="onWoodStockChange(this)" @disabled(!$order->can_edit)>
-                                        <option value="">— بدون دفعة —</option>
-                                        @foreach($woodLots as $lot)
-                                        <option value="{{ $lot['id'] }}" data-unit-cost="{{ $lot['unit_cost'] }}" @selected((string) old('components.'.$idx.'.wood_stock_id', $component->wood_stock_id ?? '') === (string) $lot['id'])>{{ $lot['label'] }}</option>
-                                        @endforeach
-                                    </select>
-                                </td>
                                 <td data-label="نوع الخام">
                                     <select name="components[{{ $idx }}][component_type]" class="form-control component-type-select" style="padding:8px 12px;" onchange="onComponentTypeChange(this)" @disabled(!$order->can_edit)>
                                         @foreach($rawMaterials as $material)
@@ -293,54 +285,12 @@
 </div>
 
 <script>
-window.MAGZANI_WOOD_LOTS = @json($woodLots ?? []);
-
-function getFilteredWoodLots() {
-    const wid = document.getElementById('warehouse_id')?.value || '';
-    const lots = window.MAGZANI_WOOD_LOTS || [];
-    if (!wid) return lots;
-    return lots.filter(function (l) { return String(l.warehouse_id) === String(wid); });
-}
-
-function woodStockSelectOptionsHtml(selectedId) {
-    selectedId = selectedId ? String(selectedId) : '';
-    const filtered = getFilteredWoodLots();
-    const all = window.MAGZANI_WOOD_LOTS || [];
-    let html = '<option value="">— بدون دفعة —</option>';
-    filtered.forEach(function (l) {
-        const sel = String(l.id) === selectedId ? ' selected' : '';
-        html += '<option value="' + l.id + '" data-unit-cost="' + l.unit_cost + '"' + sel + '>' + (l.label || ('#' + l.id)) + '</option>';
-    });
-    if (selectedId && !filtered.some(function (l) { return String(l.id) === selectedId; })) {
-        const orphan = all.find(function (l) { return String(l.id) === selectedId; });
-        if (orphan) {
-            html += '<option value="' + orphan.id + '" data-unit-cost="' + orphan.unit_cost + '" selected>(مستودع آخر) ' + (orphan.label || ('#' + orphan.id)) + '</option>';
-        }
-    }
-    return html;
-}
-
-function refreshAllWoodStockSelects() {
-    document.querySelectorAll('#components-body tr').forEach(function (row) {
-        const sel = row.querySelector('.wood-stock-select');
-        if (!sel) return;
-        const cur = sel.value;
-        sel.innerHTML = woodStockSelectOptionsHtml(cur);
-        syncPriceHiddenFromRow(row);
-    });
-    recalculateAll();
-}
-
 function syncPriceHiddenFromRow(row) {
-    const woodSel = row.querySelector('.wood-stock-select');
     const typeSel = row.querySelector('.component-type-select');
     const hidden = row.querySelector('.price-per-m3-hidden');
     const readout = row.querySelector('.price-m3-readout');
     let p = 0;
-    if (woodSel && woodSel.value) {
-        const o = woodSel.options[woodSel.selectedIndex];
-        p = parseFloat(o?.dataset?.unitCost) || 0;
-    } else if (typeSel && typeSel.value) {
+    if (typeSel && typeSel.value) {
         const o = typeSel.options[typeSel.selectedIndex];
         p = parseFloat(o?.dataset?.buyPrice) || 0;
     }
@@ -348,17 +298,9 @@ function syncPriceHiddenFromRow(row) {
     if (readout) readout.textContent = p > 0 ? p.toFixed(2) : '0';
 }
 
-function onWoodStockChange(select) {
-    syncPriceHiddenFromRow(select.closest('tr'));
-    recalculateAll();
-}
-
 function onComponentTypeChange(select) {
     const row = select.closest('tr');
-    const woodSel = row.querySelector('.wood-stock-select');
-    if (woodSel && !woodSel.value) {
-        syncPriceHiddenFromRow(row);
-    }
+    syncPriceHiddenFromRow(row);
     recalculateAll();
 }
 
@@ -367,9 +309,7 @@ function addComponent() {
     const idx = tbody.querySelectorAll('tr').length;
     const row = document.createElement('tr');
     row.innerHTML = `
-        <td data-label="دفعة الخشب">
-            <select name="components[${idx}][wood_stock_id]" class="form-control wood-stock-select" style="padding:8px 12px;" onchange="onWoodStockChange(this)">
-                ${woodStockSelectOptionsHtml('')}
+        <td data-label="نوع الخام">
             </select>
         </td>
         <td data-label="نوع الخام">
@@ -466,7 +406,6 @@ function recalculateAll() {
 }
 
 document.addEventListener('DOMContentLoaded', function () {
-    refreshAllWoodStockSelects();
     recalculateAll();
 });
 

@@ -377,6 +377,8 @@ class InvoiceService
      */
     public function createSalesInvoice(array $data): SalesInvoice
     {
+        \App\Models\AccountingSetting::checkStrictPostingLimit();
+
         return DB::transaction(function () use ($data) {
             
             // ==================== 1️⃣ جلب البيانات مرة واحدة ====================
@@ -996,6 +998,8 @@ class InvoiceService
      */
     public function createPurchaseInvoice(array $data): PurchaseInvoice
     {
+        \App\Models\AccountingSetting::checkStrictPostingLimit();
+
         return DB::transaction(function () use ($data) {
             
             // جلب البيانات

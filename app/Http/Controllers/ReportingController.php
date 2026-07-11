@@ -149,31 +149,28 @@ class ReportingController extends Controller
     /**
      * Wood Stock Report - مخزون الخشب الحالي
      */
-    public function woodStock(Request $request)
+    public function materialStock(Request $request)
     {
         $filters = [
             'supplier_id' => $request->supplier_id,
             'warehouse_id' => $request->warehouse_id,
             'date_from' => $request->date_from,
             'date_to' => $request->date_to,
-            'min_remaining_m3' => $request->min_remaining_m3,
         ];
 
-        $stocks = $this->reportingService->woodStockReport($filters);
+        $stocks = $this->reportingService->materialStockReport($filters);
 
-        // Get suppliers and warehouses for filters
         $suppliers = \App\Models\Supplier::all();
         $warehouses = Warehouse::all();
 
-        // Calculate summary
         $summary = [
             'total_batches' => $stocks->count(),
-            'total_m3' => $stocks->sum('total_m3'),
-            'remaining_m3' => $stocks->sum('remaining_m3'),
+            'total_qty' => $stocks->sum('total_qty'),
+            'remaining_qty' => $stocks->sum('remaining_qty'),
             'remaining_value' => $stocks->sum('remaining_value'),
         ];
 
-        return view('reports.wood-stock', [
+        return view('reports.material-stock', [
             'stocks' => $stocks,
             'suppliers' => $suppliers,
             'warehouses' => $warehouses,
@@ -182,9 +179,9 @@ class ReportingController extends Controller
     }
 
     /**
-     * Wood Movement Report - حركة الخشب
+     * Material Movement Report - حركة المواد الخام
      */
-    public function woodMovement(Request $request)
+    public function materialMovement(Request $request)
     {
         $filters = [
             'date_from' => $request->date_from,
@@ -193,13 +190,12 @@ class ReportingController extends Controller
             'client_id' => $request->client_id,
         ];
 
-        $movements = $this->reportingService->woodMovementReport($filters);
+        $movements = $this->reportingService->materialMovementReport($filters);
 
-        // Get users and customers for filters
         $users = \App\Models\User::all();
         $customers = \App\Models\Customer::all();
 
-        return view('reports.wood-movement', [
+        return view('reports.material-movement', [
             'movements' => $movements,
             'users' => $users,
             'customers' => $customers,
@@ -207,9 +203,9 @@ class ReportingController extends Controller
     }
 
     /**
-     * Wood Cost in Production Report - تكلفة الخشب في الإنتاج
+     * Material Cost in Production Report - تكلفة المواد الخام في الإنتاج
      */
-    public function woodCostProduction(Request $request)
+    public function materialCostProduction(Request $request)
     {
         $filters = [
             'date_from' => $request->date_from,
@@ -217,9 +213,9 @@ class ReportingController extends Controller
             'status' => $request->status,
         ];
 
-        $report = $this->reportingService->woodCostInProductionReport($filters);
+        $report = $this->reportingService->materialCostInProductionReport($filters);
 
-        return view('reports.wood-cost-production', [
+        return view('reports.material-cost-production', [
             'report' => $report,
         ]);
     }

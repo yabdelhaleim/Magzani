@@ -500,7 +500,7 @@
                     </div>
                     <div class="form-group">
                         <label class="form-label">المستودع</label>
-                        <select name="warehouse_id" id="warehouse_id" class="form-control" onchange="refreshAllWoodStockSelects()">
+                        <select name="warehouse_id" id="warehouse_id" class="form-control">
                             <option value="">-- اختر المستودع --</option>
                             @foreach($warehouses as $warehouse)
                             <option value="{{ $warehouse->id }}">{{ $warehouse->name }}</option>
@@ -705,46 +705,7 @@
 </div>
 
 <script>
-window.MAGZANI_WOOD_LOTS = @json($woodLots ?? []);
 let additionalIndex = 0;
-
-function getFilteredWoodLots() {
-    const wid = document.getElementById('warehouse_id')?.value || '';
-    const lots = window.MAGZANI_WOOD_LOTS || [];
-    if (!wid) return lots;
-    return lots.filter(function (l) {
-        return String(l.warehouse_id) === String(wid);
-    });
-}
-
-function woodStockSelectOptionsHtml(selectedId) {
-    selectedId = selectedId ? String(selectedId) : '';
-    const filtered = getFilteredWoodLots();
-    const all = window.MAGZANI_WOOD_LOTS || [];
-    let html = '<option value="">— بدون دفعة (سعر من نوع الخام) —</option>';
-    filtered.forEach(function (l) {
-        const sel = String(l.id) === selectedId ? ' selected' : '';
-        html += '<option value="' + l.id + '" data-unit-cost="' + l.unit_cost + '"' + sel + '>' + (l.label || ('#' + l.id)) + '</option>';
-    });
-    if (selectedId && !filtered.some(function (l) { return String(l.id) === selectedId; })) {
-        const orphan = all.find(function (l) { return String(l.id) === selectedId; });
-        if (orphan) {
-            html += '<option value="' + orphan.id + '" data-unit-cost="' + orphan.unit_cost + '" selected>(مستودع آخر) ' + (orphan.label || ('#' + orphan.id)) + '</option>';
-        }
-    }
-    return html;
-}
-
-function refreshAllWoodStockSelects() {
-    document.querySelectorAll('#components-body tr').forEach(function (row) {
-        const sel = row.querySelector('.wood-stock-select');
-        if (!sel) return;
-        const cur = sel.value;
-        sel.innerHTML = woodStockSelectOptionsHtml(cur);
-        syncPriceHiddenFromRow(row);
-    });
-    recalculateAll();
-}
 
 function addComponent() {
     const tbody = document.getElementById('components-body');
@@ -752,11 +713,6 @@ function addComponent() {
 
     const row = document.createElement('tr');
     row.innerHTML = `
-        <td data-label="دفعة الخشب">
-            <select name="components[${idx}][wood_stock_id]" class="form-control wood-stock-select" style="padding:8px 12px;" onchange="onWoodStockChange(this)">
-                ${woodStockSelectOptionsHtml('')}
-            </select>
-        </td>
         <td data-label="نوع الخام">
             <select name="components[${idx}][component_type]" class="form-control component-type-select" style="padding:8px 12px;" onchange="onComponentTypeChange(this)">
                 <option value="" disabled selected>النوع</option>
@@ -782,15 +738,11 @@ function addComponent() {
 }
 
 function syncPriceHiddenFromRow(row) {
-    const woodSel = row.querySelector('.wood-stock-select');
     const typeSel = row.querySelector('.component-type-select');
     const hidden = row.querySelector('.price-per-m3-hidden');
     const readout = row.querySelector('.price-m3-readout');
     let p = 0;
-    if (woodSel && woodSel.value) {
-        const o = woodSel.options[woodSel.selectedIndex];
-        p = parseFloat(o?.dataset?.unitCost) || 0;
-    } else if (typeSel && typeSel.value) {
+    if (typeSel && typeSel.value) {
         const o = typeSel.options[typeSel.selectedIndex];
         p = parseFloat(o?.dataset?.buyPrice) || 0;
     }
@@ -798,18 +750,9 @@ function syncPriceHiddenFromRow(row) {
     if (readout) readout.textContent = p > 0 ? p.toFixed(2) : '0';
 }
 
-function onWoodStockChange(select) {
-    const row = select.closest('tr');
-    syncPriceHiddenFromRow(row);
-    recalculateAll();
-}
-
 function onComponentTypeChange(select) {
     const row = select.closest('tr');
-    const woodSel = row.querySelector('.wood-stock-select');
-    if (woodSel && !woodSel.value) {
-        syncPriceHiddenFromRow(row);
-    }
+    syncPriceHiddenFromRow(row);
     recalculateAll();
 }
 
@@ -938,7 +881,7 @@ function recalculateAll() {
 }
 
 document.addEventListener('DOMContentLoaded', function () {
-    refreshAllWoodStockSelects();
+    recalculateAll();
 });
 
 // Add one component by default

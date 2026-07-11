@@ -48,6 +48,7 @@ class Product extends Model
         'is_featured',
         'has_expiry',
         'track_serial',
+        'batch_tracked',
         'meta_title',
         'meta_description',
         'meta_keywords',
@@ -76,6 +77,7 @@ class Product extends Model
         'is_featured' => 'boolean',
         'has_expiry' => 'boolean',
         'track_serial' => 'boolean',
+        'batch_tracked' => 'boolean',
         'is_manufactured' => 'boolean',
     ];
 

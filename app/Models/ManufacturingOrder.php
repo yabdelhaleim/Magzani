@@ -21,13 +21,7 @@ class ManufacturingOrder extends Model
         'cost_per_unit',
         'total_cost',
         'selling_price_per_unit',
-        // Additional costs
-        'waste_cost',
-        'labor_cost',
-        'nails_cost',
-        'tips_cost',
-        'transport_cost',
-        'fumigation_cost',
+        'labor_cost', // kept labor_cost in db if not dropped
         'profit_margin',
         'profit_amount',
         'status',
@@ -35,6 +29,15 @@ class ManufacturingOrder extends Model
         'customer_id',
         'notes',
         'produced_at',
+        'standard_cost_at_completion',
+        'actual_cost_at_completion',
+        'total_variance',
+        'variance_type',
+        'material_variance',
+        'labor_overhead_variance',
+        'variance_posted_at',
+        'variance_journal_entry_id',
+        'cost_locked_at',
         'created_by',
         'updated_by',
         'completed_by',
@@ -44,16 +47,18 @@ class ManufacturingOrder extends Model
         'quantity_produced' => 'decimal:2',
         'cost_per_unit' => 'decimal:4',
         'total_cost' => 'decimal:4',
-        'waste_cost' => 'decimal:4',
         'labor_cost' => 'decimal:4',
-        'nails_cost' => 'decimal:4',
-        'tips_cost' => 'decimal:4',
-        'transport_cost' => 'decimal:4',
-        'fumigation_cost' => 'decimal:4',
         'profit_margin' => 'decimal:2',
         'profit_amount' => 'decimal:4',
         'selling_price_per_unit' => 'decimal:4',
         'produced_at' => 'datetime',
+        'standard_cost_at_completion' => 'decimal:4',
+        'actual_cost_at_completion' => 'decimal:4',
+        'total_variance' => 'decimal:4',
+        'material_variance' => 'decimal:4',
+        'labor_overhead_variance' => 'decimal:4',
+        'variance_posted_at' => 'datetime',
+        'cost_locked_at' => 'datetime',
     ];
 
     /* ===========================
@@ -80,6 +85,16 @@ class ManufacturingOrder extends Model
         return $this->hasMany(ManufacturingOrderComponent::class, 'order_id');
     }
 
+    public function extraCosts(): HasMany
+    {
+        return $this->hasMany(ManufacturingOrderExtraCost::class, 'manufacturing_order_id');
+    }
+
+    public function materialDispensings(): HasMany
+    {
+        return $this->hasMany(MaterialDispensing::class);
+    }
+
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
@@ -104,6 +119,14 @@ class ManufacturingOrder extends Model
     {
         return $this->hasMany(InventoryMovement::class, 'reference_id')
             ->where('reference_type', ManufacturingOrder::class);
+    }
+
+    /**
+     * Gap 2 — link to the variance journal entry (account 5160), if any.
+     */
+    public function varianceJournalEntry(): BelongsTo
+    {
+        return $this->belongsTo(JournalEntry::class, 'variance_journal_entry_id');
     }
 
     /* ===========================
@@ -269,5 +292,47 @@ class ManufacturingOrder extends Model
     public function getQuantityAttribute(): float
     {
         return (float) $this->quantity_produced;
+    }
+
+    /* ===========================
+     * 📊 GAP 2 — VARIANCE ACCESSORS
+     * =========================== */
+
+    public function getHasVarianceAttribute(): bool
+    {
+        return $this->variance_journal_entry_id !== null;
+    }
+
+    public function getIsFavorableVarianceAttribute(): bool
+    {
+        return $this->variance_type === 'favorable';
+    }
+
+    public function getIsUnfavorableVarianceAttribute(): bool
+    {
+        return $this->variance_type === 'unfavorable';
+    }
+
+    public function getIsVarianceLockedAttribute(): bool
+    {
+        return $this->cost_locked_at !== null;
+    }
+
+    /**
+     * Scope: only completed orders that carry a computed variance record.
+     */
+    public function scopeWithVariance(Builder $query): Builder
+    {
+        return $query->whereNotNull('total_variance');
+    }
+
+    public function scopeFavorableVariance(Builder $query): Builder
+    {
+        return $query->where('variance_type', 'favorable');
+    }
+
+    public function scopeUnfavorableVariance(Builder $query): Builder
+    {
+        return $query->where('variance_type', 'unfavorable');
     }
 }

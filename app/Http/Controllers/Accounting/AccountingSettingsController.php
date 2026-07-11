@@ -66,15 +66,29 @@ class AccountingSettingsController extends Controller
             'auto_post_payments'         => 'boolean',
             'auto_post_expenses'         => 'boolean',
             'auto_post_manufacturing'    => 'boolean',
+            'strict_posting_mode'        => 'boolean',
+            'max_posting_failures'       => 'required|integer|min:0',
             // الضريبة
             'tax_enabled'                => 'boolean',
             'default_tax_rate'           => 'nullable|numeric|min:0|max:100',
             // المخزون
             'capitalize_freight'         => 'boolean',
+            // Gap 2 — Standard Costing toggle
+            'standard_costing_enabled'   => 'boolean',
+            'variance_posting_account_id'=> 'nullable|exists:accounts,id',
         ]);
 
         // الحقول البولية قد تكون غائبة (checkbox) → تعامل معها صراحةً
-        foreach (['auto_post_invoices', 'auto_post_payments', 'auto_post_expenses', 'auto_post_manufacturing', 'tax_enabled', 'capitalize_freight'] as $boolField) {
+        foreach ([
+            'auto_post_invoices',
+            'auto_post_payments',
+            'auto_post_expenses',
+            'auto_post_manufacturing',
+            'strict_posting_mode',
+            'tax_enabled',
+            'capitalize_freight',
+            'standard_costing_enabled',
+        ] as $boolField) {
             $validated[$boolField] = $request->boolean($boolField);
         }
 

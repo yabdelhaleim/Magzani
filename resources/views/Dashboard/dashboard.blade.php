@@ -238,11 +238,11 @@
             </div>
         </div>
 
-        <a href="{{ route('manufacturing.wood-stocks.index') }}" class="mz-mini c-wood">
-            <div class="mz-mini-icon"><i class="fas fa-tree"></i></div>
+        <a href="{{ route('manufacturing.material-batches.index') }}" class="mz-mini c-wood">
+            <div class="mz-mini-icon"><i class="fas fa-boxes"></i></div>
             <div>
-                <div class="mz-mini-val">{{ number_format($summary['wood_remaining_m3'] ?? 0, 2) }}</div>
-                <div class="mz-mini-lbl">م³ خشب متاح</div>
+                <div class="mz-mini-val">{{ number_format($summary['material_remaining_qty'] ?? 0, 2) }}</div>
+                <div class="mz-mini-lbl">مواد خام متاحة</div>
             </div>
         </a>
     </div>

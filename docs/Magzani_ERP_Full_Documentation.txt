@@ -1,0 +1,2614 @@
+================================================================================
+  Magzani ERP — Comprehensive Technical Documentation
+  (Plain-text export of Magzani_ERP_Full_Documentation.docx)
+  File size: 93.1 KB
+  Sections: 1, Paragraphs: 746, Tables: 78
+================================================================================
+
+Magzani ERP
+Comprehensive Technical Documentation
+
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+Project Name | Magzani ERP
+Codebase Path | C:\MAGZANIV6\Magzani
+Branch | main
+Documentation Date | 2026-07-04
+Stack | Laravel 12 + Livewire 3 + Stancl Tenancy 3.x
+Type | Multi-Tenant SaaS ERP (POS / Inventory / Accounting / Manufacturing)
+└──────────────────────────────────────────────────────────────────────────────┘
+
+This document is the SINGLE SOURCE OF TRUTH for the Magzani codebase.
+Always consult this file before exploring the project or answering questions.
+
+
+================================================================================
+# Table of Contents
+================================================================================
+
+
+Tip: After opening this document in Microsoft Word, right-click the TOC above and choose "Update Field" to populate page numbers.
+
+
+================================================================================
+# Part 1: Project Overview
+================================================================================
+
+
+## 1.1 What is Magzani?
+
+Magzani ERP is a comprehensive multi-tenant Inventory, Sales, Purchases, POS, Manufacturing and Accounting system. It is built on Laravel 12 and uses Stancl Tenancy 3.x for database-per-tenant multi-tenancy.
+Magzani هو نظام ERP متكامل متعدد المستأجرين (Multi-Tenant) لإدارة المخزون والمبيعات والمشتريات ونقاط البيع والتصنيع والمحاسبة. مبني على Laravel 12 ويستخدم Stancl Tenancy 3.x لعزل كل عميل في قاعدة بيانات مستقلة.
+
+## 1.2 Business Domain
+
+The system targets small-to-medium businesses and supports:
+Inventory management across multiple warehouses
+Point of Sale with shift-based cash management
+Sales & purchase invoicing (multi-tax, multi-discount)
+Returns processing (sales & purchase)
+Manufacturing / BOM-based production orders
+Full accounting: Chart of Accounts, Journal Entries, Fiscal Periods, Fixed Assets
+Customer & Supplier ledgers with statements and aging
+Multi-warehouse transfers, stock counts, adjustments
+Reporting: P&L, Balance Sheet, Trial Balance, Inventory, Wood stock, Manufacturing cost
+
+## 1.3 Target Users
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+Role | Arabic | Description | Access Surface
+Super Admin | مدير النظام العام | SaaS platform owner | routes/web.php (/super-admin/*) — landlord DB
+Tenant Admin | مدير النظام | Administrator inside each tenant company | Full access inside tenant DB
+Tenant Employee | موظف | Limited employee user (RBAC) | Limited by role & permissions
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+## 1.4 Project Status
+
+Per COMPLETION_SUMMARY_AR.md the system is at 83% stability rating. Major modules are working with full CRUD, validations, accounting posting, and Arabic RTL UI. The remaining work concentrates on: hardening tests, error handling on remaining services, caching, and rate-limiting sensitive operations.
+
+
+================================================================================
+# Part 2: Application Architecture
+================================================================================
+
+
+## 2.1 Multi-Tenancy Architecture
+
+Magzani uses Stancl Tenancy 3.x in database-per-tenant mode:
+Tenant model: App\Models\Tenant (extends Stancl\Tenancy\Database\Models\Tenant)
+ID generator: Stancl\Tenancy\UUIDGenerator
+Tenant DB naming: tenant{tenant_id} (prefix = "tenant", suffix = "")
+Active bootstrappers: DatabaseTenancyBootstrapper, FilesystemTenancyBootstrapper, QueueTenancyBootstrapper
+Cache & Redis bootstrappers are intentionally commented out
+Tenant migrations path: database/migrations/tenant/ (configured in config/tenancy.php)
+Central domains: 127.0.0.1, localhost, plus env CENTRAL_DOMAINS (comma-separated)
+Tenant domain pattern: {tenant_id}.{TENANT_DOMAIN_SUFFIX} (default suffix = localhost)
+
+## 2.2 Landlord vs Tenant Separation
+
+Two completely separate surfaces share the same Laravel installation:
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+Aspect | Landlord (Central) | Tenant (Per-DB)
+Migrations | database/migrations/ | database/migrations/tenant/
+Routes file | routes/web.php (prefix /super-admin) | routes/tenant.php (619 lines)
+Models | Tenant, Plan, PlanFeature, Domain | User, Product, Invoice, etc. (~74 models)
+Layout | resources/views/landlord/layout.blade.php | resources/views/layouts/app.blade.php
+Branding | Kayyan SaaS (K letter SVG) | Magzani ERP (RTL Arabic)
+Middleware order | web + auth + central-domain | web + PreventCentral + InitializeTenant + feature
+Auth provider | App\Models\Tenant (Stancl) | App\Models\User
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+## 2.3 Request Lifecycle
+
+When a request hits the application:
+1. Laravel boots, registers service providers (including TenancyServiceProvider and AccountingServiceProvider).
+2. AppServiceProvider registers TenantObserver on Tenant, and a view composer that injects $planFeatures into ALL views.
+3. RouteServiceProvider loads routes/web.php (landlord) and routes/tenant.php (tenant).
+4. Tenant routes group applies middleware: web → PreventAccessFromCentralDomains → InitializeTenancyByDomain → feature.
+5. InitializeTenancyByDomain reads the host, looks up the Domain row, finds the Tenant, and swaps the DB connection to tenant{id}.
+6. The `feature` middleware checks tenant()->hasFeature(key) against the central plans table.
+7. Controllers run inside the tenant DB context.
+8. On response, Stancl restores the central connection.
+
+## 2.4 Tenancy Resolution Flow
+
+Detailed lifecycle of tenancy bootstrap:
+Request → tenant routes → middleware stack
+→ PreventAccessFromCentralDomains (rejects if host ∈ central domains)
+→ InitializeTenancyByDomain → Stancl resolves Domain → finds Tenant model
+→ DatabaseTenancyBootstrapper switches default connection to tenant DB
+→ FilesystemTenancyBootstrapper suffixes local/public paths (suffix_storage_path = true)
+→ QueueTenancyBootstrapper tags the current queue for tenant isolation
+→ feature middleware looks up tenant.plan_id (from JSON data) and validates feature flag
+→ Controller executes against tenant DB
+→ Response: connection restored
+
+## 2.5 Tenant Provisioning Flow
+
+When super admin creates a new tenant from /super-admin/tenants (SuperAdminController::tenantsStore):
+1. Validate tenant_id field (alpha_dash + lowercase + unique).
+2. Create Tenant model — fires Events\TenantCreated.
+3. Stancl Tenancy queues CreateDatabase job → creates tenant{id} database.
+4. Stancl queues MigrateDatabase job → runs all migrations under database/migrations/tenant/.
+5. Create Domain: {tenant_id}.{TENANT_DOMAIN_SUFFIX}.
+6. Inside tenant()->run(...) context:
+- Run PermissionAndRoleSeeder (creates admin & employee roles, all permissions)
+- Create user admin@{tenant_id}.com with password "password"
+- Attach admin role to user
+
+
+================================================================================
+# Part 3: Tech Stack
+================================================================================
+
+
+## 3.1 Backend Stack
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+Component | Version | Purpose
+PHP | ^8.2 | Runtime
+Laravel Framework | ^12.0 | Core MVC framework
+Stancl Tenancy | ^3.10 | Multi-tenant database isolation
+Livewire | ^3.5 | Reactive full-stack components (POS)
+Laravel Sanctum | ^4.0 | API token authentication
+Laravel Reverb | ^1.0 | WebSocket broadcasting
+Laravel Tinker | ^2.10 | REPL
+GuzzleHTTP | ^7.2 | HTTP client
+Doctrine DBAL | ^3.10 | Database abstraction (used by backup)
+Predis | ^3.3 | Redis client
+Barryvdh DomPDF | ^3.1 | PDF generation (invoices, statements)
+Maatwebsite Excel | ^3.1 | Excel import/export
+Spatie Laravel-Backup | ^9.0|^10.0 | Database backups
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+## 3.2 Frontend Stack
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+Component | Version | Purpose
+Vue | ^3.5.33 | Declared in package.json (no compiled components currently)
+Laravel Echo | ^1.16.1 | WebSocket client (for Reverb)
+Pusher JS | ^8.4.0 | Pusher-compatible realtime client
+Vite | ^5.0.0 | Asset bundler
+Laravel Vite Plugin | ^1.0.0 | Vite integration
+Tailwind CSS | CDN | Utility classes via CDN
+Bootstrap 5 RTL | CDN | RTL CSS framework via CDN
+Alpine.js | CDN | Reactivity helpers
+Font Awesome | CDN | Icon set
+Rubik / Tajawal / Cairo | Google Fonts | Arabic + Latin typography
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+## 3.3 Dev Dependencies
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+Component | Purpose
+PHPUnit ^11.5 | Unit/feature testing
+Laravel Pint ^1.0 | Code style fixer (PSR-12)
+Mockery ^1.4.4 | Mocking library
+FakerPHP ^1.9.1 | Fake data generator
+Spatie Ignition ^2.4 | Error page UI
+Nuno Maduro Collision ^8.5 | Pretty test runner output
+Laravel Sail ^1.18 | Docker dev environment
+Pest Plugin (allow) | Permitted plugin in composer
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+## 3.4 Database Configuration
+
+Default connection is configured in .env via DB_CONNECTION. Production-style config file (.env.production.example) is provided.
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+Setting | Default / Production Note
+DB_CONNECTION | env-driven, default mysql
+Central DB name | "laravel" by default in .env.example
+Tenant DB naming | tenant{tenant_id} (prefix tenant + UUID, no suffix)
+Migrations table | migrations (standard)
+Redis client | phpredis (multiple connections configured)
+Cache | file driver (config/cache.php)
+Queue | sync (config/queue.php) — can switch to redis/database
+Session | file driver
+Filesystem disk | local (suffixed per tenant)
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+
+================================================================================
+# Part 4: Complete File Tree
+================================================================================
+
+
+## 4.1 Root Directory
+
+C:\MAGZANIV6\Magzani\
+├── app/                  # Application source
+├── bootstrap/            # Laravel bootstrap (app, cache)
+├── config/               # 15 config files incl. tenancy, auth, livewire
+├── database/             # Migrations, seeders, factories
+├── docs/                 # THIS DOCUMENT lives here
+├── lang/                 # i18n (ar/modules.php)
+├── public/               # index.php + assets
+├── resources/            # Views + raw assets
+├── routes/               # web.php, api.php, tenant.php, etc.
+├── storage/              # logs, cache, framework
+├── tests/                # PHPUnit tests
+├── vendor/               # Composer packages
+├── .env / .env.example   # Env config
+├── artisan               # CLI entry
+├── composer.json         # PHP deps
+├── package.json          # JS deps
+├── vite.config.js        # Asset bundler config
+└── Multiple *.md docs    # Existing Arabic / English docs
+
+## 4.2 app/ Directory Structure
+
+app/
+├── Console/
+│   └── Kernel.php
+├── Enums/                # 5 PHP enums
+│   ├── AccountTypeEnum.php
+│   ├── JournalEntrySource.php
+│   ├── JournalEntryStatus.php
+│   ├── NormalBalance.php
+│   └── PaymentTerms.php
+├── Events/               # Stancl + custom events
+├── Exceptions/           # Handler
+├── Exports/              # 10 Maatwebsite export classes
+├── Http/
+│   ├── Controllers/
+│   │   ├── Accounting/   # 13 controllers
+│   │   ├── Landlord/     # SuperAdminController
+│   │   ├── Auth/         # Login + Register
+│   │   └── (40+ top-level controllers)
+│   └── Middleware/       # Custom middleware (feature gate, etc.)
+├── Jobs/                 # Queued jobs
+├── Listeners/            # Event listeners
+├── Livewire/             # PosPanel + PosReturnPanel
+├── Models/               # 74 Eloquent models
+├── Notifications/       # Laravel notifications
+├── Observers/            # TenantObserver, etc.
+├── Policies/             # ProductPolicy, SettingsPolicy
+├── Providers/            # 7 service providers
+├── Services/             # 31 top-level + 13 Accounting services
+└── Traits/               # Reusable traits
+
+## 4.3 database/ Directory Structure
+
+database/
+├── factories/            # 4 factories: User, Product, Warehouse, MO
+├── migrations/           # LANDLORD migrations
+│   ├── 2019_09_15_000010_create_tenants_table.php
+│   ├── 2019_09_15_000020_create_domains_table.php
+│   ├── 2026_06_01_000001_create_plans_table.php
+│   ├── 2026_06_05_000001_create_plan_features_table.php
+│   └── 2026_06_05_000002_add_subscription_dates_to_tenants_table.php
+├── migrations/tenant/    # 70+ TENANT migrations
+│   ├── 2024_01_01_000001_create_users_table.php
+│   ├── 000002-000005      # roles + permissions + pivots
+│   ├── 000006-...          # warehouses, categories, products
+│   ├── .../sales_invoices, sales_returns, ...
+│   ├── .../purchase_invoices, purchase_returns, ...
+│   ├── .../manufacturing_orders, manufacturing_costs, ...
+│   ├── .../accounts, journal_entries, fiscal_* (accounting)
+│   ├── .../wood_stocks, wood_dispensings, raw_material_templates
+│   └── .../warehouse_inbound_orders, warehouse_outbound_orders, ...
+└── seeders/              # 13 seeders
+    ├── DatabaseSeeder.php
+    ├── PermissionAndRoleSeeder.php       # 22 KB comprehensive RBAC
+    ├── DefaultChartOfAccountsSeeder.php  # 12 KB COA
+    ├── TestDataSeeder.php                # 21 KB fixtures
+    ├── PlanSeeder.php                    # Subscription plans
+    └── (ProductSeeder, CustomerSeeder, etc.)
+
+## 4.4 resources/views/ Directory
+
+resources/views/
+├── layouts/
+│   ├── app.blade.php        # 71KB - main tenant RTL shell
+│   └── theme-css.blade.php  # 19KB - design tokens
+├── auth/                    # login, register
+├── Dashboard/
+│   └── dashboard.blade.php
+├── landlord/                # Glass-morphism dark theme
+│   ├── layout.blade.php
+│   ├── dashboard.blade.php
+│   ├── plans/{index,create,edit}.blade.php
+│   └── tenants/{index,create,edit}.blade.php
+├── livewire/                # POS panels
+│   ├── pos-panel.blade.php        # 50KB
+│   └── pos-return-panel.blade.php # 11KB
+├── customers/, suppliers/         # CRUD + statements
+├── products/                      # + barcode, pricing, units
+├── categories/
+├── invoices/
+│   ├── sales/{create,edit,index,show,print,store,thermal_receipt}
+│   ├── purchases/{create,edit,index,show,print}
+│   ├── sales-returns/
+│   └── purchase-returns/
+├── pos/{history,settings,shift-close,shift-open,x-report,z-report}
+├── stock-counts/
+├── transfers/, warehouses/        # + partials, warehouse-history
+├── manufacturing/                 # + wood-stocks, wood-dispensings
+├── manufacturing-orders/          # + raw-materials
+├── Movements/                     # inventory-movements index
+├── permissions/                   # RBAC management
+├── settings/                      # admin only
+├── reports/                       # + financial, inventory, profit-loss, wood-*
+├── users/                         # admin user mgmt
+├── accounting/                    # coa/, dashboard, expenses, fiscal/,
+│                                  # fixed-assets/, journal/, posting-failures/,
+│                                  # recurring/, reports/, settings/, setup/,
+│                                  # vouchers/, treasury
+├── plan/upgrade.blade.php
+├── errors/{500,http}.blade.php
+├── welcome.blade.php            # 27KB - unused default Laravel
+└── welcome_central.blade.php    # 25KB - landlord landing
+
+## 4.5 routes/ Directory
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+File | Lines | Scope
+routes/web.php | 38 | Landlord only: /super-admin/*
+routes/api.php | 20 | Sanctum minimal API (only /api/user)
+routes/tenant.php | 619 | ALL tenant routes (inside middleware group)
+routes/console.php | - | Laravel default scheduler
+routes/channels.php | 163 bytes | Laravel default broadcasting channels (none custom)
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+## 4.6 config/ Directory
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+Config File | Purpose / Notable Settings
+app.php | Timezone UTC, locale en (UI Arabic), 7 custom providers
+auth.php | web session guard, eloquent User provider, 60-min password reset
+broadcasting.php | Standard Laravel config
+cache.php | file driver, tag_base "tenant"
+cors.php | Standard CORS
+database.php | mysql default; redis with phpredis client
+filesystems.php | local + public disks (tenancy suffixes them)
+hashing.php | bcrypt default
+logging.php | stack channel
+mail.php | SMTP defaults (mailpit in dev)
+queue.php | sync default
+reverb.php | Reverb WebSocket server (port 8080)
+sanctum.php | API tokens
+services.php | 3rd-party credentials placeholders
+session.php | file driver, 120-min lifetime
+tenancy.php | 234 lines — central tenant config (see Part 2)
+view.php | view paths
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+## 4.7 Lang / Tests / Storage / Public
+
+lang/
+└── ar/modules.php         # 405 bytes - Arabic module name labels
+
+tests/                     # PHPUnit skeleton (probably Feature + Unit)
+
+storage/
+├── app/                   # tenant-suffixed
+├── app/public/            # tenant-suffixed (Laravel <11) 
+├── framework/
+│   ├── cache/data/
+│   ├── sessions/
+│   ├── testing/
+│   └── views/
+└── logs/laravel.log
+
+public/
+├── index.php              # Laravel entry
+├── .htaccess              # Apache rewrite rules
+├── favicon.ico
+├── robots.txt
+├── css/                   # compiled assets folder
+└── build/                 # vite build output
+
+
+================================================================================
+# Part 5: Database Schema
+================================================================================
+
+Magzani uses a database-per-tenant architecture. The central MySQL database holds tenant, domain, and plan tables. Each tenant gets its own MySQL database named tenant{tenant_id}, with all business tables (products, invoices, accounting, etc.).
+
+## 5.1 Central (Landlord) Database Tables
+
+
+### 5.1.1 tenants
+
+Stancl default + custom columns. Source-of-truth for each tenant organization.
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+Column | Type | Notes
+id | string (UUID) | PK, generated by Stancl\Tenancy\UUIDGenerator
+data | JSON | Stancl flexible store — plan_id stored here
+plan_id | (from data) | FK to plans.slug, stored in JSON
+plan_expires_at | timestamp | Added by migration 2026_06_05_000002
+trial_ends_at | timestamp | Added by migration 2026_06_05_000002
+is_suspended | bool (from data) | Tenant suspension flag
+created_at / updated_at | timestamps | 
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+### 5.1.2 domains
+
+Stancl default. Stores the domain-to-tenant mapping (e.g. acme.localhost → tenant id abc-123).
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+Column | Type | Notes
+id | bigint | PK
+domain | string (unique) | Full hostname, e.g. "acme.localhost"
+tenant_id | string FK | FK → tenants.id
+created_at / updated_at | timestamps | 
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+### 5.1.3 plans
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+Column | Type | Notes
+id | bigint | PK
+slug | string (unique) | starter, pro, enterprise, custom...
+name | string | Display name (Arabic / English)
+description | text | 
+price | decimal(10,2) | 
+billing_period | string | monthly | yearly
+features | JSON | Feature flag toggles
+is_active | bool | 
+created_at / updated_at | timestamps | 
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+### 5.1.4 plan_features
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+Column | Type | Notes
+id | bigint | PK
+plan_id | bigint FK | FK → plans.id
+feature_key | string | pos, manufacturing, multi_warehouse...
+is_enabled | bool | 
+limit_value | integer (nullable) | Optional numeric cap (e.g. max warehouses = 5)
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+
+## 5.2 Tenant Database Schema (per-tenant DB)
+
+Each tenant DB contains ALL the tables below. There are ~70+ tables grouped by module:
+
+### 5.2.1 Auth & RBAC (5 tables)
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+Table | Key Columns | Purpose
+users | id, name, email (unique), password, phone, is_active, role (admin/employee), ... | User accounts — admin & employee
+roles | id, name, display_name (AR), description, color, is_system, timestamps | Permission roles
+permissions | id, name, display_name, description, module, action, timestamps | Granular permissions per module/action
+role_user | user_id, role_id, timestamps | Pivot: users ↔ roles
+permission_role | permission_id, role_id, timestamps | Pivot: permissions ↔ roles
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+### 5.2.2 Catalog - Products & Pricing (~12 tables)
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+Table | Key Columns
+categories | id, name, description, parent_id, is_active, timestamps
+products | id, name, code, sku, barcode, description, category_id, brand_id, unit_id, ba...
+product_warehouse | product_id, warehouse_id, quantity, reserved_quantity, available_quantity, mi...
+units | id, name, abbreviation, conversion_factor, timestamps
+product_base_pricing | product_id, base_purchase_price, base_selling_price, is_active, is_current
+product_price_history | product_id, old_price, new_price, change_type, changed_by, changed_at
+product_base_units | product_id, unit_name, unit_code, quantity_in_base_unit
+product_selling_units | product_id, unit_name, unit_code, conversion_factor, label, selling_price, pu...
+product_sales_units | similar to selling_units
+unit_conversions | from_unit_id, to_unit_id, factor, type
+price_change_history | Bulk price change audit trail
+supplier_product_prices | supplier_id, product_id, price, min_quantity, valid_from, valid_to
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+### 5.2.3 Warehouses & Transfers (6 tables)
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+Table | Key Columns
+warehouses | id, name, location, manager, is_active, timestamps, soft_deletes
+warehouse_transfers | id, transfer_number, from_warehouse_id, to_warehouse_id, status (draft/pendin...
+warehouse_transfer_items | id, transfer_id, product_id, quantity, unit, unit_cost, total
+warehouse_inbound_orders | id, order_number, warehouse_id, supplier_id, status, expected_date, received_...
+warehouse_inbound_order_items | inbound_id, product_id, quantity, unit_cost, total_cost
+warehouse_outbound_orders | id, order_number, warehouse_id, customer_id, status, expected_date, shipped_date
+warehouse_outbound_order_items | outbound_id, product_id, quantity, unit_cost, total_cost
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+### 5.2.4 Sales (4 tables)
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+Table | Key Columns
+sales_invoices | id, invoice_number, customer_id, warehouse_id, invoice_date, due_date, subtot...
+sales_invoice_items | id, invoice_id, product_id, quantity, unit, base_quantity, unit_price, discou...
+sales_returns | id, return_number, invoice_id, customer_id, warehouse_id, return_date, subtot...
+sales_return_items | id, return_id, invoice_item_id, product_id, quantity, unit_price, total
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+### 5.2.5 Purchases (4 tables)
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+Table | Key Columns
+purchase_invoices | id, invoice_number, supplier_id, warehouse_id, invoice_date, due_date, subtot...
+purchase_invoice_items | id, invoice_id, product_id, quantity, base_quantity, unit, cost, total
+purchase_returns | id, return_number, invoice_id, supplier_id, warehouse_id, return_date, total,...
+purchase_return_items | id, return_id, invoice_item_id, product_id, quantity, unit_cost, total
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+### 5.2.6 Partners (4 tables)
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+Table | Key Columns
+customers | id, name, phone, email, address, contact_person, opening_balance, current_bal...
+suppliers | id, name, phone, email, address, contact_person, opening_balance, current_bal...
+supplier_payments | id, supplier_id, invoice_id, amount, payment_date, payment_method, notes, jou...
+supplier_product_prices | id, supplier_id, product_id, price, min_quantity, valid_from, valid_to, notes
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+### 5.2.7 Payments (3 tables)
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+Table | Key Columns
+payments | id, payable_id, payable_type (polymorphic), amount, payment_date, payment_met...
+invoice_payments | legacy duplicate of payments
+customer_refunds | id, customer_id, invoice_id, amount, refund_date, method, journal_entry_id, n...
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+### 5.2.8 Stock Operations (3 tables)
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+Table | Key Columns
+stock_adjustments | id, product_id, warehouse_id, quantity, type, reason, notes, user_id
+stock_counts | id, count_number, warehouse_id, count_date, status (draft/pending/in_transit/...
+stock_count_items | id, stock_count_id, product_id, system_quantity, counted_quantity, difference...
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+### 5.2.9 Inventory Movements (1 table)
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+Table | Key Columns
+inventory_movements | id, product_id, warehouse_id, type (initial_stock/purchase/sale/transfer/adju...
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+### 5.2.10 Cash & Expenses (3 tables)
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+Table | Key Columns
+cash_transactions | id, type (deposit/withdrawal), amount, transaction_date, reference, notes, cr...
+expenses | id, expense_category_id, amount, expense_date, description, payment_method, r...
+expense_categories | id, name, description, is_active
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+### 5.2.11 Manufacturing (5 tables)
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+Table | Key Columns
+manufacturing_costs | id, product_id, labor_cost, material_cost, overhead_cost, total_cost, cost_pe...
+bom_components | id, manufacturing_cost_id, product_id, material_name, quantity, unit, unit_co...
+manufacturing_orders | id, order_number (MO-YYYY-NNNN), product_id (nullable FK), product_name, quan...
+manufacturing_order_components | id, order_id, component_name, quantity, unit, unit_cost, total_cost, wood_sto...
+raw_material_templates | id, name, description, is_active, timestamps
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+### 5.2.12 Wood Stock & Dispensing (2 tables)
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+Table | Key Columns
+wood_stocks | id, wood_type, quantity, unit, warehouse_id (added 2026_*), product_id (added...
+wood_dispensings | id, wood_stock_id, quantity, dispensed_to, dispensing_date, invoice_id (added...
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+### 5.2.13 Accounting (~14 tables)
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+Table | Key Columns
+accounts | id, code (unique), name, type (asset/liability/equity/revenue/expense), paren...
+account_types | id, name, category (asset/liability/equity/revenue/expense), normal_balance
+account_balances | id, account_id, fiscal_year_id, opening_balance, debit_total, credit_total, c...
+journal_entries | id, entry_number, entry_date, description, source (manual/system), status (dr...
+journal_entry_lines | id, journal_entry_id, account_id, debit, credit, description, cost_center_id,...
+recurring_journal_entries | id, template_name, frequency, start_date, end_date, last_run_date, next_run_d...
+recurring_journal_entry_lines | id, recurring_id, account_id, debit, credit, description
+fiscal_years | id, name, start_date, end_date, is_current, is_closed, closed_at
+fiscal_periods | id, fiscal_year_id, name, start_date, end_date, period_number, is_closed
+accounting_settings | id, setting_key, setting_value
+accounting_audit_logs | audit trail for posting
+accounting_posting_failures | id, transaction_type, reference_id, error_message, retry_count, resolved_at
+bank_accounts | id, name, account_number, bank_name, currency, opening_balance, current_balance
+bank_reconciliations | id, bank_account_id, statement_date, statement_balance, book_balance, difference
+cost_centers | id, name, code, description, is_active
+fixed_assets | id, name, code, purchase_date, purchase_cost, salvage_value, useful_life, dep...
+fixed_asset_depreciations | id, fixed_asset_id, depreciation_date, amount, accumulated_depreciation, book...
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+### 5.2.14 Misc Tables
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+Table | Key Columns
+companies | id, name, logo, address, phone, email, tax_id, currency
+system_settings | id, key, value, timestamps
+activity_logs | id, user_id, action, model_type, model_id, description, properties (JSON), cr...
+invoice_sequences | per-type invoice numbering tracking
+invoice_activity_log | invoice-specific event tracking
+notifications | Standard Laravel notifications table
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+## 5.3 Key Model Relationships Summary
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+Parent Model | hasMany | belongsTo
+Warehouse | products (via ProductWarehouse), transfers (from/to), inboundOrders, outbound... | creator/approver (User)
+Customer | salesInvoices, salesReturns, payments, refunds | createdBy (User)
+Supplier | purchaseInvoices, purchaseReturns, payments, productPrices | createdBy (User)
+Product | invoiceItems (sales+purchase), returnItems, warehouseStocks, movements, price... | category, brand, unit, baseUnit
+SalesInvoice | items, returns, payments (polymorphic), inventoryMovements | customer, warehouse, shift, confirmedBy (User)
+PurchaseInvoice | items, returns, payments (polymorphic) | supplier, warehouse, confirmedBy (User)
+PosShift | salesInvoices (source=pos) | user (User), closingBy
+ManufacturingOrder | components, costs | product, warehouse, createdBy/completedBy (User)
+Account | balances, journalEntryLines, parent/children | accountType, parent
+JournalEntry | lines, recurringLines | fiscalYear, fiscalPeriod, createdBy (User)
+User | salesInvoices, purchaseInvoices, salesReturns, purchaseReturns, transfers, pa... | role (via role_user pivot), permissions
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+
+================================================================================
+# Part 6: Modules (Deep Dive)
+================================================================================
+
+Each module section below documents its Models, Controllers, Services, Livewire components, Views, main routes, and key business logic. Use the TOC to navigate directly to any module.
+
+## Module 1: Authentication & RBAC
+
+المصادقة والصلاحيات
+User authentication (login/logout) and per-tenant Role-Based Access Control with module+action permissions.
+
+### Files
+
+app/Http/Controllers/Auth/LoginController.php (throttled 5/min)
+app/Http/Controllers/Auth/RegisterController.php
+app/Http/Controllers/UserController.php (CRUD users, toggle-active)
+app/Http/Controllers/PermissionsController.php (roles, role-permissions, edit-user)
+app/Models/User.php (isAdmin, hasPermission, hasAnyPermission, hasRole)
+app/Models/Role.php / Permission.php
+app/Providers/AuthServiceProvider.php (Gate::before admin bypass, 19 accounting abilities)
+database/seeders/PermissionAndRoleSeeder.php (22KB comprehensive matrix)
+resources/views/auth/{login,register}.blade.php
+resources/views/users/{create,edit,index,show}.blade.php
+resources/views/permissions/{index,edit-user,print,roles}.blade.php
+
+### Key Fields / Models
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+Entity | Notable Fields
+User | id, name, email (unique), password, phone, is_active, role (admin|employee), ...
+Role | id, name, display_name (AR), description, color, is_system
+Permission | id, name, display_name, description, module, action
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+### Routes
+
+Base URL prefix: /login, /logout, /users/*, /permissions/*  (see Part 5 for full details)
+
+### Business Notes
+
+Defaults: roles "admin" + "employee" seeded per tenant. Admin gets ALL permissions via Gate::before in AuthServiceProvider.
+Login route: POST /login (rate-limited 5/min). Logout: POST /logout.
+Permission modules in seeder cover: sales.invoices.*, purchases.invoices.*, warehouse.products.*, warehouse.transfers.*, warehouse.movements.*, plus accounting group.
+User management routes are admin-only: /users/{create,edit,show,index,toggle-active}.
+Permissions UI: PermissionsController manages roles (create/edit/destroy + per-role permission editor) and per-user permission editor.
+Account route: /permissions/roles/{role}/permissions → update-role-permissions.
+
+## Module 2: Multi-Tenancy / Landlord (Kayyan SaaS Admin)
+
+إدارة المستأجرين (لوحة المالك)
+Super-admin manages tenants and plans. Creates new tenants which triggers Stancl provisioning (DB creation + migrations + admin user seeding).
+
+### Files
+
+routes/web.php (38 lines — all landlord routes prefixed /super-admin)
+app/Http/Controllers/Landlord/SuperAdminController.php
+app/Models/Tenant.php (extends Stancl\Tenancy\Database\Models\Tenant, uses HasDatabase, HasDomains)
+app/Models/Plan.php / PlanFeature.php
+app/Providers/TenancyServiceProvider.php (events, middleware priority)
+config/tenancy.php (central tenancy config — 234 lines)
+resources/views/landlord/{layout,dashboard}.blade.php + plans/ + tenants/
+database/migrations/{create_tenants_table, create_domains_table, plans_table, plan_features_table, add_subscription_dates_to_tenants_table}.php
+database/seeders/PlanSeeder.php
+
+### Key Fields / Models
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+Entity | Notable Fields
+Tenant | id (UUID), data (JSON: plan_id, is_suspended), plan_expires_at, trial_ends_at...
+Plan | id, slug (unique), name, description, price decimal(10,2), billing_period, fe...
+PlanFeature | id, plan_id, feature_key, is_enabled, limit_value (nullable)
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+### Routes
+
+Base URL prefix: /super-admin/{dashboard, plans/*, tenants/*}  (see Part 5 for full details)
+
+### Business Notes
+
+Tenant creation flow: SuperAdminController::tenantsStore validates tenant_id (alpha_dash + lowercase + unique) → creates Tenant (fires TenantCreated event → queues CreateDatabase then MigrateDatabase jobs) → creates Domain {tenant_id}.{TENANT_DOMAIN_SUFFIX} → inside tenant()->run(...) seeds roles + creates admin user (admin@{tenant_id}.com / password) + attaches admin role.
+Tenant routes: GET/POST /super-admin/tenants, /create, /{id}/edit, /{id} (PUT), /{id}/toggle-status (POST), /{id} (DELETE).
+Plan CRUD: GET/POST /super-admin/plans, /create, /{id}/edit (PUT), /{id} (DELETE).
+Tenant model helper: publicUrl($path) builds tenant login URL shown on landlord dashboard.
+Central domain config: app.central_domains in config/tenancy.php (127.0.0.1, localhost, plus env CENTRAL_DOMAINS).
+
+## Module 3: Products & Pricing
+
+المنتجات والتسعير
+Catalog of products with multi-unit pricing, supplier-specific prices, barcode generation, bulk price update, price history.
+
+### Files
+
+app/Http/Controllers/ProductController.php (18 KB — CRUD, search, low-stock)
+app/Http/Controllers/CategoryController.php
+app/Http/Controllers/PriceUpdateController.php (22 KB — bulk update UI)
+app/Http/Controllers/ProductPricingController.php
+app/Services/ProductService.php (50 KB)
+app/Services/ProductPricingService.php (15 KB)
+app/Services/PriceUpdateService.php (18 KB)
+app/Services/AdvancedPricingService.php (27 KB)
+app/Models/Product.php / Category.php / ProductBaseUnit.php / ProductBasePricing.php / ProductSellingUnit.php / ProductSalesUnit.php / ProductPriceHistory.php / PriceChangeHistory.php / UnitConversion.php / ProductWarehouse.php / SupplierProductPrice.php
+resources/views/products/{index,create,edit,show,barcode,bulk-price-update,price-history,units-statistics}.blade.php
+
+### Key Fields / Models
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+Entity | Notable Fields
+Product | name, code, sku, barcode, description, category_id, brand_id, unit_id, base_u...
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+### Routes
+
+Base URL prefix: /products/* (CRUD + bulk-price-update + barcode + 7 AJAX)  (see Part 5 for full details)
+
+### Business Notes
+
+Product accessors: total_stock, total_available, total_reserved, stock_status (نفذ/منخفض/متوفر), is_low_stock, is_out_of_stock, base_selling_price, base_purchase_price, sellingUnitsWithPrices.
+Scopes: active, featured, search, byCategory, manufactured, lowStock, outOfStock.
+Routes (in routes/tenant.php lines 313-339): GET /products (index), GET /products/barcode/print, GET/POST /products/bulk-price-update (preview + apply), AJAX endpoints: categories-by-unit, by-unit-category, preview-smart-update, suggested-pricing, convert-unit-price, unit-details. CRUD: admin.only for create/store/edit/update/destroy. POST /products/{id}/update-price, GET /products/{id}/price-history.
+
+## Module 4: Customers
+
+العملاء
+Customer directory with opening/current balance, credit limit, statement view, and statement export.
+
+### Files
+
+app/Http/Controllers/CustomerController.php
+app/Services/CustomerService.php
+app/Models/Customer.php (very small fillable — balance updated via 2026_04_07 migration)
+app/Models/Payment.php (polymorphic for customer payments)
+app/Exports/CustomersExport.php + CustomerStatementExport.php
+resources/views/customers/{create,edit,index,show,statement}.blade.php
+
+### Key Fields / Models
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+Entity | Notable Fields
+Customer | id, name, phone, email, address, contact_person, opening_balance, current_bal...
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+### Routes
+
+Base URL prefix: /customers/* (CRUD + statement + statement.export)  (see Part 5 for full details)
+
+### Business Notes
+
+Routes (lines 408-423): CRUD /customers, show /customers/{id}, statement /customers/{id}/statement, export /customers/{id}/statement/export (Excel).
+Customer has payments via polymorphic payments table (payable_type = SalesInvoice).
+IMPORTANT (per recent fixes): Use $transaction["type"] (array access), NOT $transaction->type — fixed in commit ec3b50c + ba001f6.
+
+## Module 5: Suppliers
+
+الموردين
+Supplier directory with per-supplier product pricing, supplier payments, balance, statements, and statements exports.
+
+### Files
+
+app/Http/Controllers/SupplierController.php
+app/Http/Controllers/SupplierPaymentController.php
+app/Services/SupplierService.php
+app/Services/SupplierBalanceService.php
+app/Services/SupplierStatementService.php
+app/Models/Supplier.php / SupplierPayment.php / SupplierProductPrice.php
+app/Exports/SuppliersExport.php + SupplierStatementExport.php
+resources/views/suppliers/{create,edit,index,show,statement}.blade.php
+
+### Key Fields / Models
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+Entity | Notable Fields
+Supplier | id, name, phone, email, address, contact_person, opening_balance, current_bal...
+SupplierPayment | id, supplier_id, invoice_id, amount, payment_date, payment_method, notes, jou...
+SupplierProductPrice | id, supplier_id, product_id, price, min_quantity, valid_from, valid_to, notes
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+### Routes
+
+Base URL prefix: /suppliers/* (CRUD + statement + statement.export)  (see Part 5 for full details)
+
+### Business Notes
+
+Routes (lines 430-445): CRUD /suppliers, show /suppliers/{id}, statement /suppliers/{id}/statement, export /suppliers/{id}/statement/export.
+SupplierController resolved via InvoiceService (66 KB) for invoice-side supplier balance updates.
+Null-safe Company access added in statement view (commit ba001f6).
+
+## Module 6: Sales Invoices & Returns
+
+فواتير المبيعات والمرتجعات
+Sales invoicing with multi-tax, discounts, payment terms, installment tracking; sales returns tied to original invoice.
+
+### Files
+
+app/Http/Controllers/SalesController.php (19 KB — main sales controller)
+app/Http/Controllers/SalesReturnsController.php (5 KB)
+app/Services/InvoiceService.php (66 KB — core sales/purchase invoice engine + confirm/post/etc.)
+app/Services/ReturnService.php (21 KB)
+app/Models/SalesInvoice.php / SalesInvoiceItem.php / SalesReturn.php / SalesReturnItem.php
+resources/views/invoices/sales/{create,edit,index,show,print,store,Print,thermal_receipt}.blade.php
+resources/views/invoices/sales-returns/{create,index,show}.blade.php
+
+### Key Fields / Models
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+Entity | Notable Fields
+SalesInvoice | invoice_number, customer_id, warehouse_id, invoice_date, due_date, subtotal, ...
+SalesInvoiceItem | invoice_id, product_id, quantity, unit, base_quantity, unit_price, discount_*...
+SalesReturn | return_number, invoice_id, customer_id, warehouse_id, return_date, subtotal, ...
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+### Routes
+
+Base URL prefix: /invoices/sales/* (CRUD + print), /invoices/sales-returns/*  (see Part 5 for full details)
+
+### Business Notes
+
+Accessors: remaining (total - paid), payment_percentage, is_fully_paid, is_partially_paid.
+Scopes: paid, unpaid, partiallyPaid, confirmed.
+Routes (feature:pos gated, lines 107-120): CRUD /invoices/sales (admin-only writes), /invoices/sales/{id}/print.
+Confirmation flow (inside InvoiceService::confirmInvoice — DB transaction + lockForUpdate): decrement inventory → record InventoryMovement type=sale → update Customer.current_balance → auto-post JournalEntry (Sales) via PostingService → set status=confirmed, confirmed_by/at → generate cogs_entry_id.
+Thermal receipt view exists: invoices/sales/thermal_receipt.blade.php.
+
+## Module 7: Purchase Invoices & Returns
+
+فواتير المشتريات والمرتجعات
+Purchase invoicing, supplier balance updates, purchase returns; gated behind feature:purchase plan flag.
+
+### Files
+
+app/Http/Controllers/PurchaseInvoiceController.php (5.6 KB)
+app/Http/Controllers/PurchaseReturnController.php (6.7 KB)
+app/Services/PurchaseInvoiceService.php (11 KB)
+app/Services/PurchaseReturnService.php (12 KB)
+app/Models/PurchaseInvoice.php / PurchaseInvoiceItem.php / PurchaseReturn.php / PurchaseReturnItem.php
+app/Exports/PurchaseInvoicesExport.php + PurchaseInvoiceDetailsExport.php
+resources/views/invoices/purchases/{create,edit,index,show,print}.blade.php
+resources/views/invoices/purchase-returns/index.blade.php
+
+### Key Fields / Models
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+Entity | Notable Fields
+PurchaseInvoice | invoice_number, supplier_id, warehouse_id, invoice_date, due_date, subtotal, ...
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+### Routes
+
+Base URL prefix: /invoices/purchases/* (feature:purchase), /invoices/purchase-returns/*  (see Part 5 for full details)
+
+### Business Notes
+
+Routes (feature:purchase + auth, lines 360-372): CRUD /invoices/purchases/*, POST /invoices/purchases/{id}/confirm, GET /print, GET /export (list), GET /{id}/exportSingle.
+Purchase-returns routes (lines 392-401): CRUD + AJAX /invoices/purchase-returns/available-items.
+Confirmation: increase inventory + record InventoryMovement type=purchase + update Supplier.current_balance + auto-post JournalEntry (Purchase) + mark confirmed.
+
+## Module 8: Warehouses & Transfers
+
+المخازن والتحويلات
+Multi-warehouse support with product-warehouse pivot, draft→pending→in_transit→received transfer workflow, warehouse inbound/outbound orders.
+
+### Files
+
+app/Http/Controllers/WarehouseController.php (8 KB)
+app/Http/Controllers/TransferController.php (6.8 KB)
+app/Http/Controllers/WarehouseOrderController.php (14 KB)
+app/Services/WarehouseService.php (20 KB)
+app/Services/TransferService.php (25 KB)
+app/Services/WarehouseStockService.php (10 KB)
+app/Models/Warehouse.php / ProductWarehouse.php / WarehouseTransfer.php / WarehouseTransferItem.php / WarehouseInboundOrder.php / WarehouseInboundOrderItem.php / WarehouseOutboundOrder.php / WarehouseOutboundOrderItem.php
+resources/views/warehouses/{index,create,edit,show,add-product,movements,search,store,destroy, partials/}.blade.php
+resources/views/transfers/{index,create,pending,show,warehouse-history,transfers/}.blade.php
+
+### Key Fields / Models
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+Entity | Notable Fields
+Warehouse | id, name, location, manager, is_active, soft_deletes
+ProductWarehouse | product_id, warehouse_id, quantity, reserved_quantity, available_quantity, mi...
+WarehouseTransfer | transfer_number, from_warehouse_id, to_warehouse_id, status (draft/pending/in...
+WarehouseInboundOrder | order_number, warehouse_id, supplier_id, status, expected_date, received_date
+WarehouseOutboundOrder | order_number, warehouse_id, customer_id, status, expected_date, shipped_date
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+### Routes
+
+Base URL prefix: /warehouses/*, /transfers/*, /warehouse-orders/*  (see Part 5 for full details)
+
+### Business Notes
+
+Routes (feature:warehouses + auth + role, lines 236-249): full CRUD /warehouses/*, POST /warehouses/{id}/add-product, GET /warehouses/low-stock, /warehouses/{id}/movements, /warehouses/search.
+Routes (feature:multi_warehouse + auth, lines 183-194): /transfers/* — index, create, store, pending, show, reverse, cancel, warehouse/{id}/history.
+Routes (feature:warehouses + auth, lines 256-274): /warehouse-orders/stock-preview, /warehouse-orders/inbound/* (index/create/store/show/print), /warehouse-orders/outbound/* (index/create/store/show/print/approve/cancel).
+Transfer status state machine: draft → pending → in_transit → received (or cancelled / reversed at any step).
+Note: routes/orders inside warehouse-inbound and warehouse-outbound have print/approve/cancel endpoints (see Part 5).
+
+## Module 9: Point of Sale & Shifts
+
+نقطة البيع والورديات
+Livewire-based POS with shift lifecycle (open → in-progress → close), cash reconciliation, X/Z reports, returns panel.
+
+### Files
+
+app/Livewire/PosPanel.php (29 KB — main POS screen component)
+app/Livewire/PosReturnPanel.php (5 KB — POS returns)
+app/Http/Controllers/PosShiftController.php (11 KB)
+app/Http/Controllers/PosSettingController.php
+app/Models/PosShift.php / PosSetting.php
+resources/views/livewire/pos-panel.blade.php (50 KB — POS screen)
+resources/views/livewire/pos-return-panel.blade.php (11 KB)
+resources/views/pos/{history,settings,shift-close,shift-open,x-report,z-report}.blade.php
+
+### Key Fields / Models
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+Entity | Notable Fields
+PosShift | user_id, opened_at, closed_at, opening_balance, closing_balance_actual/expect...
+PosSetting | tenant-specific POS settings (receipt header, footer, tax display, etc.)
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+### Routes
+
+Base URL prefix: /pos/*, /invoices/sales/* (POS-flavoured)  (see Part 5 for full details)
+
+### Business Notes
+
+PosShift constants (lines 35-37): STATUS_OPEN, STATUS_CLOSED, STATUS_AUTO_CLOSED.
+Methods: getActiveShift(), autoCloseStaleShays(), calculateExpectedBalance(), recalculateTotals(), computeAndSaveDifference(), duration accessor.
+Routes (feature:pos + auth, lines 92-120): GET /pos → PosPanel, GET /pos/returns → PosReturnPanel, GET/POST /pos/settings (admin.only), GET/POST /pos/shift/open, GET/POST /pos/shift/close, GET /pos/history, GET /pos/x-report, GET /pos/shift/{id}/z-report. Sales invoice CRUD also feature:pos + admin-only writes.
+Opening flow: verify no active shift → auto-close stale shifts → create new shift with opening_balance → redirect to /pos.
+During sale: SalesInvoice records shift_id + source=pos + payment_method. PosShift::recalculateTotals() aggregates confirmed sales.
+Closing flow: calc expected_cash = opening_balance + cash_sales → user inputs counted cash → save cash_difference = actual - expected → set STATUS_CLOSED.
+X-Report = mid-shift snapshot; Z-Report = end-of-day reset-style report per shift.
+
+## Module 10: Inventory, Stock Count & Movements
+
+المخزون والجرد وحركات المخزون
+Inventory movements ledger, full-cycle stock counts (draft→started→completed), stock adjustments, wood stock & dispensing.
+
+### Files
+
+app/Http/Controllers/InventoryMovementController.php (3.5 KB)
+app/Http/Controllers/StockCountController.php (7.8 KB)
+app/Http/Controllers/WoodStockController.php
+app/Http/Controllers/WoodDispensingController.php
+app/Services/InventoryMovementService.php (17 KB)
+app/Services/StockCountService.php (20 KB)
+app/Services/StockService.php (11 KB)
+app/Services/WoodCalculationService.php
+app/Services/WoodStockService.php
+app/Models/InventoryMovement.php / StockCount.php / StockCountItem.php / StockAdjustment.php / WoodStock.php / WoodDispensing.php
+resources/views/stock-counts/, Movements/index.blade.php, manufacturing/wood-stocks/, manufacturing/wood-dispensings/
+
+### Key Fields / Models
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+Entity | Notable Fields
+InventoryMovement | product_id, warehouse_id, type (initial_stock/purchase/sale/transfer/adjustme...
+StockCount | count_number, warehouse_id, count_date, status, started_at, completed_at, can...
+WoodStock | wood_type, quantity, unit, warehouse_id, product_id
+WoodDispensing | wood_stock_id, quantity, dispensed_to, dispensing_date, invoice_id, notes, cr...
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+### Routes
+
+Base URL prefix: /stock-counts/*, /movements/*, /manufacturing/wood-stocks/*, /manufacturing/wood-dispensings/*  (see Part 5 for full details)
+
+### Business Notes
+
+InventoryMovement types: initial_stock, purchase, sale, transfer, adjustment, return, production.
+StockCount statuses (transfers): draft, pending, in_transit, received, cancelled, reversed. Stock counts: start → count → complete workflow with per-item approve / approve-all.
+Routes (feature:stock_count + feature:warehouses + role, lines 281-295): /stock-counts/* (index, create, store, show, start, count, complete, cancel, items.approve, items.count, approve-all, warehouse-products, print).
+Routes (lines 302-306): /movements/* (index, product/{id}, export).
+
+## Module 11: Manufacturing Orders & BOM
+
+التصنيع وأوامر الإنتاج
+BOM-based production orders (draft → confirmed → completed / cancelled). Auto-updates finished product cost + selling price on completion; records wood consumption.
+
+### Files
+
+app/Http/Controllers/ManufacturingOrderController.php (25 KB)
+app/Http/Controllers/ManufacturingCostController.php
+app/Http/Controllers/RawMaterialTemplateController.php (4.5 KB)
+app/Services/ManufacturingOrderService.php (25 KB)
+app/Services/ManufacturingCostService.php (10 KB)
+app/Services/RawMaterialTemplateInventoryService.php (4 KB)
+app/Models/ManufacturingOrder.php / ManufacturingOrderComponent.php / ManufacturingCost.php / BomComponent.php / RawMaterialTemplate.php
+resources/views/manufacturing/{create,edit,index,show}.blade.php
+resources/views/manufacturing-orders/{create,edit,index,show,raw-materials/}.blade.php
+
+### Key Fields / Models
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+Entity | Notable Fields
+ManufacturingOrder | order_number (auto MO-YYYY-NNNN), product_id (nullable FK), product_name, qua...
+ManufacturingOrderComponent | order_id, component_name, quantity, unit, unit_cost, total_cost, wood_stock_i...
+ManufacturingCost | product_id, labor_cost, material_cost, overhead_cost, total_cost, cost_per_un...
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+### Routes
+
+Base URL prefix: /manufacturing/*, /manufacturing-orders/*  (see Part 5 for full details)
+
+### Business Notes
+
+Statuses: draft → confirmed → completed / cancelled.
+Routes (feature:manufacturing + auth + admin.only, lines 128-176):
+/manufacturing/* — calculator: index, create, store, calculate, show, edit, update, destroy, confirm + wood-stocks/wood-dispensings sub-routes.
+/manufacturing-orders/* — orders: index, create, store, calculate, show, edit, update, destroy, confirm/complete/cancel (POST or PATCH), raw-materials sub-resource.
+Completion flow (atomic DB transaction in ManufacturingOrderService):
+1. Find target product (FK).
+2. Update product purchase_price = cost_per_unit, selling_price = selling_price_per_unit.
+3. Inventory movement: type=production, qty = +quantity_produced.
+4. Status = completed, produced_at = now().
+Order numbers auto-generated as MO-YYYY-NNNN.
+Manufacturing cost calculator (BOM-based pricing) lets you build per-product cost + suggested selling price.
+Wood consumption: manufacturing_order_components.wood_stock_id links to wood_stocks.
+
+## Module 12: Accounting (Chart of Accounts, Journals, Reports)
+
+المحاسبة (شجرة الحسابات، القيود، التقارير)
+Full double-entry accounting: COA, Journal Entries (manual + system-posted), Receipt & Payment Vouchers, Fiscal Years/Periods, Fixed Assets, Posting Failures, Partner Ledger.
+
+### Files
+
+app/Http/Controllers/Accounting/AccountingDashboardController.php
+app/Http/Controllers/Accounting/AccountingSettingsController.php
+app/Http/Controllers/Accounting/AccountingSetupController.php (onboarding wizard)
+app/Http/Controllers/Accounting/ChartOfAccountsController.php
+app/Http/Controllers/Accounting/FinancialReportController.php
+app/Http/Controllers/Accounting/FiscalPeriodController.php
+app/Http/Controllers/Accounting/FixedAssetController.php
+app/Http/Controllers/Accounting/JournalEntryController.php
+app/Http/Controllers/Accounting/PaymentVoucherController.php
+app/Http/Controllers/Accounting/PostingFailureController.php
+app/Http/Controllers/Accounting/ReceiptVoucherController.php
+app/Http/Controllers/Accounting/RecurringJournalEntryController.php
+app/Http/Controllers/Accounting/YearEndClosingController.php
+app/Services/Accounting/* (13 services — PostingService is 43 KB, FinancialReportService 26 KB)
+app/Providers/AccountingServiceProvider.php (registered in app()->booted)
+app/Enums/AccountTypeEnum.php, JournalEntrySource.php, JournalEntryStatus.php, NormalBalance.php, PaymentTerms.php
+app/Models/{Account, AccountType, AccountBalance, JournalEntry, JournalEntryLine, RecurringJournalEntry*, FiscalYear, FiscalPeriod, AccountingSetting, AccountingAuditLog, AccountingPostingFailure, BankAccount, BankReconciliation, CostCenter, FixedAsset, FixedAssetDepreciation}.php
+database/seeders/DefaultChartOfAccountsSeeder.php (12 KB full COA)
+resources/views/accounting/{coa,dashboard,expenses,fiscal,fixed-assets,journal,posting-failures,recurring,reports,settings,setup,treasury,vouchers}.blade.php
+
+### Key Fields / Models
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+Entity | Notable Fields
+Account | code (unique), name, type (asset/liability/equity/revenue/expense), parent_id...
+JournalEntry | entry_number, entry_date, description, source (manual/system), status (draft/...
+JournalEntryLine | journal_entry_id, account_id, debit, credit, description, cost_center_id, par...
+FiscalYear / FiscalPeriod | is_current, is_closed, closed_at, period_number
+FixedAsset | name, code, purchase_date, purchase_cost, salvage_value, useful_life, depreci...
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+### Routes
+
+Base URL prefix: /accounting/* (feature:accounting_advanced + admin)  (see Part 5 for full details)
+
+### Business Notes
+
+Routes (feature:accounting_advanced + admin.only, lines 496-617):
+/accounting — dashboard + integrity-check + fix.
+/accounting/setup/* — multi-step onboarding wizard.
+/accounting/coa/* — CRUD + export.
+/accounting/journal/* — CRUD + post + reverse (throttled 30,1).
+/accounting/vouchers/{receipt,payment}/*.
+/accounting/reports/* — trial-balance, income-statement, comparative-income, balance-sheet, general-ledger, partner-ledger, audit-trail, aging, financial-ratios, vat-settlement.
+/accounting/recurring/* — recurring journal entries with run-now.
+/accounting/fiscal/* — fiscal periods/years + year-end wizard.
+/accounting/posting-failures/* — retry / resolve.
+/accounting/fixed-assets/* — CRUD + depreciate + dispose.
+/accounting/settings — index/update.
+PostingService (43 KB) auto-posts journal entries on sales confirmation, purchase confirmation, payment, refund, manufacturing completion, etc. — and logs failures to accounting_posting_failures for manual retry.
+AuthServiceProvider defines 19 accounting.* gates dynamically: accounting.dashboard, accounting.coa.*, accounting.journal.*, accounting.vouchers.*, accounting.reports.*, accounting.fiscal.*, accounting.settings.*, accounting.posting-failures.*.
+System-posted entries are linked to source transactions via reference_type + reference_id and cannot be edited directly (must be reversed first).
+Year-end closing wizard handles period/year locking and rollover.
+
+## Module 13: Reporting & Dashboard
+
+التقارير ولوحة التحكم
+Operational + financial + wood-specific reports, Excel exports, profit/loss, inventory, aging, statements.
+
+### Files
+
+app/Http/Controllers/ReportingController.php (7.8 KB)
+app/Http/Controllers/FinancialReportController.php
+app/Http/Controllers/AccountingDashboardController.php
+app/Http/Controllers/DashboardController.php
+app/Services/ReportingService.php (23 KB)
+app/Services/FinancialReportService.php
+app/Exports/{CustomersExport, SuppliersExport, InventoryReportExport, ProfitLossReportExport, FinancialReportExport, CustomerStatementExport, SupplierStatementExport}.php
+resources/views/reports/{financial,inventory,profit-loss,wood-stock,wood-movement,wood-cost-production}.blade.php
+resources/views/Dashboard/dashboard.blade.php
+
+### Routes
+
+Base URL prefix: /reports/* + /accounting/reports/*  (see Part 5 for full details)
+
+### Business Notes
+
+Reports operational (DOCUMENTATION.md §11):
+• Sales by date / customer / product
+• Purchases by date / supplier
+• Inventory levels / value
+• Profit & Loss (Gross + Net)
+• Top products / top customers
+• Low stock
+• Debtors / Creditors (Aging)
+• Expenses by category
+• Daily sales detail
+Reports financial (in /accounting/reports/*):
+• Trial Balance, Income Statement, Comparative Income, Balance Sheet
+• General Ledger, Partner Ledger, Audit Trail
+• Aging (AR/AP), Financial Ratios, VAT Settlement.
+Reports wood-specific: wood-stock, wood-movement, wood-cost-production.
+Routes (feature:accounting + admin, lines 216-228): /reports/{financial,inventory,profit-loss}/{export} and non-export versions; /reports/wood-stock, /reports/wood-movement, /reports/wood-cost-production.
+
+## Module 14: Settings
+
+الإعدادات
+Tenant-level company profile, system settings, logo, accounting settings (admin-only).
+
+### Files
+
+app/Http/Controllers/SettingsController.php (4 KB)
+app/Http/Controllers/AccountingSettingsController.php
+app/Http/Controllers/AccountingSetupController.php (onboarding wizard)
+app/Services/SettingsService.php / ChartOfAccountsService.php / ExpenseService.php / AccountingAuditService.php
+app/Models/Company.php / SystemSetting.php / AccountingSetting.php / PosSetting.php
+resources/views/settings/*.blade.php (admin only)
+
+### Key Fields / Models
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+Entity | Notable Fields
+Company | name, logo, address, phone, email, tax_id, currency
+SystemSetting | key-value general settings
+AccountingSetting | key-value accounting settings
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+### Routes
+
+Base URL prefix: /settings/* (admin only)  (see Part 5 for full details)
+
+### Business Notes
+
+Routes (auth + admin.only, lines 452-455): GET /settings, POST /settings/company, POST /settings/system, POST /settings/logo/delete.
+AppServiceProvider view composer reads tenant()->plan->features (or plan()->custom_features) on every view → exposes $planFeatures.
+
+## Module 15: Activity Logs & Notifications
+
+سجل النشاط والإشعارات
+Per-user activity tracking across invoices, transfers, payments; standard Laravel notifications table.
+
+### Files
+
+app/Models/ActivityLog.php
+app/Notifications/* (custom + Laravel default)
+database/migrations/tenant/2026_01_20_232916_create_notifications_table.php
+database/migrations/tenant/*_create_activity_logs*.php
+
+### Routes
+
+Base URL prefix: (no UI routes — used by Audit)  (see Part 5 for full details)
+
+### Business Notes
+
+User hasMany: salesInvoices, purchaseInvoices, salesReturns, purchaseReturns, warehouseTransfers, payments, expenses, cashTransactions, activityLogs.
+There are TWO activity_log tables: activity_logs (custom) AND Laravel default activity_log pattern from migrations. The "system_audit_logs" pattern is logged via Custom events.
+TODO from ERROR_FIXES_TODO.md: ensure single activity_log table per tenant.
+Notifications: standard Laravel mail / database / broadcast channels available via app()->booted services.
+
+
+================================================================================
+# Part 7: Complete Routes Reference
+================================================================================
+
+This part lists every route in routes/web.php (landlord) and routes/tenant.php. All tenant routes are wrapped in middleware: web + PreventAccessFromCentralDomains + InitializeTenancyByDomain + feature.
+
+## 7.1 Landlord Routes (routes/web.php)
+
+File: routes/web.php (38 lines). All landlord routes are prefixed /super-admin and require central-domain context.
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+Method | URI | Name | Controller@Action
+GET | /super-admin/dashboard | super-admin.dashboard | SuperAdminController@dashboard
+GET | /super-admin/plans | super-admin.plans.index | plansIndex
+GET | /super-admin/plans/create | super-admin.plans.create | plansCreate
+POST | /super-admin/plans | super-admin.plans.store | plansStore
+GET | /super-admin/plans/{plan}/edit | super-admin.plans.edit | plansEdit
+PUT | /super-admin/plans/{plan} | super-admin.plans.update | plansUpdate
+DELETE | /super-admin/plans/{plan} | super-admin.plans.destroy | plansDestroy
+GET | /super-admin/tenants | super-admin.tenants.index | tenantsIndex
+GET | /super-admin/tenants/create | super-admin.tenants.create | tenantsCreate
+POST | /super-admin/tenants | super-admin.tenants.store | tenantsStore
+GET | /super-admin/tenants/{id}/edit | super-admin.tenants.edit | tenantsEdit
+PUT | /super-admin/tenants/{id} | super-admin.tenants.update | tenantsUpdate
+POST | /super-admin/tenants/{id}/toggle-status | super-admin.tenants.toggle-status | tenantsToggleStatus
+DELETE | /super-admin/tenants/{id} | super-admin.tenants.destroy | tenantsDestroy
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+
+## 7.2 Tenant Routes (routes/tenant.php — 619 lines)
+
+The full middleware stack wrapping all tenant routes:
+Route::middleware([
+    'web',
+    \Stancl\Tenancy\Middleware\PreventAccessFromCentralDomains::class,
+    \Stancl\Tenancy\Middleware\InitializeTenancyByDomain::class,
+    'feature',
+])->group(function () {
+    // ... all tenant routes
+});
+
+### 7.2.1 Auth & Public
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+Method | URI | Name | Middleware
+GET | /login | login | guest
+POST | /login | login.post | guest + throttle:5,1
+POST | /logout | logout | auth
+GET | / | dashboard | auth + role middleware
+GET | /home | home | redirects → /
+GET | /plan/upgrade | plan.upgrade | PlanController
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+### 7.2.2 POS & Shifts (feature:pos)
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+Method | URI | Name | Notes
+GET | /pos | pos.index | PosPanel Livewire
+GET | /pos/returns | pos.returns | PosReturnPanel Livewire
+GET | /pos/settings | pos.settings.index | admin.only
+POST | /pos/settings | pos.settings.update | admin.only
+GET | /pos/shift/open | pos.shift.create | open form
+POST | /pos/shift/open | pos.shift.open | open action
+GET | /pos/shift/close | pos.shift.close-view | close form
+POST | /pos/shift/close | pos.shift.close | close action
+GET | /pos/history | pos.history | past shifts
+GET | /pos/x-report | pos.xreport | mid-shift report
+GET | /pos/shift/{id}/z-report | pos.shift.zreport | end-of-day report
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+### 7.2.3 Sales Invoices (feature:pos, admin-only writes)
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+Method | URI | Name
+GET | /invoices/sales | invoices.sales.index
+GET | /invoices/sales/create | invoices.sales.create
+POST | /invoices/sales | invoices.sales.store
+GET | /invoices/sales/{id}/edit | invoices.sales.edit
+PUT | /invoices/sales/{id} | invoices.sales.update
+DELETE | /invoices/sales/{id} | invoices.sales.destroy
+GET | /invoices/sales/{id} | invoices.sales.show
+GET | /invoices/sales/{id}/print | invoices.sales.print
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+### 7.2.4 Manufacturing (feature:manufacturing + admin.only)
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+Method | URI | Name
+GET | /manufacturing | manufacturing.index
+GET | /manufacturing/create | manufacturing.create
+POST | /manufacturing | manufacturing.store
+POST | /manufacturing/calculate | manufacturing.calculate
+GET | /manufacturing/{id} | manufacturing.show
+GET | /manufacturing/{id}/edit | manufacturing.edit
+PUT | /manufacturing/{id} | manufacturing.update
+DELETE | /manufacturing/{id} | manufacturing.destroy
+POST | /manufacturing/{id}/confirm | manufacturing.confirm
+GET | /manufacturing-orders | manufacturing-orders.index
+GET | /manufacturing-orders/create | manufacturing-orders.create
+POST | /manufacturing-orders | manufacturing-orders.store
+POST | /manufacturing-orders/calculate | manufacturing-orders.calculate
+GET | /manufacturing-orders/{id} | manufacturing-orders.show
+GET | /manufacturing-orders/{id}/edit | manufacturing-orders.edit
+PUT | /manufacturing-orders/{id} | manufacturing-orders.update
+DELETE | /manufacturing-orders/{id} | manufacturing-orders.destroy
+POST | /manufacturing-orders/{id}/confirm | manufacturing-orders.confirm
+PATCH | /manufacturing-orders/{id}/complete | manufacturing-orders.complete
+PATCH | /manufacturing-orders/{id}/cancel | manufacturing-orders.cancel
+GET | /manufacturing/wood-stocks | manufacturing.wood-stocks.index
+GET | /manufacturing/wood-stocks/create | manufacturing.wood-stocks.create
+POST | /manufacturing/wood-stocks | manufacturing.wood-stocks.store
+GET | /manufacturing/wood-stocks/{id}/edit | manufacturing.wood-stocks.edit
+PUT | /manufacturing/wood-stocks/{id} | manufacturing.wood-stocks.update
+DELETE | /manufacturing/wood-stocks/{id} | manufacturing.wood-stocks.destroy
+GET | /manufacturing/wood-dispensings | manufacturing.wood-dispensings.index
+GET | /manufacturing/wood-dispensings/create | manufacturing.wood-dispensings.create
+POST | /manufacturing/wood-dispensings | manufacturing.wood-dispensings.store
+GET | /manufacturing/wood-dispensings/{id}/edit | manufacturing.wood-dispensings.edit
+PUT | /manufacturing/wood-dispensings/{id} | manufacturing.wood-dispensings.update
+DELETE | /manufacturing/wood-dispensings/{id} | manufacturing.wood-dispensings.destroy
+GET | /manufacturing-orders/raw-materials | manufacturing-orders.raw-materials.index
+GET | /manufacturing-orders/raw-materials/create | manufacturing-orders.raw-materials.create
+POST | /manufacturing-orders/raw-materials | manufacturing-orders.raw-materials.store
+GET | /manufacturing-orders/raw-materials/{id}/edit | manufacturing-orders.raw-materials.edit
+PUT | /manufacturing-orders/raw-materials/{id} | manufacturing-orders.raw-materials.update
+DELETE | /manufacturing-orders/raw-materials/{id} | manufacturing-orders.raw-materials.destroy
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+### 7.2.5 Warehouse Transfers (feature:multi_warehouse)
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+Method | URI | Name
+GET | /transfers | transfers.index
+GET | /transfers/create | transfers.create
+POST | /transfers | transfers.store
+GET | /transfers/pending | transfers.pending
+GET | /transfers/warehouse/{id}/history | transfers.warehouse-history
+GET | /transfers/{id} | transfers.show
+POST | /transfers/{id}/reverse | transfers.reverse
+POST | /transfers/{id}/cancel | transfers.cancel
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+### 7.2.6 Accounting (Quick) & Reports (feature:accounting, admin)
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+Method | URI | Name
+GET | /accounting/treasury | accounting.treasury
+GET | /accounting/payments | accounting.payments
+POST | /accounting/payments/deposits | accounting.payments.deposits
+POST | /accounting/payments/withdrawals | accounting.payments.withdrawals
+PUT | /accounting/payments/transactions/{id} | accounting.payments.transactions.update
+DELETE | /accounting/payments/transactions/{id} | accounting.payments.transactions.destroy
+GET | /accounting/expenses | accounting.expenses
+POST | /accounting/expenses | accounting.expenses.store
+GET | /accounting/expenses/statistics | accounting.expenses.statistics
+GET | /reports/financial | reports.financial
+GET | /reports/inventory | reports.inventory
+GET | /reports/profit-loss | reports.profit-loss
+GET | /reports/financial/export | reports.financial.export
+GET | /reports/inventory/export | reports.inventory.export
+GET | /reports/profit-loss/export | reports.profit-loss.export
+GET | /reports/wood-stock | reports.wood-stock
+GET | /reports/wood-movement | reports.wood-movement
+GET | /reports/wood-cost-production | reports.wood-cost-production
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+### 7.2.7 Warehouses (feature:warehouses + role)
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+Method | URI | Name
+GET | /warehouses | warehouses.index
+GET | /warehouses/create | warehouses.create
+POST | /warehouses | warehouses.store
+GET | /warehouses/{id} | warehouses.show
+GET | /warehouses/{id}/edit | warehouses.edit
+PUT | /warehouses/{id} | warehouses.update
+DELETE | /warehouses/{id} | warehouses.destroy
+POST | /warehouses/{id}/add-product | warehouses.add-product
+GET | /warehouses/low-stock | warehouses.low-stock
+GET | /warehouses/{id}/movements | warehouses.movements
+GET | /warehouses/search | warehouses.search
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+### 7.2.8 Warehouse Orders (inbound + outbound)
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+Method | URI | Name
+GET | /warehouse-orders/stock-preview | warehouse-orders.stock-preview
+GET | /warehouse-orders/inbound | warehouse-orders.inbound.index
+GET | /warehouse-orders/inbound/create | warehouse-orders.inbound.create
+POST | /warehouse-orders/inbound | warehouse-orders.inbound.store
+GET | /warehouse-orders/inbound/{id} | warehouse-orders.inbound.show
+GET | /warehouse-orders/inbound/{id}/print | warehouse-orders.inbound.print
+GET | /warehouse-orders/outbound | warehouse-orders.outbound.index
+GET | /warehouse-orders/outbound/create | warehouse-orders.outbound.create
+POST | /warehouse-orders/outbound | warehouse-orders.outbound.store
+GET | /warehouse-orders/outbound/{id} | warehouse-orders.outbound.show
+GET | /warehouse-orders/outbound/{id}/print | warehouse-orders.outbound.print
+POST | /warehouse-orders/outbound/{id}/approve | warehouse-orders.outbound.approve
+POST | /warehouse-orders/outbound/{id}/cancel | warehouse-orders.outbound.cancel
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+### 7.2.9 Stock Counts
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+Method | URI | Name
+GET | /stock-counts | stock-counts.index
+GET | /stock-counts/create | stock-counts.create
+POST | /stock-counts | stock-counts.store
+GET | /stock-counts/{id} | stock-counts.show
+POST | /stock-counts/{id}/start | stock-counts.start
+POST | /stock-counts/{id}/count | stock-counts.count
+POST | /stock-counts/{id}/complete | stock-counts.complete
+POST | /stock-counts/{id}/cancel | stock-counts.cancel
+POST | /stock-counts/{id}/items/{itemId}/approve | stock-counts.items.approve
+POST | /stock-counts/{id}/items/{itemId}/count | stock-counts.items.count
+POST | /stock-counts/{id}/approve-all | stock-counts.approve-all
+GET | /stock-counts/warehouse/{id}/products | stock-counts.warehouse-products
+GET | /stock-counts/{id}/print | stock-counts.print
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+### 7.2.10 Inventory Movements
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+Method | URI | Name
+GET | /movements | movements.index
+GET | /movements/product/{id} | movements.product
+GET | /movements/export | movements.export
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+### 7.2.11 Products (auth)
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+Method | URI | Name | Notes
+GET | /products | products.index | 
+GET | /products/barcode/print | products.barcode.print | 
+GET | /products/bulk-price-update | products.bulk-price-update.index | 
+POST | /products/bulk-price-update/preview | products.bulk-price-update.preview | 
+POST | /products/bulk-price-update/apply | products.bulk-price-update.apply | 
+POST | /products/categories-by-unit | products.categories-by-unit | AJAX
+POST | /products/by-unit-category | products.by-unit-category | AJAX
+POST | /products/preview-smart-update | products.preview-smart-update | AJAX
+POST | /products/suggested-pricing | products.suggested-pricing | AJAX
+POST | /products/convert-unit-price | products.convert-unit-price | AJAX
+POST | /products/unit-details | products.unit-details | AJAX
+GET | /products/create | products.create | admin.only
+POST | /products | products.store | admin.only
+GET | /products/{product}/edit | products.edit | admin.only
+PUT | /products/{product} | products.update | admin.only
+DELETE | /products/{product} | products.destroy | admin.only
+GET | /products/{product} | products.show | 
+POST | /products/{product}/update-price | products.update-price | 
+GET | /products/{product}/price-history | products.price-history | 
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+### 7.2.12 Categories (auth)
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+Method | URI | Name
+GET | /categories | categories.index
+POST | /categories | categories.store
+PUT | /categories/{id} | categories.update
+DELETE | /categories/{id} | categories.destroy
+POST | /categories/{id}/toggle-status | categories.toggle-status
+GET | /categories/list | categories.list
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+### 7.2.13 Purchases (feature:purchase + auth)
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+Method | URI | Name
+GET | /invoices/purchases | invoices.purchases.index
+GET | /invoices/purchases/create | invoices.purchases.create
+POST | /invoices/purchases | invoices.purchases.store
+GET | /invoices/purchases/{id} | invoices.purchases.show
+GET | /invoices/purchases/{id}/edit | invoices.purchases.edit
+PUT | /invoices/purchases/{id} | invoices.purchases.update
+DELETE | /invoices/purchases/{id} | invoices.purchases.destroy
+POST | /invoices/purchases/{id}/confirm | invoices.purchases.confirm
+GET | /invoices/purchases/{id}/print | invoices.purchases.print
+GET | /invoices/purchases/export | invoices.purchases.export
+GET | /invoices/purchases/{id}/exportSingle | invoices.purchases.exportSingle
+GET | /invoices/purchase-returns | invoices.purchase-returns.index
+GET | /invoices/purchase-returns/create | invoices.purchase-returns.create
+POST | /invoices/purchase-returns | invoices.purchase-returns.store
+GET | /invoices/purchase-returns/{id} | invoices.purchase-returns.show
+GET | /invoices/purchase-returns/{id}/edit | invoices.purchase-returns.edit
+PUT | /invoices/purchase-returns/{id} | invoices.purchase-returns.update
+DELETE | /invoices/purchase-returns/{id} | invoices.purchase-returns.destroy
+POST | /invoices/purchase-returns/available-items | invoices.purchase-returns.available-items
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+### 7.2.14 Sales Returns (feature:pos + auth)
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+Method | URI | Name
+GET | /invoices/sales-returns | invoices.sales-returns.index
+GET | /invoices/sales-returns/create | invoices.sales-returns.create
+POST | /invoices/sales-returns | invoices.sales-returns.store
+GET | /invoices/sales-returns/{id} | invoices.sales-returns.show
+GET | /invoices/sales-returns/{id}/edit | invoices.sales-returns.edit
+PUT | /invoices/sales-returns/{id} | invoices.sales-returns.update
+DELETE | /invoices/sales-returns/{id} | invoices.sales-returns.destroy
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+### 7.2.15 Customers & Suppliers (auth)
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+Method | URI | Name
+GET | /customers | customers.index
+GET | /customers/create | customers.create
+POST | /customers | customers.store
+GET | /customers/{id} | customers.show
+GET | /customers/{id}/edit | customers.edit
+PUT | /customers/{id} | customers.update
+DELETE | /customers/{id} | customers.destroy
+GET | /customers/{id}/statement | customers.statement
+GET | /customers/{id}/statement/export | customers.statement.export
+GET | /suppliers | suppliers.index
+GET | /suppliers/create | suppliers.create
+POST | /suppliers | suppliers.store
+GET | /suppliers/{id} | suppliers.show
+GET | /suppliers/{id}/edit | suppliers.edit
+PUT | /suppliers/{id} | suppliers.update
+DELETE | /suppliers/{id} | suppliers.destroy
+GET | /suppliers/{id}/statement | suppliers.statement
+GET | /suppliers/{id}/statement/export | suppliers.statement.export
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+### 7.2.16 Settings (auth + admin)
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+Method | URI | Name
+GET | /settings | settings.index
+POST | /settings/company | settings.company
+POST | /settings/system | settings.system
+POST | /settings/logo/delete | settings.logo.delete
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+### 7.2.17 Users & Permissions (auth + admin)
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+Method | URI | Name
+GET | /users | users.index
+GET | /users/create | users.create
+POST | /users | users.store
+GET | /users/{user} | users.show
+GET | /users/{user}/edit | users.edit
+PUT | /users/{user} | users.update
+DELETE | /users/{user} | users.destroy
+POST | /users/{user}/toggle-active | users.toggle-active
+GET | /permissions | permissions.index
+GET | /permissions/print | permissions.print
+GET | /permissions/users/{user}/edit | permissions.users.edit
+PUT | /permissions/users/{user} | permissions.users.update
+GET | /permissions/roles | permissions.roles.index
+POST | /permissions/roles | permissions.roles.store
+GET | /permissions/roles/{role}/edit | permissions.roles.edit
+PUT | /permissions/roles/{role} | permissions.roles.update
+DELETE | /permissions/roles/{role} | permissions.roles.destroy
+PUT | /permissions/roles/{role}/permissions | permissions.roles.update-permissions
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+### 7.2.18 Advanced Accounting (feature:accounting_advanced + admin)
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+Method | URI | Name
+GET | /accounting | accounting.dashboard
+GET | /accounting/integrity-check | accounting.integrity-check
+POST | /accounting/integrity-check/fix | accounting.integrity-check.fix
+GET | /accounting/setup | accounting.setup.index
+GET | /accounting/coa | accounting.coa.index
+GET | /accounting/coa/create | accounting.coa.create
+POST | /accounting/coa | accounting.coa.store
+GET | /accounting/coa/{id}/edit | accounting.coa.edit
+PUT | /accounting/coa/{id} | accounting.coa.update
+DELETE | /accounting/coa/{id} | accounting.coa.destroy
+GET | /accounting/coa/export | accounting.coa.export
+GET | /accounting/journal | accounting.journal.index
+GET | /accounting/journal/create | accounting.journal.create
+POST | /accounting/journal | accounting.journal.store
+GET | /accounting/journal/{id} | accounting.journal.show
+PUT | /accounting/journal/{id} | accounting.journal.update
+DELETE | /accounting/journal/{id} | accounting.journal.destroy
+POST | /accounting/journal/{id}/post | accounting.journal.post
+POST | /accounting/journal/{id}/reverse | accounting.journal.reverse
+GET | /accounting/vouchers/receipt | accounting.vouchers.receipt.index
+POST | /accounting/vouchers/receipt | accounting.vouchers.receipt.store
+GET | /accounting/vouchers/receipt/{id}/print | accounting.vouchers.receipt.print
+GET | /accounting/vouchers/payment | accounting.vouchers.payment.index
+POST | /accounting/vouchers/payment | accounting.vouchers.payment.store
+GET | /accounting/vouchers/payment/{id}/print | accounting.vouchers.payment.print
+GET | /accounting/reports/trial-balance | accounting.reports.trial-balance
+GET | /accounting/reports/income-statement | accounting.reports.income-statement
+GET | /accounting/reports/comparative-income | accounting.reports.comparative-income
+GET | /accounting/reports/balance-sheet | accounting.reports.balance-sheet
+GET | /accounting/reports/general-ledger | accounting.reports.general-ledger
+GET | /accounting/reports/partner-ledger | accounting.reports.partner-ledger
+GET | /accounting/reports/audit-trail | accounting.reports.audit-trail
+GET | /accounting/reports/aging | accounting.reports.aging
+GET | /accounting/reports/financial-ratios | accounting.reports.financial-ratios
+GET | /accounting/reports/vat-settlement | accounting.reports.vat-settlement
+GET | /accounting/recurring | accounting.recurring.index
+POST | /accounting/recurring | accounting.recurring.store
+GET | /accounting/recurring/{id}/edit | accounting.recurring.edit
+PUT | /accounting/recurring/{id} | accounting.recurring.update
+DELETE | /accounting/recurring/{id} | accounting.recurring.destroy
+POST | /accounting/recurring/{id}/run-now | accounting.recurring.run-now
+GET | /accounting/fiscal | accounting.fiscal.index
+GET | /accounting/fiscal/years/create | accounting.fiscal.years.create
+POST | /accounting/fiscal/years | accounting.fiscal.years.store
+POST | /accounting/fiscal/years/{year}/close | accounting.fiscal.years.close
+POST | /accounting/fiscal/years/{year}/reopen | accounting.fiscal.years.reopen
+POST | /accounting/fiscal/years/{year}/year-end-close | accounting.fiscal.years.year-end-close
+GET | /accounting/posting-failures | accounting.posting-failures.index
+POST | /accounting/posting-failures/{failure}/retry | accounting.posting-failures.retry
+POST | /accounting/posting-failures/{failure}/resolve | accounting.posting-failures.resolve
+GET | /accounting/fixed-assets | accounting.fixed-assets.index
+POST | /accounting/fixed-assets | accounting.fixed-assets.store
+GET | /accounting/fixed-assets/{id}/edit | accounting.fixed-assets.edit
+PUT | /accounting/fixed-assets/{id} | accounting.fixed-assets.update
+DELETE | /accounting/fixed-assets/{id} | accounting.fixed-assets.destroy
+POST | /accounting/fixed-assets/{id}/depreciate | accounting.fixed-assets.depreciate
+POST | /accounting/fixed-assets/{id}/dispose | accounting.fixed-assets.dispose
+GET | /accounting/settings | accounting.settings.index
+POST | /accounting/settings | accounting.settings.update
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+## 7.3 API Routes (routes/api.php)
+
+Only ONE route is exposed via API right now:
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+Method | URI | Name | Middleware | Returns
+GET | /api/user | api.user | auth:sanctum | $request->user()
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+
+================================================================================
+# Part 8: Business Logic Deep-Dive
+================================================================================
+
+
+## 8.1 Tenancy Internals
+
+
+### 8.1.1 Tenant Model Deep-Dive
+
+app/Models/Tenant.php extends Stancl\Tenancy\Database\Models\Tenant. It implements TenantWithDatabase, uses HasDatabase, HasDomains traits, and adds:
+// app/Models/Tenant.php (key features)
+
+// Constants for plan slugs
+const PLAN_STARTER    = 'starter';
+const PLAN_PRO        = 'pro';
+const PLAN_ENTERPRISE = 'enterprise';
+const PLAN_CUSTOM     = 'custom';
+
+// Feature keys
+const FEATURE_POS                 = 'pos';
+const FEATURE_MANUFACTURING       = 'manufacturing';
+const FEATURE_MULTI_WAREHOUSE     = 'multi_warehouse';
+const FEATURE_ACCOUNTING          = 'accounting';
+const FEATURE_ACCOUNTING_ADVANCED = 'accounting_advanced';
+const FEATURE_STOCK_COUNT         = 'stock_count';
+const FEATURE_PURCHASE            = 'purchase';
+const FEATURE_REPORTS_ADVANCED    = 'reports_advanced';
+
+// Dynamic: get plan via data.plan_id (JSON)
+public function getPlanAttribute() {
+    // returns Plan from central DB or synthetic custom plan
+}
+
+// Feature check
+public function hasFeature(string $key): bool {
+    // checks plan()->features[$key] or custom_features
+}
+
+// Subscription status
+public function isOnTrial(): bool;
+public function isActive(): bool;
+public function hasExpired(): bool;
+
+// URL helper
+public function publicUrl(string $path = '/'): string {
+    // returns https://{primaryDomain}{$path}
+}
+
+### 8.1.2 TenancyServiceProvider
+
+Registered in config/app.php line ~171. Does three things:
+1. Bootstraps tenant lifecycle events (TenantCreated → CreateDatabase + MigrateDatabase jobs; TenantDeleted → DeleteDatabase).
+2. Sets tenancy middleware to highest priority (preventing route middleware conflicts) via makeTenancyMiddlewareHighestPriority().
+3. Marks tenancy route loading as the responsibility of RouteServiceProvider (commented out in TenancyServiceProvider to avoid UrlGenerator state desync).
+
+### 8.1.3 Feature Middleware
+
+Used as feature:pos, feature:manufacturing, feature:multi_warehouse, feature:accounting, feature:accounting_advanced, feature:purchase, feature:warehouses, feature:stock_count.
+// Pseudo-code of feature middleware (HTTP middleware)
+public function handle($request, Closure $next, string $feature) {
+    if (! tenant()->hasFeature($feature)) {
+        abort(403, 'Feature not available in your plan');
+    }
+    return $next($request);
+}
+
+### 8.1.4 Tenant Provisioning (Recap)
+
+When SuperAdmin creates a tenant (routes/web.php → SuperAdminController@tenantsStore):
+Validate tenant_id (alpha_dash, lowercase, unique).
+Tenant::create([id => $tenant_id]) → fires TenantCreated event.
+Stancl dispatches CreateDatabase job (creates MySQL DB named tenant{tenant_id}).
+On DB create success, dispatches MigrateDatabase job.
+MigrateDatabase runs php artisan migrate --path=database/migrations/tenant --force --realpath.
+Domain::create([domain => "{tenant_id}.{TENANT_DOMAIN_SUFFIX}", tenant_id => $tenant_id]).
+$tenant->run(...) closure runs inside tenant context:
+• PermissionAndRoleSeeder → admin + employee roles + all permissions.
+• User::create([email => "admin@{tenant_id}.com", password => bcrypt("password"), role => "admin", is_active => true]).
+• $user->attachRole(admin).
+Return redirect to /super-admin/tenants with success flash.
+
+## 8.2 POS Shift Lifecycle
+
+
+### 8.2.1 Status State Machine
+
+STATUS_OPEN       = 'open'      // shift in progress, can record sales
+STATUS_CLOSED     = 'closed'    // shift closed normally by cashier
+STATUS_AUTO_CLOSED = 'auto_closed' // system-closed: stale from previous day or replaced
+
+### 8.2.2 Open Shift Flow
+
+// PosShiftController::open(Request $request)
+// 1. validate opening_balance (numeric, min:0)
+// 2. ensure no active shift: PosShift::getActiveShift($request->user()->id) === null
+// 3. $previousAutoClosed = PosShift::autoCloseStaleShays()  // closes stale shifts from past days
+// 4. $shift = PosShift::create([
+//      user_id => auth()->id(),
+//      opened_at => now(),
+//      opening_balance => $request->opening_balance,
+//      status => STATUS_OPEN,
+//      total_sales => 0, total_returns => 0, sales_count => 0, returns_count => 0,
+//    ])
+// 5. return redirect('/pos')  // Livewire reads active shift
+
+### 8.2.3 During Sale (Livewire)
+
+PosPanel Livewire component renders the POS screen. On sale confirmation:
+// PosPanel::confirmSale()
+// 1. InvoiceService::confirmInvoice($invoice) inside DB::transaction
+//    a. lockForUpdate on product_warehouse rows (prevent race)
+//    b. decrement product_warehouse.quantity, available_quantity
+//    c. record InventoryMovement{type='sale'}
+//    d. update Customer.current_balance (if credit sale) or mark paid
+//    e. PostingService::postSalesInvoice($invoice)
+//       → creates JournalEntry{source=system, status=posted}
+//       → creates 2+ JournalEntryLines (Dr Cash/AR, Cr Sales, possibly COGS Dr / Cr Inventory)
+//       → sets $invoice->journal_entry_id
+//       → sets $invoice->cogs_entry_id (Cost of Goods Sold entry)
+//    f. set $invoice->status=confirmed, confirmed_by, confirmed_at
+// 2. PosShift::recalculateTotals() sums all confirmed POS sales for shift
+//    - total_sales, sales_count, net_sales (total - returns)
+//
+// Livewire emits 'saleCompleted' event → UI updates cart/grid.
+Failed postings (e.g. invalid COGS) are logged to accounting_posting_failures and can be retried via /accounting/posting-failures.
+
+### 8.2.4 Close Shift Flow
+
+// PosShiftController::close(Request $request)
+// 1. load active shift
+// 2. show close form (closeView) — shift summary + cash expected
+// 3. on POST close:
+//    a. validate closing_balance_actual (numeric)
+//    b. $shift->calculateExpectedBalance() → opening_balance + SUM(cash sales)
+//    c. $shift->update([
+//         closing_balance_actual => $actual,
+//         closing_balance_expected => $expected,
+//         status => STATUS_CLOSED,
+//         closed_at => now(),
+//       ])
+//    d. $shift->computeAndSaveDifference() → cash_difference = actual - expected
+// 4. redirect to /pos/history (showing all closed shifts including this one)
+
+### 8.2.5 X-Report & Z-Report
+
+X-Report (pos.xreport): live snapshot of current shift totals without closing it.
+Z-Report (pos.shift.zreport at /pos/shift/{id}/z-report): final end-of-day report for a closed shift — same data as X but read-only.
+History (pos.history): all past shifts paginated.
+
+
+## 8.3 Accounting Posting Flow
+
+
+### 8.3.1 PostingService (43 KB) - The Auto-Posting Engine
+
+PostingService lives at app/Services/Accounting/PostingService.php. It is the central entry point that turns business transactions into double-entry JournalEntries. Every confirmed invoice / payment / manufacturing completion flows through here.
+PostingService methods (non-exhaustive):
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+Method | Source Transaction | Entries Created
+postSalesInvoice($invoice) | Confirmed sales invoice | Dr Cash/AR, Cr Sales (+ optional COGS Dr Inventory / Cr Inventory)
+postPurchaseInvoice($invoice) | Confirmed purchase invoice | Dr Inventory, Cr Cash/AP (+ optional VAT)
+postPayment($payment) | Customer or supplier payment | Dr/Cash + Cr AR for receipts; Dr AP + Cr Cash for payments
+postRefund($refund) | Customer refund | Dr Sales Returns, Cr Cash
+postManufacturingCompletion($mo) | Manufacturing order completed | Dr Inventory (FG), Cr Inventory (Components) + variance
+postExpense($expense) | Expense record | Dr Expense, Cr Cash
+postCashTransaction($txn) | Cash deposit or withdrawal | Dr/Cash, Cr/Bank or vice versa
+postFixedAssetDepreciation($fa) | Depreciation entry | Dr Depreciation Expense, Cr Accumulated Depreciation
+postVatSettlement($period) | Periodic VAT settlement | Dr VAT Payable, Cr VAT Receivable (or reverse)
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+### 8.3.2 Posting Failure Handling
+
+Every post*() method wraps the journal insert in a try/catch. On failure:
+1. Catch Throwable.
+2. Insert AccountingPostingFailure row:
+{
+transaction_type: <class>,      // e.g. SalesInvoice
+reference_id: <id>,
+error_message: <message>,
+retry_count: 0,
+resolved_at: null
+}
+3. Original transaction still goes through (status confirmed), but linked journal_entry_id stays null until retry succeeds.
+4. /accounting/posting-failures shows pending failures with retry/resolve actions.
+5. Failed invoices are still reversible (their stock movement happened); only the GL posting retries.
+
+### 8.3.3 Year-End Closing Wizard
+
+/accounting/fiscal/years/{year}/year-end-close triggers YearEndClosingController which:
+// Pseudo-code
+public function yearEndClose(FiscalYear $year) {
+    DB::transaction(function () use ($year) {
+        // 1. Verify all periods in year are closed
+        // 2. Post net income/loss to retained earnings
+        $retainedEarnings = Account::where('code', 'retained_earnings')->first();
+        JournalEntry::create([
+            'source' => 'system',
+            'description' => 'Year-end closing for ' . $year->name,
+            'lines' => [...],
+        ]);
+        // 3. Mark year as closed
+        $year->update(['is_closed' => true, 'closed_at' => now()]);
+    });
+}
+
+
+## 8.4 Role-Based Access Control (RBAC)
+
+
+### 8.4.1 User Model Key Methods
+
+// app/Models/User.php
+public function isAdmin(): bool {
+    return $this->role === 'admin';          // legacy shortcut
+        || $this->hasAllPermissionsViaRole(); // RBAC-based check
+}
+
+public function hasPermission(string $perm): bool {
+    // returns true if any role has this permission
+    // super-bypass: Gate::before returns true if isAdmin()
+}
+
+public function hasAnyPermission(array $perms): bool { ... }
+public function hasRole(string $name): bool { ... }
+public function allPermissions(): \Illuminate\Support\Collection { ... }
+public function roles(): BelongsToMany { return $this->belongsToMany(Role::class); }
+public function permissions(): BelongsToMany { return $this->belongsToMany(Permission::class); }
+
+### 8.4.2 Gate::before in AuthServiceProvider
+
+// app/Providers/AuthServiceProvider.php
+public function boot() {
+    $this->registerPolicies();
+    
+    Gate::before(function ($user, $ability) {
+        if ($user->isAdmin()) {
+            return true;  // admins bypass all checks
+        }
+    });
+    
+    // warehouse transfers
+    Gate::define('warehouse.transfers.read', fn($u) => $u->hasPermission('warehouse.transfers.read'));
+    Gate::define('warehouse.transfers.create', fn($u) => $u->hasPermission('warehouse.transfers.create'));
+    Gate::define('warehouse.transfers.update', fn($u) => $u->hasPermission('warehouse.transfers.update'));
+    Gate::define('warehouse.transfers.delete', fn($u) => $u->hasPermission('warehouse.transfers.delete'));
+    
+    // users
+    Gate::define('users.permissions', fn($u) => $u->hasPermission('users.permissions'));
+    
+    // accounting (19 abilities defined dynamically)
+    foreach ([
+        'accounting.dashboard', 'accounting.coa.read', 'accounting.coa.write',
+        'accounting.journal.read', 'accounting.journal.write', 'accounting.journal.post', 'accounting.journal.reverse',
+        'accounting.vouchers.read', 'accounting.vouchers.write',
+        'accounting.reports.read', 'accounting.fiscal.read', 'accounting.fiscal.write',
+        'accounting.settings.read', 'accounting.settings.write',
+        'accounting.posting-failures.read', 'accounting.posting-failures.write',
+        // ... 19 in total
+    ] as $ability) {
+        Gate::define($ability, function ($u) use ($ability) {
+            return $u->hasPermission($ability);
+        });
+    }
+}
+
+### 8.4.3 Permission Seeding (22 KB matrix)
+
+PermissionAndRoleSeeder creates a comprehensive matrix. Key permission groups:
+sales.invoices.{create,read,update,delete,print}
+sales.returns.{create,read,delete}
+purchases.invoices.{create,read,update,delete}
+purchases.returns.{...}
+warehouse.products.{create,read,update,delete}
+warehouse.transfers.{create,read,update,delete}
+warehouse.movements.{read}
+accounting.* (19 abilities — see AuthServiceProvider)
+users.permissions
+
+
+## 8.5 Subscriptions & Plans
+
+
+### 8.5.1 Default Plans (PlanSeeder)
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+Slug | Price | Features (sample)
+starter | $99/month | pos, purchase
+pro | $299/month | pos, purchase, manufacturing, multi_warehouse (limit 5), accounting, accounti...
+enterprise | $599/month | all features unlimited
+basic | $19 (legacy) | base only
+pos | $39 (legacy) | pos
+manufacturing | $79 (legacy) | manufacturing
+pro-x | $500 (legacy) | pro extras
+custom | price=0 | special: data.custom_features array controls
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+### 8.5.2 Plan Resolution Flow
+
+// app/Models/Tenant.php - getPlanAttribute()
+public function getPlanAttribute(): Plan|CustomPlan {
+    $planId = $this->data['plan_id'] ?? null;
+    if ($planId === 'custom' || $planId === null) {
+        // fallback: return Plan::custom with custom_features
+        return $this->resolveCustomPlan();
+    }
+    return Plan::where('slug', $planId)->first() ?? $this->resolveCustomPlan();
+}
+
+public function hasFeature(string $key): bool {
+    $plan = $this->plan;
+    if (! $plan) return false;
+    if ($plan->slug === 'custom') {
+        return in_array($key, $this->data['custom_features'] ?? []);
+    }
+    return (bool) ($plan->features[$key] ?? false);
+}
+
+### 8.5.3 Plan Limits
+
+Some features carry numeric limits via PlanFeature.limit_value (e.g. multi_warehouse = 5 for pro plan). The code that checks these is typically in the relevant service / controller, not the middleware.
+
+### 8.5.4 Subscription Status
+
+Tenant table columns added by migration 2026_06_05_000002:
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+Column | Purpose
+plan_expires_at | When current plan expires — used by isActive()
+trial_ends_at | End of trial period — used by isOnTrial()
+└──────────────────────────────────────────────────────────────────────────────┘
+
+Per Tenant::isActive(): returns plan_expires_at === null OR plan_expires_at > now(). Per Tenant::hasExpired(): opposite.
+
+### 8.5.5 Plan Upgrade UI
+
+GET /plan/upgrade (PlanController) lets a tenant user see available plans and trigger an upgrade request. Final payment integration is not implemented in this codebase (UI only — extends to a real payment gateway as a follow-up).
+
+
+## 8.6 Reports & Exports
+
+
+### 8.6.1 Excel Exports (Maatwebsite)
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+Class | Source Report
+CustomersExport | /customers (list)
+SuppliersExport | /suppliers (list)
+InventoryReportExport | /reports/inventory/export
+ProfitLossReportExport | /reports/profit-loss/export
+FinancialReportExport | /reports/financial/export
+CustomerStatementExport | /customers/{id}/statement/export
+SupplierStatementExport | /suppliers/{id}/statement/export
+PurchaseInvoicesExport | /invoices/purchases/export
+PurchaseInvoiceDetailsExport | /invoices/purchases/{id}/exportSingle
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+### 8.6.2 PDF Generation (DomPDF)
+
+Used in: invoices/sales/{print,thermal_receipt}, invoices/purchases/print, customers/statement, suppliers/statement, accounting/vouchers/{receipt,payment}/print, stock-counts/{id}/print, warehouse-orders/{inbound,outbound}/{id}/print, permissions/print.
+
+### 8.6.3 Reporting Service Hierarchy
+
+reportingService (app/Services/ReportingService.php, 23KB) handles operational reports. financialReportService (in Accounting/) handles accounting reports with sub-methods for:
+trialBalance($date)
+incomeStatement($from, $to)
+comparativeIncome($currentFrom, $currentTo, $compareFrom, $compareTo)
+balanceSheet($date)
+generalLedger($accountId, $from, $to)
+partnerLedger($partnerType, $partnerId, $from, $to)
+auditTrail($from, $to)
+aging($type = AR|AP, $date)
+financialRatios($from, $to)
+vatSettlement($period)
+
+## 8.7 AppServiceProvider (Cross-Cutting)
+
+// app/Providers/AppServiceProvider.php
+public function boot() {
+    // 1. Tenant observer
+    Tenant::observe(TenantObserver::class);
+    
+    // 2. View composer — inject plan features into EVERY view
+    try {
+        $planFeatures = tenant()?->plan?->features ?? collect();
+        View::composer('*', function ($view) use ($planFeatures) {
+            $view->with('planFeatures', $planFeatures);
+        });
+    } catch (\Throwable $e) {
+        // central-domain context (no tenant) — silently skip
+    }
+    
+    // 3. Register any global scopes / custom macros here
+}
+
+## 8.8 Custom Middleware Summary
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+Middleware | Purpose
+auth | Standard Laravel session auth
+guest | Standard Laravel guest
+throttle:5,1 | Rate-limit 5 attempts per minute (login)
+throttle:30,1 | Rate-limit 30 per minute (journal entries)
+admin.only | Restrict route to admin role
+role | Custom role-based gate
+feature:<key> | Check tenant hasFeature(<key>)
+PreventAccessFromCentralDomains | Stancl — tenant routes block central hostnames
+InitializeTenancyByDomain | Stancl — resolve tenant from host
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+
+================================================================================
+# Part 9: Recent Changes & Known Issues
+================================================================================
+
+
+## 9.1 Recent Git History (git log --oneline -15)
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+Commit | Description | Type
+f60b6b8 | CHANG ***** | top of main
+10637c0 | CHANG *** | recent refactor
+1d220ad | CHANG ** | recent refactor
+045b0eb | CHANG * | recent refactor
+8e7e8e6 | CHANG * | recent refactor
+d14c1a9 | Merge PR #1 from yabdelhaleim/fix/route-500-errors | PR merge
+ef57130 | fix: add missing controller methods and views for all routes returning 500 | BUG FIX
+bd22115 | feat: raw materials management system for manufacturing orders | FEAT
+5b42b62 | magzaniv6 | release/snapshot
+5d3a409 | fix: mobile responsive design for settings and permissions pages | UI FIX
+ba001f6 | fix: null-safe company access in reports, pass missing variables to views | BUG FIX
+b12e8d6 | fix: null-safe company access in sales invoice print and add ProductService::... | BUG FIX
+3f52e9d | fix: route ordering bug in products and UI fixes for customers/suppliers | BUG FIX
+fdd0a48 | Fix show page buttons contrast and improve mobile responsiveness | UI FIX
+60e4711 | Fix supplier statement print button contrast | UI FIX
+ec3b50c | Add null-safe checks in customer and supplier statement views | BUG FIX
+8732779 | Fix route ordering for customers and suppliers to prevent /create matching as ID | BUG FIX
+ef6f60b | Unify manufacturing orders form: single responsive table with mobile card-vie... | UI REFACTOR
+1b5fcca | Remove duplicate permissions migration, add warehouse order migrations | MIGRATION
+b5825d6 | Fix wallet currency based on country | FIX
+d934086 | Add manufacturing cost calculator (BOM-based pricing module) | FEAT
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+## 9.2 Recent File Modifications (last 48h)
+
+Files heavily modified on July 3-4, 2026 (most recent work):
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+File / Folder | What Likely Changed
+app/Models/ActivityLog.php | Tweaks for activity tracking
+app/Models/Tenant.php | Multi-tenancy helpers updated
+app/Models/Supplier.php / Customer.php | Balance handling updates
+app/Models/PosShift.php | Cash diff & recalc methods
+app/Models/FixedAsset.php | Depreciation lifecycle
+app/Models/RecurringJournalEntry*.php | Recurring templates
+app/Models/AccountingSetting.php | New accounting toggles
+app/Models/CashTransaction.php | Treasury ledger
+app/Http/Controllers/PosShiftController.php | Lifecycle methods
+app/Http/Controllers/UserController.php | RBAC improvements
+app/Http/Controllers/Accounting/* | Multiple accounting controllers touched
+app/Providers/AppServiceProvider.php | View composer / observer
+app/Providers/AuthServiceProvider.php | Gates additions
+app/Providers/EventServiceProvider.php | Listeners registered
+app/Providers/AccountingServiceProvider.php | Service registration
+app/Services/* | Bulk updates across services
+database/seeders/{AccountingSettingsSeeder, DefaultChartOfAccountsSeeder, Pla... | Plan / COA / settings seeding refinements
+database/migrations/tenant/2026_06_*.php | New tenant migrations
+routes/tenant.php | +2,156 bytes — major route additions
+config/tenancy.php | Multi-tenant config tweaks
+config/app.php | Provider registrations
+bootstrap/cache/services.php | Service cache invalidation
+database/migrations/tenant/2026_04_07_000001_update_customers_balance_column.php | Customer balance column update
+.env.example / .env.production.example | Env samples updated
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+## 9.3 Known Issues (from ERROR_FIXES_TODO.md, SYSTEM_AUDIT_REPORT.md)
+
+
+### 9.3.1 Critical
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+Issue | Status
+APP_DEBUG=true in .env → SECURITY RISK for production. Must be false. | Open — disable before deploy
+Missing try-catch in CustomerService::update / delete / updateBalance (likewi... | Open — partial fix done in recent commits
+Missing unique indexes on sales_invoices.invoice_number and purchase_invoices... | Open
+Missing foreign key constraints preventing deletes of customers/suppliers wit... | Open
+No rate limiting outside login (5/min) and journal post (30/min). Sensitive r... | Open
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+### 9.3.2 Bugs Already Fixed (mention for awareness)
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+Bug | Fix
+Routes 500 error on missing controller methods | Added missing controller methods + views (commit ef57130)
+Missing /create matching as ID in customers / suppliers / products | Route ordering bug fix (commits 3f52e9d, 8732779)
+Null-safe Company access in reports + sales invoice print | Passes missing variables, guards null (ba001f6, b12e8d6)
+Array access bug in customer & supplier statement | Use $transaction["type"] not $transaction->type (ec3b50c)
+Duplicate permissions migration | Removed (1b5fcca); warehouse order migrations added
+Mobile responsive design issues on settings/permissions | CSS adjustments (5d3a409)
+Mobile responsive customer statement | CSS adjustments (ba001f6)
+Button contrast on white backgrounds | White button text on transparent bg fixed (fdd0a48, 60e4711)
+Missing ProductService::updateStock | Added (b12e8d6)
+Wallet currency hardcoded | Now uses tenant country (b5825d6)
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+### 9.3.3 Module Stability (per COMPLETION_SUMMARY_AR.md)
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+Module | Stability | Notes
+Invoices / Returns | 90% — excellent | 
+Manufacturing | 85% — very good | 
+Customers / Suppliers | 85% — very good | 
+Inventory | 80% — good | 
+Reports | 80% — good | 
+Security | 70% — needs hardening | 
+Performance | 80% — good | 
+Overall | 83% — very good | 
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+### 9.3.4 Operational Caveats
+
+No compiled Vue components are in the public/build folder at the moment — UI relies on Alpine + Livewire + CDN Tailwind. Vite is configured but not actively used in production.
+API routes are minimal: only /api/user is implemented. No documented REST API surface for tenants.
+activity_logs exists in TWO forms (legacy custom + Laravel default). Pick one in a future cleanup.
+The main README.md is the default Laravel boilerplate — never modified to describe the actual project (see DOCUMENTATION.md for real description).
+welcome.blade.php (27 KB) and welcome_central.blade.php (25 KB) are present but unused in normal flow.
+Reverb is installed but no broadcasting channels are defined (routes/channels.php has only 163 bytes of defaults).
+Controllers WarehouseOrderController (14 KB) and ReportingController (7.8 KB) contain significant logic — extract to services in a future refactor.
+The desktop project\.php style plan structure (large file, .bak) suggests on-disk snapshot artifacts — DO NOT commit `.bak` files to Git.
+
+
+================================================================================
+# Part 10: Quick Reference Card
+================================================================================
+
+
+## 10.1 Default Credentials (per Plan Provisioning)
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+Surface | Email | Password | Where Set
+Tenant Admin (per tenant) | admin@{tenant_id}.com | password | SuperAdminController::tenantsStore line 169
+Landlord Super Admin | (no default — manually create in DB or via tinker) | - | Created by tenant itself
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+## 10.2 Important URLs (Local Dev)
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+URL | Surface
+http://localhost/super-admin | Landlord dashboard (central)
+http://localhost/super-admin/tenants | Manage tenants
+http://localhost/super-admin/tenants/create | Create new tenant
+http://localhost/super-admin/plans | Manage plans
+http://{tenant_id}.localhost | Tenant login (e.g. http://acme.localhost)
+http://{tenant_id}.localhost/login | Login form
+http://{tenant_id}.localhost/pos | POS panel (if feature:pos enabled)
+http://{tenant_id}.localhost/dashboard | Dashboard
+http://{tenant_id}.localhost/accounting | Accounting dashboard (if feature:accounting)
+http://{tenant_id}.localhost/api/user | Sanctum-protected test endpoint
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+## 10.3 Common Artisan Commands
+
+# Landlord / Central
+php artisan tenants                                   # list tenants
+php artisan tenants:create <tenant_id>                # create new tenant (admin-only path)
+
+# Inside tenant context (after SetTenancy or via /super-admin UI):
+php artisan migrate --path=database/migrations/tenant --force
+php artisan db:seed --class=PermissionAndRoleSeeder --force
+php artisan db:seed --class=DefaultChartOfAccountsSeeder --force
+
+# Cache + ops
+php artisan optimize:clear
+php artisan route:list --path=pos
+php artisan config:cache
+
+# Tenancy package
+php artisan tenancy:list
+php artisan tenancy:migrate
+
+# Reverb (if used)
+php artisan reverb:start
+
+## 10.4 Default Plans & Feature Map
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+Feature Key | Starter | Pro | Enterprise | Custom
+pos | ✓ | ✓ | ✓ | opt
+purchase | ✓ | ✓ | ✓ | opt
+manufacturing | ✗ | ✓ | ✓ | opt
+multi_warehouse | ✗ | ✓ (max 5) | ✓ | opt
+accounting | ✗ | ✓ | ✓ | opt
+accounting_advanced | ✗ | ✓ | ✓ | opt
+stock_count | ✗ | ✓ | ✓ | opt
+reports_advanced | ✗ | ✓ | ✓ | opt
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+## 10.5 Key Files To Remember
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+Task | Open This File First
+Add/modify a landlord route | routes/web.php
+Add/modify a tenant route | routes/tenant.php
+Tweak tenancy behavior | config/tenancy.php
+Adjust auth/permissions | app/Providers/AuthServiceProvider.php
+Adjust RBAC matrix | database/seeders/PermissionAndRoleSeeder.php
+Add a new plan/feature | database/seeders/PlanSeeder.php + app/Models/Tenant::FEATURE_*
+Edit sales/purchase invoice logic | app/Services/InvoiceService.php (66 KB)
+Edit POS behavior | app/Livewire/PosPanel.php + app/Http/Controllers/PosShiftController.php
+Edit accounting auto-post | app/Services/Accounting/PostingService.php (43 KB)
+Edit reports / financial logic | app/Services/ReportingService.php / app/Services/Accounting/FinancialReportSe...
+Edit UI (RTL, theme) | resources/views/layouts/app.blade.php + layouts/theme-css.blade.php
+Edit landlord UI (dark glass) | resources/views/landlord/layout.blade.php
+Setup new tenant provisioning | app/Http/Controllers/Landlord/SuperAdminController.php + app/Providers/Tenanc...
+Edit COA template | database/seeders/DefaultChartOfAccountsSeeder.php (12 KB)
+Edit dev env | .env.example / .env
+Edit production env sample | .env.production.example
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+## 10.6 Troubleshooting Recipe
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+Symptom | Check
+500 on /super-admin/* | Check APP_KEY, run php artisan optimize:clear
+500 on tenant route | Check tenant DB exists, migrations applied, feature flag enabled
+Tenant login fails | Verify tenant domain resolves, tenant DB has users + roles seeded
+POS panel blank | Check Livewire scripts loaded, debug vite build if used
+Invoice not auto-posting | Check /accounting/posting-failures; verify PostingService logs
+No style applied | Verify CDN fallback works; check resources/views/layouts/theme-css.blade.php
+Chart of Accounts empty | Re-run DefaultChartOfAccountsSeeder on tenant DB
+Plan upgrade missing features | Re-check plan features JSON in plans table; clear central caches
+Routes ordering bug | See commits 3f52e9d, 8732779 for /create vs {id} placement
+Multi-warehouse transfer fails | Check from/to warehouses are different + product has stock at source
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+## 10.7 Production Deployment Checklist
+
+Set APP_DEBUG=false in .env.
+Set APP_ENV=production.
+Generate APP_KEY with php artisan key:generate.
+php artisan config:cache; route:cache; view:cache.
+Run php artisan migrate --path=database/migrations (landlord) — Stancl will run tenant DBs on demand via CreateDatabase + MigrateDatabase.
+Configure CENTRAL_DOMAINS and TENANT_DOMAIN_SUFFIX in .env.
+Configure mail (SMTP), queue (redis/database), session (redis) — currently file drivers.
+Back up central DB regularly (spatie/laravel-backup configured).
+Ensure DB user has CREATE DATABASE privilege (needed for CreateDatabase job).
+Set up DNS wildcard *.yourdomain.com OR proxy that routes tenant hostnames correctly.
+Configure Reverb for WebSockets if any realtime features are enabled.
+Run security audit: APP_DEBUG, CORS, rate limits, password policies.
+
+
+END OF DOCUMENTATION.  This file is the single source of truth for the Magzani ERP project. Always consult this document before exploring files, before answering user questions, and before writing new features. When in doubt, look at Part 4 (Modules), Part 5 (Routes), or Part 6 (Business Logic).
+
+
+================================================================================
+# Part 11: Public Pricing Page (Kayyan SaaS Marketing)
+================================================================================
+
+A standalone, public marketing pricing page for Kayyan SaaS — separate from the tenant dashboard. Designed to be hosted on its own subdomain (e.g. pricing.kayyan.com) and shared via external links (website, social media, email).
+
+## 11.1 Overview
+
+Route: GET /pricing | Route name: pricing.public | Controller: App\Http\Controllers\PricingController@index
+Auth required: No. Tenant context: No (always uses central DB connection).
+Total page size: ~78 KB HTML (uncompressed).
+
+## 11.2 File Inventory
+
+[New file] app/Http/Controllers/PricingController.php — Fetches plans + features, builds WhatsApp messages, passes data to view
+[New file] config/pricing.php — Env-driven config (WhatsApp, demo URL, brand name, SEO defaults)
+[New file] resources/views/pricing/layout.blade.php — Standalone RTL layout with inlined SVG defs + critical CSS + SEO meta
+[New file] resources/views/pricing/index.blade.php — Actual 9-section marketing page (Hero / Features / Pricing / Comparison / Add-ons / FAQ / Final CTA / Footer)
+[New file] docs/PRICING_PAGE.md — Reference doc with deployment instructions
+[Modified] routes/web.php — Added GET /pricing → PricingController@index
+[Modified] .env.example — Documented KAYYAN_* env vars + CENTRAL_DOMAINS examples
+[Modified] .env.production.example — Added pricing.kayyan.com to CENTRAL_DOMAINS + KAYYAN_* values
+[Modified] resources/views/Dashboard/dashboard.blade.php — Added conditional Upgrade Banner (shows for starter/pro tenants)
+
+## 11.3 Routing Architecture
+
+The route lives in routes/web.php (NOT routes/tenant.php). This is critical:
+routes/web.php is wrapped by RouteServiceProvider with the "web" middleware group + the "central.domains" middleware (CentralDomainsOnly). Since "central.domains" allows requests ONLY from hosts in config(tenancy.central_domains), and Stancl tenancy bootstrappers are NEVER applied to web.php routes, the pricing page:
+Reads from the CENTRAL DB (default DB_CONNECTION — same as landlord operations)
+Returns 404 on any tenant subdomain (acme.localhost, etc.)
+Is fully cacheable + SEO-indexable
+Does NOT trigger InitializeTenancyByDomain or any DatabaseTenancyBootstrapper
+
+## 11.4 Subdomain Deployment (Production)
+
+To deploy on a dedicated subdomain like pricing.kayyan.com:
+1. DNS: point pricing.kayyan.com A/CNAME to the same server as the main dashboard.
+2. Web server (Nginx/Apache): serve the same public/ document root for both domains.
+3. .env: add pricing.kayyan.com to CENTRAL_DOMAINS (comma-separated):
+CENTRAL_DOMAINS=superdashboard.remotelly1.site,pricing.kayyan.com
+4. SSL: ensure the subdomain has a valid HTTPS certificate.
+5. Test: curl -I https://pricing.kayyan.com/pricing should return 200.
+
+## 11.5 Data Source
+
+Plans are loaded from the CENTRAL plans table:
+Plan::where('is_active', true)
+    ->whereIn('slug', PricingController::PUBLIC_PLAN_SLUGS)  // ['starter','pro','enterprise']
+    ->orderByRaw("FIELD(slug, 'starter', 'pro', 'enterprise')")
+    ->with(['featuresList' => fn($q) => $q->where('is_enabled', true)])
+    ->get();
+Legacy plans (basic, pos, manufacturing, pro-x, custom) are HIDDEN from the public page.
+
+## 11.6 CTA Configuration (Env-Override)
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+Env Var | Default | Purpose
+KAYYAN_WHATSAPP_NUMBER | +966500000000 | WhatsApp number used by كل Contact Sales CTA
+KAYYAN_DEMO_URL | Google Calendar public pattern | احجز ديمو CTA target (override with Calendly / Cal.com)
+KAYYAN_SIGNUP_URL | env(APP_URL)/super-admin/tenants/create | Start Free Trial CTA target
+KAYYAN_BRAND_NAME | "كيان SaaS" | Brand name in title, JSON-LD, social cards
+KAYYAN_SEO_TITLE | الأسعار | كيان SaaS ... | <title> tag override
+KAYYAN_SEO_DESCRIPTION | اختر باقة كيان SaaS... | <meta name="description"> override
+KAYYAN_SEO_KEYWORDS | نظام إدارة أعمال, نقاط بيع... | <meta name="keywords"> override
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+## 11.7 Page Sections (Top → Bottom)
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+# | Section | Purpose
+1 | Sticky Top Bar | Kayyan K-logo + nav links + Contact + Start Free Trial CTAs
+2 | Hero | H1 headline + subtitle + dual CTAs + trust badges
+3 | Trust Strip | 4 stats (+500 شركات, +2,400 مستخدمين, +1.2M فاتورة, 99.9% uptime)
+4 | 8 Features Grid | POS / المخازن / التصنيع / المحاسبة / التقارير / RBAC / مخزون الخشب / الدعم
+5 | Pricing Cards | 3 cards (Starter/Pro/Enterprise) — each with WhatsApp CTA + Demo CTA
+6 | Comparison Table | 8-row feature matrix (desktop) + accordion view (mobile)
+7 | Add-ons | 4 mini-cards: تدريب / دعم VIP / تخصيص / ترحيل بيانات
+8 | FAQ | 6 collapsible <details> Q&As (zero JS)
+9 | Final CTA + Footer | Email-less CTA + 4-column footer + copyright
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+## 11.8 In-App Upgrade Banner
+
+A conditional Upgrade Banner was added to resources/views/Dashboard/dashboard.blade.php at the top of the dash-v3 div. It shows ONLY for tenants whose plan_id is "starter" or "pro".
+Trigger condition: @if(in_array($currentPlanSlug, ["starter", "pro"], true))
+Target: opens the public pricing subdomain in a new tab via KAYYAN_SIGNUP_URL.
+Styling: gradient indigo→amber background with animated blob decorations, responsive (stacks vertically on mobile), uses inline @push("styles") CSS.
+
+## 11.9 SEO & Performance
+
+Pre-loaded SEO meta in pricing/layout.blade.php:
+<title> + <meta name="description"> + <meta name="keywords">
+Open Graph tags (og:type, og:title, og:description, og:url, og:locale ar_SA, og:image)
+Twitter Card tags (summary_large_image)
+JSON-LD ProductCollection schema (pushed from index view via @stack("json-ld"))
+Canonical URL (auto-derived from current request origin)
+hreflang-ready (og:locale:alternate en_US)
+For higher traffic, add caching in PricingController:
+Cache::remember('pricing_page_payload', 3600, function () use ($request) {
+    return [...];  // heavy queries / API calls
+});
+
+## 11.10 Custom Plan Slugs (Public)
+
+PricingController::PUBLIC_PLAN_SLUGS defines which plans appear on the public page. To show more plans, edit the constant in the controller.
+Active plans in central DB (per PlanSeeder):
+• starter ($99) — POS + Purchase
+• pro ($299) — adds Manufacturing + Multi-warehouse (5) + Accounting + Accounting Advanced + Reports Advanced
+• enterprise ($599) — all features unlimited
+
+## 11.11 Related Documentation
+
+• docs/PRICING_PAGE.md — quick reference card with deployment steps
+• Part 4 (Modules) — existing /plan/upgrade inside tenant context is the legacy equivalent
+• Part 7 (Routes) — Route added to landlord scope (routes/web.php)
+• Plan model — app/Models/Plan.php
+• PlanFeature model — app/Models/PlanFeature.php
+
+## 11.12 v2 Rollback Note (2026-07-04)
+
+
+### 11.12.1 What Changed
+
+A separate CMS admin form at /super-admin/pricing-settings was prototyped, then REMOVED per operator preference. The operator controls all plan content from /super-admin/plans.
+All marketing copy (hero, trust stats, features, addons, FAQs, footer) is now hard-coded directly in resources/views/pricing/index.blade.php.
+WhatsApp CTAs remain REMOVED from the public page (retained from the v2 change that the operator asked for).
+The only CTA per pricing card is now "احجز ديمو مجاني" pointing to the configured demo URL.
+
+### 11.12.2 Removed Files
+
+app/Models/PricingSetting.php
+app/Http/Controllers/Landlord/PricingSettingsController.php
+resources/views/landlord/pricing-settings.blade.php
+database/migrations/2026_07_04_000001_create_pricing_settings_table.php
+database/seeders/PricingSettingSeeder.php
+
+### 11.12.3 Reverted Files (now back to hard-coded v1 behavior)
+
+routes/web.php — /super-admin/pricing-settings routes removed
+resources/views/landlord/layout.blade.php — sidebar item "إعدادات صفحة الأسعار" removed
+app/Http/Controllers/PricingController.php — back to simple Plan::where(...)->get() pattern; settings removed
+resources/views/pricing/index.blade.php — hard-coded sections, no $settings; WhatsApp still removed
+.env.example + .env.production.example — KAYYAN_WHATSAPP_NUMBER removed
+config/pricing.php — whatsapp_number key removed
+
+### 11.12.4 DB Action Taken
+
+php artisan tinker → Schema::drop("pricing_settings") — table dropped (migration file was also deleted).
+
+### 11.12.5 How To Edit Marketing Content Going Forward
+
+Edit resources/views/pricing/index.blade.php directly. Each section has hard-coded arrays (stats, features, addons, faqs) at the top of its section block. No artisan command needed — Blade recompiles on demand.
+To edit plan-level data (name, price, features, slugs, is_active), use /super-admin/plans (unchanged).

@@ -10,46 +10,39 @@ class ManufacturingOrderComponent extends Model
 {
     use HasFactory;
 
+    protected $table = 'manufacturing_order_components';
+
     protected $fillable = [
         'order_id',
-        'wood_stock_id',
-        'component_name',   // legacy field for backward compatibility
+        'material_batch_id',
+        'component_name',
         'component_type',
         'quantity',
-        'unit',             // legacy
-        'thickness_cm',
-        'width_cm',
-        'length_cm',
-        'volume_cm3',
-        'price_per_cubic_meter',
-        'unit_cost',        // legacy
+        'uom_id',
+        'unit_cost',
         'total_cost',
         'created_by',
     ];
 
     protected $casts = [
         'quantity' => 'decimal:4',
-        'thickness_cm' => 'decimal:4',
-        'width_cm' => 'decimal:4',
-        'length_cm' => 'decimal:4',
-        'volume_cm3' => 'decimal:4',
-        'price_per_cubic_meter' => 'decimal:4',
         'unit_cost' => 'decimal:4',
         'total_cost' => 'decimal:4',
     ];
-
-    /* ===========================
-     * 🔗 RELATIONSHIPS
-     * =========================== */
 
     public function order(): BelongsTo
     {
         return $this->belongsTo(ManufacturingOrder::class, 'order_id');
     }
 
-    public function woodStock(): BelongsTo
+    public function batch(): BelongsTo
     {
-        return $this->belongsTo(WoodStock::class);
+        return $this->belongsTo(MaterialBatch::class, 'material_batch_id');
+    }
+
+    public function uom(): BelongsTo
+    {
+        return $this->belongsTo(UnitOfMeasure::class, 'uom_id');
     }
 
     public function creator(): BelongsTo
@@ -57,44 +50,22 @@ class ManufacturingOrderComponent extends Model
         return $this->belongsTo(User::class, 'created_by');
     }
 
-    /* ===========================
-     * 📊 ACCESSORS
-     * =========================== */
-
     public function getFormattedCostAttribute(): string
     {
         return number_format($this->total_cost, 2);
     }
 
-    /* ===========================
-     * 🛠️ HELPER METHODS
-     * =========================== */
-
-    /**
-     * Calculate total cost from quantity and unit cost
-     */
     public function calculateTotalCost(): void
     {
         $this->total_cost = $this->quantity * $this->unit_cost;
     }
 
-    /* ===========================
-     * 🔄 DYNAMIC ACCESSOR FOR STOCK SERVICE
-     * =========================== */
-
     public function getProductIdAttribute(): ?int
     {
-        if ($this->wood_stock_id) {
-            $woodStock = $this->woodStock ?: \App\Models\WoodStock::find($this->wood_stock_id);
-            return $woodStock ? $woodStock->product_id : null;
+        if ($this->material_batch_id) {
+            $batch = $this->batch ?: MaterialBatch::find($this->material_batch_id);
+            return $batch ? $batch->product_id : null;
         }
-
-        $typeName = $this->component_type ?: $this->component_name;
-        $raw = \App\Models\RawMaterialTemplate::where('name', $typeName)->first();
-        if ($raw) {
-            return $raw->product_id;
-        }
-
         return null;
     }
 }

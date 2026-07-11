@@ -116,6 +116,8 @@ class DefaultChartOfAccountsSeeder extends Seeder
             // Level 2 (Expenses)
             ['code' => '5100', 'name_ar' => 'تكلفة البضاعة المباعة', 'name_en' => 'COGS', 'account_type_id' => 5, 'parent_code' => '5000', 'level' => 2, 'is_leaf' => true, 'is_system' => true],
             ['code' => '5150', 'name_ar' => 'تكلفة مواد خام مستخدمة', 'name_en' => 'Raw Materials Used Cost', 'account_type_id' => 5, 'parent_code' => '5000', 'level' => 2, 'is_leaf' => true, 'is_system' => true],
+            // Gap 2: Standard Costing & Cost Variance — Manufacturing Cost Variance (used only when tenant enables standard_costing)
+            ['code' => '5160', 'name_ar' => 'انحراف تكلفة التصنيع', 'name_en' => 'Manufacturing Cost Variance', 'account_type_id' => 5, 'parent_code' => '5000', 'level' => 2, 'is_leaf' => true, 'is_system' => true],
             ['code' => '5200', 'name_ar' => 'مصروفات تشغيلية', 'name_en' => 'Operating Expenses', 'account_type_id' => 5, 'parent_code' => '5000', 'level' => 2, 'is_leaf' => false, 'is_system' => true],
             ['code' => '5300', 'name_ar' => 'مصروفات إدارية وعمومية', 'name_en' => 'General & Admin Expenses', 'account_type_id' => 5, 'parent_code' => '5000', 'level' => 2, 'is_leaf' => true, 'is_system' => false],
             ['code' => '5400', 'name_ar' => 'مصروفات شحن', 'name_en' => 'Shipping Expenses', 'account_type_id' => 5, 'parent_code' => '5000', 'level' => 2, 'is_leaf' => true, 'is_system' => false],

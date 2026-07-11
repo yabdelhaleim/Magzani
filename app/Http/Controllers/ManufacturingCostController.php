@@ -7,6 +7,7 @@ use App\Http\Requests\UpdateManufacturingCostRequest;
 use App\Models\ManufacturingCost;
 use App\Services\ManufacturingCostService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 
 class ManufacturingCostController extends Controller
@@ -149,5 +150,53 @@ class ManufacturingCostController extends Controller
 
             return back()->with('error', 'حدث خطأ أثناء التأكيد: ' . $e->getMessage());
         }
+    }
+
+    /* ============================================================
+     * GAP 2 — Standard Costing on the BOM
+     * ============================================================ */
+
+    /**
+     * Update the standard cost on the BOM header. Independent of the
+     * actual-cost revision flow — accountants set the expected per-unit
+     * cost they expect production to run at. Setting zero in any of the
+     * three sub-fields disables standard costing for this BOM.
+     */
+    public function updateStandardCost(Request $request, ManufacturingCost $manufacturingCost)
+    {
+        $validated = $request->validate([
+            'standard_material_cost'      => 'required|numeric|min:0',
+            'standard_labor_cost'         => 'required|numeric|min:0',
+            'standard_overhead_cost'      => 'required|numeric|min:0',
+            'standard_cost_effective_from'=> 'nullable|date',
+        ]);
+
+        $standardTotal = round(
+            (float) $validated['standard_material_cost']
+            + (float) $validated['standard_labor_cost']
+            + (float) $validated['standard_overhead_cost'],
+            4
+        );
+
+        $manufacturingCost->update([
+            'standard_material_cost'        => $validated['standard_material_cost'],
+            'standard_labor_cost'           => $validated['standard_labor_cost'],
+            'standard_overhead_cost'        => $validated['standard_overhead_cost'],
+            'standard_cost'                 => $standardTotal,
+            'standard_cost_effective_from'  => $validated['standard_cost_effective_from'] ?? now()->toDateString(),
+            'standard_cost_updated_by'      => Auth::id(),
+            'standard_cost_updated_at'      => now(),
+        ]);
+
+        Log::info('[StandardCosting] BOM standard cost updated', [
+            'manufacturing_cost_id' => $manufacturingCost->id,
+            'product_id'            => $manufacturingCost->product_id,
+            'standard_total'        => $standardTotal,
+            'updated_by'            => Auth::id(),
+        ]);
+
+        return redirect()
+            ->route('manufacturing.show', $manufacturingCost)
+            ->with('success', "✅ تم حفظ التكلفة المعيارية (الإجمالي: {$standardTotal}).");
     }
 }

@@ -9,46 +9,46 @@ class BomComponent extends Model
 {
     protected $fillable = [
         'manufacturing_cost_id',
+        'component_product_id',
         'component_name',
         'quantity',
-        'length_cm',
-        'width_cm',
-        'thickness_cm',
-        'volume_cm3',
+        'uom_id',
+        'cost_per_uom',
+        'component_category_id',
         'sort_order',
     ];
 
     protected $casts = [
-        'quantity' => 'decimal:2',
-        'length_cm' => 'decimal:2',
-        'width_cm' => 'decimal:2',
-        'thickness_cm' => 'decimal:2',
-        'volume_cm3' => 'decimal:4',
+        'quantity' => 'decimal:4',
+        'cost_per_uom' => 'decimal:2',
+        'sort_order' => 'integer',
     ];
-
-    /* ===========================
-     * 🔗 RELATIONSHIPS
-     * =========================== */
 
     public function manufacturingCost(): BelongsTo
     {
         return $this->belongsTo(ManufacturingCost::class);
     }
 
-    /* ===========================
-     * 🛠️ HELPER METHODS
-     * =========================== */
+    public function product(): BelongsTo
+    {
+        return $this->belongsTo(Product::class, 'component_product_id');
+    }
+
+    public function uom(): BelongsTo
+    {
+        return $this->belongsTo(UnitOfMeasure::class, 'uom_id');
+    }
+
+    public function category(): BelongsTo
+    {
+        return $this->belongsTo(ComponentCategory::class, 'component_category_id');
+    }
 
     /**
-     * Calculate volume: length × width × thickness × quantity
+     * Calculate cost: quantity × cost_per_uom
      */
-    public function calculateVolume(): float
+    public function calculateCost(): float
     {
-        return (float) (
-            $this->length_cm *
-            $this->width_cm *
-            $this->thickness_cm *
-            $this->quantity
-        );
+        return (float) ($this->quantity * $this->cost_per_uom);
     }
 }

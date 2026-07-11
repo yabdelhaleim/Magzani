@@ -146,14 +146,11 @@ class PurchaseInvoiceService
             $quantity = $item['qty'];
             $cost = $item['price'];
             $storageType = $item['storage_type'] ?? 'general';
-            $tildeDetails = $this->normalizeTildeDetails($item['tilde_details'] ?? []);
 
             PurchaseInvoiceItem::create([
                 'purchase_invoice_id' => $invoice->id,
                 'product_id' => $item['product_id'],
                 'storage_type' => $storageType,
-                'tilde_number' => $item['tilde_number'] ?? null,
-                'tilde_details' => $tildeDetails ?: null,
                 'quantity' => $quantity,
                 'base_quantity' => $quantity,
                 'unit_price' => $cost,
@@ -245,30 +242,6 @@ class PurchaseInvoiceService
         DB::table('products')
             ->where('id', $productId)
             ->update(array_merge($payload, ['updated_at' => now()]));
-    }
-
-    private function normalizeTildeDetails(array $rows): array
-    {
-        $out = [];
-        foreach ($rows as $row) {
-            $quantity = (float) ($row['quantity'] ?? 0);
-            $length = (float) ($row['length'] ?? 0);
-            $width = (float) ($row['width'] ?? 0);
-            $thickness = (float) ($row['thickness'] ?? 0);
-
-            if ($quantity <= 0 && $length <= 0 && $width <= 0 && $thickness <= 0) {
-                continue;
-            }
-
-            $out[] = [
-                'quantity' => $quantity,
-                'length' => $length,
-                'width' => $width,
-                'thickness' => $thickness,
-            ];
-        }
-
-        return $out;
     }
 
     /**

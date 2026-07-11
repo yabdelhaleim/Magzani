@@ -10,7 +10,9 @@ use App\Models\Customer;
 use App\Models\Supplier;
 use App\Models\Warehouse;
 use App\Models\Product;
-use App\Models\WoodStock;
+use App\Models\MaterialBatch;
+use App\Models\UnitOfMeasure;
+use App\Models\UomConversion;
 use App\Models\SalesInvoice;
 use App\Models\PurchaseInvoice;
 use App\Models\FiscalYear;
@@ -136,12 +138,29 @@ class RemediationPhase1Test extends TestCase
             'is_active' => true,
         ]);
 
-        $woodStock = WoodStock::create([
-            'thickness_cm' => 2.50,
-            'width_cm' => 10.00,
-            'length_cm' => 300.00,
+        $m3 = UnitOfMeasure::create(['name' => 'متر مكعب', 'code' => 'm3', 'type' => 'volume', 'is_active' => true]);
+        $board = UnitOfMeasure::create(['name' => 'لوح خشب', 'code' => 'board', 'type' => 'volume', 'is_active' => true]);
+        UomConversion::create([
+            'from_uom_id' => $board->id,
+            'to_uom_id' => $m3->id,
+            'factor' => 0.003,
+        ]);
+        $woodProduct = Product::create([
+            'name' => 'لوح خشب موسكي',
+            'code' => 'RAW-MOSKY',
+            'sku' => 'MOSKY-BOARD',
+            'product_type' => 'raw_material',
+            'base_unit' => 'm3',
+            'purchase_price' => 1000.00,
+            'selling_price' => 1200.00,
+            'is_active' => true,
+        ]);
+        $woodStock = app(\App\Services\MaterialStockService::class)->createStock([
+            'product_id' => $woodProduct->id,
+            'warehouse_id' => $warehouse->id,
+            'uom_id' => $board->id,
             'quantity' => 1000,
-            'unit_cost' => 2000.00, // per m3
+            'unit_cost' => 6.00, // 0.003 * 2000
             'received_at' => '2026-07-01',
         ]);
 
@@ -197,13 +216,11 @@ class RemediationPhase1Test extends TestCase
             'profit_margin' => 42.86,
             'components' => [
                 [
-                    'wood_stock_id' => $woodStock->id,
+                    'material_batch_id' => $woodStock->id,
+                    'uom_id' => $board->id,
                     'quantity' => 15,
-                    'thickness_cm' => 2.5,
-                    'width_cm' => 10,
-                    'length_cm' => 120,
-                    'price_per_cubic_meter' => 2000.00,
-                    'component_type' => 'موسكي',
+                    'unit_cost' => 6.00,
+                    'component_name' => 'لوح خشب موسكي',
                 ]
             ]
         ]);
