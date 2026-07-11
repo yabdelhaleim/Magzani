@@ -37,6 +37,114 @@
 
 @section('content')
 
+{{-- ===================== SECTION 0: REMOTELLY HERO BANNER (integrated at top) ===================== --}}
+<section class="relative py-10 sm:py-14 lg:py-16 overflow-hidden border-b border-white/5 k-reveal">
+    {{-- Background ambient gradient — same dark/blue palette as the rest of the page --}}
+    <div class="drift-blob absolute top-0 right-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-[120px] pointer-events-none"></div>
+    <div class="drift-blob absolute bottom-0 left-1/4 w-96 h-96 bg-cyan-500/10 rounded-full blur-[120px] pointer-events-none" style="animation-delay:-9s"></div>
+
+    <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex flex-col lg:flex-row items-center gap-6 lg:gap-12">
+
+            {{-- LEFT: R lettermark + brand identity --}}
+            <div class="flex flex-col items-center lg:items-start text-center lg:text-right gap-3 shrink-0">
+                {{-- Remotelly R logo (large, gradient) --}}
+                <div class="w-24 h-24 sm:w-32 sm:h-32 lg:w-36 lg:h-36">
+                    <svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Remotelly">
+                        <defs>
+                            <linearGradient id="rem-r-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" stop-color="#60a5fa"/>
+                                <stop offset="50%" stop-color="#3b82f6"/>
+                                <stop offset="100%" stop-color="#1e40af"/>
+                            </linearGradient>
+                            <linearGradient id="rem-r-highlight" x1="0%" y1="0%" x2="0%" y2="100%">
+                                <stop offset="0%" stop-color="#93c5fd" stop-opacity="0.9"/>
+                                <stop offset="100%" stop-color="#3b82f6" stop-opacity="0.4"/>
+                            </linearGradient>
+                        </defs>
+                        {{-- Vertical bar (left) --}}
+                        <rect x="14" y="10" width="22" height="100" rx="4" fill="url(#rem-r-grad)"/>
+                        {{-- Upper bowl of R (rounded) --}}
+                        <path d="M 36 10 L 70 10 Q 90 10 90 32 Q 90 54 70 54 L 36 54 Z M 36 22 L 36 42 L 64 42 Q 76 42 76 32 Q 76 22 64 22 Z" fill="url(#rem-r-grad)" fill-rule="evenodd"/>
+                        {{-- Leg of R (diagonal) --}}
+                        <path d="M 56 54 L 96 110 L 76 110 L 40 60 Z" fill="url(#rem-r-highlight)"/>
+                    </svg>
+                </div>
+
+                {{-- Remotelly wordmark --}}
+                <h1 class="text-3xl sm:text-4xl lg:text-5xl font-black text-white tracking-tight leading-none">
+                    Remotelly
+                </h1>
+
+                {{-- "Team Online" tagline --}}
+                <p class="text-cyan-400 font-bold text-sm sm:text-base tracking-wide">
+                    — Team Online —
+                </p>
+            </div>
+
+            {{-- RIGHT: messaging + services + features + CTAs --}}
+            <div class="flex-1 w-full space-y-5">
+
+                {{-- Headline (Arabic) --}}
+                <div>
+                    <h2 class="text-xl sm:text-2xl lg:text-3xl font-black text-white mb-2 leading-tight">
+                        نحوّل أفكارك إلى حلول رقمية
+                    </h2>
+                    <p class="text-base sm:text-lg text-cyan-400 font-bold mb-1">فريقك التقني عن بُعد</p>
+                    <p class="text-sm text-slate-400 leading-relaxed">نقدم خدمات برمجية متكاملة تناسب احتياجات عملك — من التطوير إلى الدعم المستمر</p>
+                </div>
+
+                {{-- 5 Service icons (compact grid) --}}
+                <div class="k-reveal-stagger grid grid-cols-5 gap-2 sm:gap-3">
+                    @php
+                        $remServices = [
+                            ['icon' => 'fa-code',          'color' => 'cyan',    'label' => 'تطوير المواقع'],
+                            ['icon' => 'fa-palette',       'color' => 'blue',    'label' => 'تصميم UI/UX'],
+                            ['icon' => 'fa-cloud',         'color' => 'purple',  'label' => 'الحلول السحابية'],
+                            ['icon' => 'fa-headset',       'color' => 'emerald', 'label' => 'الدعم والصيانة'],
+                            ['icon' => 'fa-mobile-screen', 'color' => 'amber',   'label' => 'تطوير التطبيقات'],
+                        ];
+                    @endphp
+                    @foreach($remServices as $s)
+                        <div class="glass-card rounded-xl p-2 sm:p-3 text-center hover:border-{{ $s['color'] }}-500/40">
+                            <i class="fas {{ $s['icon'] }} text-{{ $s['color'] }}-400 text-lg sm:text-xl"></i>
+                            <p class="text-[10px] sm:text-xs text-slate-300 mt-1.5 leading-tight">{{ $s['label'] }}</p>
+                        </div>
+                    @endforeach
+                </div>
+
+                {{-- 4 Feature pills --}}
+                <div class="k-reveal-stagger flex flex-wrap gap-2">
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-[11px] sm:text-xs font-bold text-blue-300">
+                        <i class="fas fa-shield-halved"></i> أمان كامل للبيانات
+                    </span>
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-[11px] sm:text-xs font-bold text-cyan-300">
+                        <i class="fas fa-bolt"></i> تنفيذ سريع خلال 24 ساعة
+                    </span>
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-purple-500/10 border border-purple-500/20 text-[11px] sm:text-xs font-bold text-purple-300">
+                        <i class="fas fa-shield-check"></i> حماية متكاملة
+                    </span>
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[11px] sm:text-xs font-bold text-emerald-300">
+                        <i class="fas fa-headset"></i> تواصل مستمر
+                    </span>
+                </div>
+
+                {{-- CTAs --}}
+                <div class="k-reveal flex flex-wrap gap-3 items-center">
+                    <a href="https://remotelly1.site/" target="_blank" rel="noopener" class="k-btn k-btn-primary text-sm">
+                        <i class="fas fa-paper-plane"></i>
+                        <span>تواصل معنا الآن</span>
+                    </a>
+                    <a href="https://remotelly1.site/" target="_blank" rel="noopener" class="k-btn k-btn-ghost text-sm">
+                        <i class="fas fa-images"></i>
+                        <span>استعرض أعمالنا</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
 {{-- ===================== SECTION 1: STICKY TOP BAR (with mobile menu) ===================== --}}
 <header class="k-topbar">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
@@ -200,12 +308,22 @@
             <p class="k-reveal text-base sm:text-lg text-slate-400 max-w-2xl mx-auto leading-relaxed" style="transition-delay:160ms">اختر الباقة المناسبة لحجم عملك. كل الباقات تشمل تجربة مجانية لمدة 14 يوم</p>
         </div>
 
-        <div class="k-reveal-stagger grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8 items-stretch max-w-6xl mx-auto" style="transition-delay:240ms">
+        @php
+            $planCount = max(1, min(4, $plans->count()));
+            $gridCols  = [
+                1 => 'lg:grid-cols-1 max-w-md',
+                2 => 'lg:grid-cols-2 max-w-3xl',
+                3 => 'lg:grid-cols-3 max-w-6xl',
+                4 => 'lg:grid-cols-4 max-w-7xl',
+            ][$planCount];
+        @endphp
+        <div class="k-reveal-stagger grid grid-cols-1 {{ $gridCols }} gap-6 lg:gap-8 items-stretch mx-auto" style="transition-delay:240ms">
             @foreach($plans as $plan)
                 @php
-                    $isFeatured = $plan->slug === 'pro';
+                    $isFeatured = (bool) $plan->is_featured;
                     $demoQuery = http_build_query(['utm_source' => 'pricing', 'utm_medium' => 'cta', 'utm_campaign' => $plan->slug]);
                     $demoLink  = $demoUrl . (str_contains($demoUrl, '?') ? '&' : '?') . $demoQuery;
+                    $periodLabel = ($plan->billing_period ?? 'monthly') === 'yearly' ? 'سنوياً' : 'شهرياً';
                 @endphp
 
                 <article class="k-card {{ $isFeatured ? 'k-card--featured' : '' }} flex flex-col">
@@ -221,7 +339,7 @@
 
                     <div class="mb-6">
                         <span class="text-xs font-extrabold tracking-widest uppercase {{ $isFeatured ? 'text-amber-400' : 'text-indigo-400' }}">
-                            {{ $plan->slug === 'starter' ? 'الباقة الأساسية' : ($plan->slug === 'pro' ? 'الباقة الاحترافية' : 'الباقة المؤسسية') }}
+                            {{ $plan->display_label ?: $plan->name }}
                         </span>
                         <h3 class="k-h k-h-3 mt-2 text-white">{{ $plan->name }}</h3>
                         <p class="text-sm text-slate-400 mt-2 min-h-[44px] leading-relaxed">{{ $plan->description }}</p>
@@ -231,9 +349,10 @@
                         <div class="flex items-baseline gap-2">
                             @if((float) $plan->price == 0)
                                 <span class="text-3xl sm:text-4xl font-black text-white">مخصص</span>
+                                <span class="text-sm text-slate-400 font-bold">تواصل معنا</span>
                             @else
                                 <span class="text-5xl sm:text-6xl font-black text-white tracking-tight">{{ number_format((float) $plan->price, 0) }}</span>
-                                <span class="text-sm text-slate-400 font-bold">ريال / شهرياً</span>
+                                <span class="text-sm text-slate-400 font-bold">ريال / {{ $periodLabel }}</span>
                             @endif
                         </div>
                         <p class="text-xs text-slate-500 mt-2">
@@ -243,12 +362,19 @@
                     </div>
 
                     <ul class="space-y-3 mb-8 flex-grow">
-                        @foreach($plan->value_props ?? [] as $prop)
+                        @forelse(($plan->value_props ?? []) as $prop)
                             <li class="flex items-start gap-3 text-sm text-slate-300">
                                 <i class="fas fa-check-circle {{ $isFeatured ? 'text-amber-400' : 'text-emerald-400' }} text-base shrink-0 mt-0.5"></i>
                                 <span>{{ $prop }}</span>
                             </li>
-                        @endforeach
+                        @empty
+                            @foreach(($plan->featuresList ?? collect()) as $feat)
+                                <li class="flex items-start gap-3 text-sm text-slate-300">
+                                    <i class="fas fa-check-circle {{ $isFeatured ? 'text-amber-400' : 'text-emerald-400' }} text-base shrink-0 mt-0.5"></i>
+                                    <span>{{ \App\Support\FeatureLabels::translate($feat->feature_key) }}</span>
+                                </li>
+                            @endforeach
+                        @endforelse
                     </ul>
 
                     <div class="space-y-3 mt-auto">
@@ -285,24 +411,12 @@
                     <tr>
                         <th class="text-right px-4 sm:px-6 py-5 font-black text-white text-sm sm:text-base">الميزة</th>
                         @foreach($plans as $plan)
-                            <th class="text-center px-4 sm:px-6 py-5 font-black {{ $plan->slug === 'pro' ? 'text-amber-400' : 'text-white' }} text-sm sm:text-base">{{ $plan->name }}</th>
+                            <th class="text-center px-4 sm:px-6 py-5 font-black {{ $plan->is_featured ? 'text-amber-400' : 'text-white' }} text-sm sm:text-base">{{ $plan->name }}</th>
                         @endforeach
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-white/5">
-                    @php
-                        $featureLabels = [
-                            'pos'                 => 'نقاط البيع (POS) مع الكاشير',
-                            'purchase'            => 'فواتير المبيعات والمشتريات',
-                            'manufacturing'       => 'إدارة التصنيع وأوامر الإنتاج',
-                            'multi_warehouse'     => 'تعدد المستودعات والتحويلات',
-                            'accounting'          => 'الحسابات والمصروفات',
-                            'accounting_advanced' => 'المحاسبة المتقدمة (شجرة الحسابات والقيود)',
-                            'stock_count'         => 'الجرد الدوري وحركات المخزون',
-                            'reports_advanced'    => 'التقارير المالية وقوائم الدخل',
-                        ];
-                    @endphp
-                    @foreach($featureLabels as $key => $label)
+                    @foreach(\App\Support\FeatureLabels::all() as $key => $label)
                         @php $anyHave = false; @endphp
                         @foreach($plans as $plan)
                             @php $has = $plan->featuresList->firstWhere('feature_key', $key); @endphp
@@ -338,7 +452,7 @@
                         <span class="text-xs text-slate-400 font-normal">{{ $plan->featuresList->count() }} ميزة</span>
                     </summary>
                     <div class="faq-body space-y-2">
-                        @foreach($featureLabels as $key => $label)
+                        @foreach(\App\Support\FeatureLabels::all() as $key => $label)
                             @php $has = $plan->featuresList->firstWhere('feature_key', $key); @endphp
                             @if($has)
                                 <div class="flex items-center justify-between text-sm py-1.5 border-b border-white/5">

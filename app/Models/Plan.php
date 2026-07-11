@@ -21,6 +21,10 @@ class Plan extends Model
         'price',
         'billing_period',
         'features',
+        'value_props',
+        'display_label',
+        'is_featured',
+        'sort_order',
         'is_active',
     ];
 
@@ -30,9 +34,12 @@ class Plan extends Model
      * @var array<string, string>
      */
     protected $casts = [
-        'features' => 'array',
-        'is_active' => 'boolean',
-        'price' => 'decimal:2',
+        'features'    => 'array',
+        'value_props' => 'array',
+        'is_active'   => 'boolean',
+        'is_featured' => 'boolean',
+        'price'       => 'decimal:2',
+        'sort_order'  => 'integer',
     ];
 
     /**

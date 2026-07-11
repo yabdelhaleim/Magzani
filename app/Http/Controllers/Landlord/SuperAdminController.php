@@ -60,16 +60,25 @@ class SuperAdminController extends Controller
             'billing_period' => 'required|in:monthly,yearly',
             'description' => 'nullable|string',
             'features' => 'nullable|array',
+            'value_props' => 'nullable|array',
+            'value_props.*' => 'nullable|string|max:255',
+            'display_label' => 'nullable|string|max:255',
+            'is_featured' => 'sometimes|boolean',
+            'sort_order' => 'nullable|integer|min:0',
         ]);
 
         Plan::create([
-            'name' => $request->name,
-            'slug' => $request->slug,
-            'price' => $request->price,
-            'billing_period' => $request->billing_period,
-            'description' => $request->description,
-            'features' => $request->features ?? [],
-            'is_active' => $request->has('is_active'),
+            'name'          => $request->name,
+            'slug'          => $request->slug,
+            'price'         => $request->price,
+            'billing_period'=> $request->billing_period,
+            'description'   => $request->description,
+            'features'      => $request->features ?? [],
+            'value_props'   => array_values(array_filter($request->value_props ?? [], fn ($v) => filled($v))),
+            'display_label' => $request->display_label,
+            'is_featured'   => $request->boolean('is_featured'),
+            'sort_order'    => (int) ($request->sort_order ?? 0),
+            'is_active'     => $request->has('is_active'),
         ]);
 
         return redirect()->route('super-admin.plans.index')->with('success', 'تم إنشاء الباقة بنجاح!');
@@ -89,16 +98,25 @@ class SuperAdminController extends Controller
             'billing_period' => 'required|in:monthly,yearly',
             'description' => 'nullable|string',
             'features' => 'nullable|array',
+            'value_props' => 'nullable|array',
+            'value_props.*' => 'nullable|string|max:255',
+            'display_label' => 'nullable|string|max:255',
+            'is_featured' => 'sometimes|boolean',
+            'sort_order' => 'nullable|integer|min:0',
         ]);
 
         $plan->update([
-            'name' => $request->name,
-            'slug' => $request->slug,
-            'price' => $request->price,
-            'billing_period' => $request->billing_period,
-            'description' => $request->description,
-            'features' => $request->features ?? [],
-            'is_active' => $request->has('is_active'),
+            'name'          => $request->name,
+            'slug'          => $request->slug,
+            'price'         => $request->price,
+            'billing_period'=> $request->billing_period,
+            'description'   => $request->description,
+            'features'      => $request->features ?? [],
+            'value_props'   => array_values(array_filter($request->value_props ?? [], fn ($v) => filled($v))),
+            'display_label' => $request->display_label,
+            'is_featured'   => $request->boolean('is_featured'),
+            'sort_order'    => (int) ($request->sort_order ?? 0),
+            'is_active'     => $request->has('is_active'),
         ]);
 
         return redirect()->route('super-admin.plans.index')->with('success', 'تم تحديث الباقة بنجاح!');

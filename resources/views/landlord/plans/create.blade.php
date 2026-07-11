@@ -123,6 +123,51 @@
                 <span class="text-sm font-bold text-slate-300">تفعيل الباقة وعرضها للجمهور فوراً</span>
             </label>
 
+            <!-- Pricing-page Presentation -->
+            <div class="space-y-5 border-t border-slate-800/60 pt-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <label class="block text-sm font-bold text-slate-200">عرض الباقة في صفحة الأسعار العامة</label>
+                        <p class="text-xs text-slate-500 mt-1">هذه الحقول تتحكم في ظهور الباقة على /pricing وتُدار بالكامل من هنا بدون أي تعديل برمجي.</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="space-y-2">
+                        <label for="display_label" class="block text-sm font-bold text-slate-300">التسمية الظاهرة فوق اسم الباقة</label>
+                        <input type="text" id="display_label" name="display_label" maxlength="255" class="w-full bg-slate-900 border border-slate-800 focus:border-indigo-500 rounded-xl px-4 py-3 text-white outline-none transition" placeholder="مثال: الباقة الأساسية">
+                        <span class="text-xs text-slate-500 block">تظهر بخط صغير فوق اسم الباقة في الكارت. اختياري — لو تُرك فارغاً سيُعرض اسم الباقة.</span>
+                        @error('display_label') <p class="text-xs text-rose-400 mt-1">{{ $message }}</p> @enderror
+                    </div>
+
+                    <div class="space-y-2">
+                        <label for="sort_order" class="block text-sm font-bold text-slate-300">ترتيب العرض في صفحة الأسعار</label>
+                        <input type="number" id="sort_order" name="sort_order" min="0" value="0" class="w-full bg-slate-900 border border-slate-800 focus:border-indigo-500 rounded-xl px-4 py-3 text-white outline-none transition" placeholder="0">
+                        <span class="text-xs text-slate-500 block">رقم أقل = يظهر أولاً. اتركه 0 لاتباع الترتيب الافتراضي حسب السعر.</span>
+                        @error('sort_order') <p class="text-xs text-rose-400 mt-1">{{ $message }}</p> @enderror
+                    </div>
+                </div>
+
+                <label class="flex items-center gap-3 cursor-pointer select-none p-4 rounded-xl bg-amber-500/5 border border-amber-500/20">
+                    <input type="checkbox" name="is_featured" value="1" class="w-5 h-5 accent-amber-500 rounded cursor-pointer">
+                    <div>
+                        <span class="font-bold text-sm text-amber-300 block">تمييز الباقة كـ "الأكثر طلباً"</span>
+                        <span class="text-xs text-slate-400 block">تظهر بحدة لونية مختلفة وشارة ⚡ فوق الكارت. باقة واحدة فقط يُفضّل أن تحمل هذا التمييز.</span>
+                    </div>
+                </label>
+
+                <div class="space-y-3">
+                    <label class="block text-sm font-bold text-slate-300">نقاط القيمة المعروضة في كارت الباقة (Value Props)</label>
+                    <span class="text-xs text-slate-500 block -mt-2">اكتب كل نقطة في حقل منفصل. لو تُركت فارغة، سيتم عرض الميزات المختارة من قسم تخصيص الميزات أعلاه تلقائياً.</span>
+                    <div class="space-y-2">
+                        @for($i = 0; $i < 6; $i++)
+                            <input type="text" name="value_props[]" maxlength="255" class="w-full bg-slate-900 border border-slate-800 focus:border-indigo-500 rounded-xl px-4 py-2.5 text-white outline-none transition text-sm" placeholder="مثال: {{ ['كاشير احترافي', 'حتى 3 مستخدمين', 'مخزن واحد', 'تقارير أساسية', 'دعم بالبريد الإلكتروني', 'بدون رسوم إعداد'][$i] }}">
+                        @endfor
+                    </div>
+                    @error('value_props.*') <p class="text-xs text-rose-400 mt-1">{{ $message }}</p> @enderror
+                </div>
+            </div>
+
             <!-- Submit Button -->
             <div class="border-t border-slate-800/60 pt-6 flex gap-4">
                 <button type="submit" class="flex-1 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold transition shadow-lg">
