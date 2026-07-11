@@ -1,2 +1,14 @@
-﻿* text=auto
+* text=auto
 docs/*.txt -text
+
+# Force LF on all source code (no CRLF warnings on Windows)
+*.blade.php        text eol=lf
+*.php              text eol=lf
+resources/views/**  text eol=lf
+public/**/*.css    text eol=lf
+public/**/*.js     text eol=lf
+*.json             text eol=lf
+*.yml              text eol=lf
+*.yaml             text eol=lf
+*.md               text eol=lf
+*.svg              text -text
