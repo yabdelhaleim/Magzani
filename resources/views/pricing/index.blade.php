@@ -37,39 +37,6 @@
 
 @section('content')
 
-
-                {{-- 4 Feature pills --}}
-                <div class="k-reveal-stagger flex flex-wrap gap-2">
-                    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-[11px] sm:text-xs font-bold text-blue-300">
-                        <i class="fas fa-shield-halved"></i> أمان كامل للبيانات
-                    </span>
-                    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-[11px] sm:text-xs font-bold text-cyan-300">
-                        <i class="fas fa-bolt"></i> تنفيذ سريع خلال 24 ساعة
-                    </span>
-                    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-purple-500/10 border border-purple-500/20 text-[11px] sm:text-xs font-bold text-purple-300">
-                        <i class="fas fa-shield-check"></i> حماية متكاملة
-                    </span>
-                    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[11px] sm:text-xs font-bold text-emerald-300">
-                        <i class="fas fa-headset"></i> تواصل مستمر
-                    </span>
-                </div>
-
-                {{-- CTAs --}}
-                <div class="k-reveal flex flex-wrap gap-3 items-center">
-                    <a href="https://remotelly1.site/" target="_blank" rel="noopener" class="k-btn k-btn-primary text-sm">
-                        <i class="fas fa-paper-plane"></i>
-                        <span>تواصل معنا الآن</span>
-                    </a>
-                    <a href="https://remotelly1.site/" target="_blank" rel="noopener" class="k-btn k-btn-ghost text-sm">
-                        <i class="fas fa-images"></i>
-                        <span>استعرض أعمالنا</span>
-                    </a>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
-
 {{-- ===================== SECTION 1: STICKY TOP BAR (with mobile menu) ===================== --}}
 <header class="k-topbar">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
