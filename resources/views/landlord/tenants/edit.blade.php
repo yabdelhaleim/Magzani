@@ -5,13 +5,13 @@
 @section('content')
 <div class="max-w-2xl mx-auto">
 
-    <div class="glass-card rounded-2xl p-8 shadow-xl space-y-6">
-        <div class="flex justify-between items-center border-b border-slate-800 pb-4">
-            <h3 class="text-lg font-bold text-white">تعديل اشتراك الشركة</h3>
-            <a href="{{ route('super-admin.tenants.index') }}" class="text-sm text-slate-400 hover:text-white transition font-semibold">إلغاء والعودة</a>
+    <div class="glass-card rounded-2xl p-4 sm:p-6 lg:p-8 shadow-xl space-y-5 sm:space-y-6">
+        <div class="flex flex-wrap justify-between items-center gap-2 border-b border-slate-800 pb-4">
+            <h3 class="text-base sm:text-lg font-bold text-white">تعديل اشتراك الشركة</h3>
+            <a href="{{ route('super-admin.tenants.index') }}" class="text-xs sm:text-sm text-slate-400 hover:text-white transition font-semibold">إلغاء والعودة</a>
         </div>
 
-        <form action="{{ route('super-admin.tenants.update', $tenant->id) }}" method="POST" class="space-y-6">
+        <form action="{{ route('super-admin.tenants.update', $tenant->id) }}" method="POST" class="space-y-5 sm:space-y-6">
             @csrf
             @method('PUT')
 
@@ -99,11 +99,11 @@
             </div>
 
             <!-- Submit Button -->
-            <div class="border-t border-slate-800/60 pt-6 flex gap-4">
-                <button type="submit" class="flex-1 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold transition shadow-lg">
+            <div class="border-t border-slate-800/60 pt-6 flex flex-col sm:flex-row gap-3 sm:gap-4">
+                <button type="submit" class="flex-1 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold transition shadow-lg text-sm sm:text-base">
                     حفظ وتحديث الاشتراك
                 </button>
-                <a href="{{ route('super-admin.tenants.index') }}" class="flex-1 py-3 text-center bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl font-bold transition border border-slate-700/30">
+                <a href="{{ route('super-admin.tenants.index') }}" class="flex-1 py-3 text-center bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl font-bold transition border border-slate-700/30 text-sm sm:text-base">
                     إلغاء
                 </a>
             </div>
