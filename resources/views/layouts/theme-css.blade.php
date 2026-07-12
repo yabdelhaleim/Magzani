@@ -711,6 +711,10 @@ body.magzani-v3 {
     background: var(--mz-primary-muted);
     color: var(--mz-primary);
 }
+.mz-empty-icon-success {
+    background: var(--mz-success-soft);
+    color: var(--mz-success);
+}
 
 .mz-empty-title {
     font-weight: 800;
@@ -731,3 +735,131 @@ body.magzani-v3 {
 .dash-animate:nth-child(2) { animation-delay: 0.1s; }
 .dash-animate:nth-child(3) { animation-delay: 0.15s; }
 .dash-animate:nth-child(4) { animation-delay: 0.2s; }
+
+/* Dashboard utility classes (replace inline styles) */
+.text-mz-danger { color: var(--mz-danger); }
+.text-mz-muted  { color: var(--mz-text-muted); }
+.text-mz-success { color: var(--mz-success); }
+.text-muted     { color: var(--mz-text-muted); }
+
+.mz-alert-progress-meta {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    font-weight: 700;
+    margin-top: 6px;
+}
+
+/* ============================================================
+   ENHANCED RESPONSIVE — Phase 2
+   ============================================================ */
+
+/* Fluid typography for stat values — scales smoothly */
+.mz-stat-value {
+    font-size: clamp(1.25rem, 4.5vw, 1.75rem);
+}
+.mz-stat-label {
+    font-size: clamp(11px, 2.6vw, 12px);
+}
+.mz-mini-val {
+    font-size: clamp(1rem, 3.5vw, 1.25rem);
+}
+.dash-welcome-text h2 {
+    font-size: clamp(1.2rem, 5vw, 1.65rem);
+    line-height: 1.3;
+}
+.dash-welcome-text p {
+    font-size: clamp(12px, 2.8vw, 14px);
+}
+
+/* Mobile breakpoint — 480px and below (phones) */
+@media (max-width: 480px) {
+    /* Stats cards */
+    .mz-stat { padding: 14px; }
+    .mz-stat-icon { width: 38px; height: 38px; font-size: 15px; border-radius: 10px; }
+    .mz-stat-tag { font-size: 9px; padding: 3px 8px; }
+
+    /* Mini stats */
+    .mz-mini { padding: 12px 14px; gap: 10px; }
+    .mz-mini-icon { width: 38px; height: 38px; font-size: 15px; }
+
+    /* Card headers — stack on mobile */
+    .mz-card-head {
+        flex-direction: column;
+        align-items: flex-start !important;
+        gap: 10px;
+        padding: 14px 16px;
+    }
+    .mz-card-head-left { width: 100%; }
+    .mz-card-link { font-size: 11px; padding: 4px 10px; }
+    .mz-card-title { font-size: 14px; }
+    .mz-card-sub { font-size: 11px; }
+
+    /* Welcome meta pills */
+    .dash-welcome-meta { gap: 8px; }
+    .dash-company-pill,
+    .dash-date-pill {
+        font-size: 11px;
+        padding: 6px 10px;
+    }
+
+    /* Empty state */
+    .mz-empty { padding: 28px 14px; }
+    .mz-empty-icon { width: 48px; height: 48px; font-size: 18px; }
+
+    /* Quick action tiles */
+    .mz-quick { padding: 14px 8px; gap: 8px; }
+    .mz-quick-icon { width: 38px; height: 38px; font-size: 15px; }
+    .mz-quick-label { font-size: 10px; }
+
+    /* Table — card-stack on mobile */
+    .mz-table thead { display: none; }
+    .mz-table,
+    .mz-table tbody,
+    .mz-table tr { display: block; width: 100%; }
+    .mz-table tr {
+        padding: 12px;
+        border-bottom: 1px solid var(--mz-border);
+    }
+    .mz-table tr:last-child { border-bottom: 0; }
+    .mz-table td {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 6px 0;
+        border: 0;
+        text-align: start;
+    }
+    .mz-table td::before {
+        content: attr(data-label);
+        font-weight: 700;
+        color: var(--mz-text-muted);
+        font-size: 11px;
+        margin-inline-end: 10px;
+        flex-shrink: 0;
+    }
+    .mz-table tbody tr {
+        background: var(--mz-surface);
+        border-radius: 12px;
+        margin-bottom: 8px;
+        border: 1px solid var(--mz-border);
+    }
+    .mz-empty { width: 100%; }
+}
+
+/* Ultra-narrow phones — 380px and below (iPhone SE 1st gen, Galaxy Fold cover, etc.) */
+@media (max-width: 380px) {
+    .dash-stats { gap: 10px; }
+    .dash-mini-stats { grid-template-columns: 1fr !important; }
+    .mz-quick-grid { grid-template-columns: 1fr !important; }
+    .mz-stat { padding: 12px; }
+    .dash-welcome { gap: 14px; margin-bottom: 20px; }
+    .dash-welcome-meta { width: 100%; }
+}
+
+/* Accessibility — bump tiny font-sizes from 9-10px to 11px minimum */
+.mz-table thead th { font-size: 11px; }
+.mz-alert-meta { font-size: 11px; }
+
+/* RTL-safe spacing helpers */
+[dir="rtl"] .mz-stat-tag { letter-spacing: 0; }

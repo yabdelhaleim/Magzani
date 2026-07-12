@@ -261,7 +261,7 @@
                     </div>
                 </div>
                 <a href="{{ route('invoices.sales.index') }}" class="mz-card-link">
-                    عرض الكل <i class="fas fa-arrow-left" style="font-size:9px;"></i>
+                    عرض الكل <i class="fas fa-arrow-left text-[10px]"></i>
                 </a>
             </div>
             <div style="overflow-x:auto;">
@@ -278,23 +278,23 @@
                     <tbody>
                         @forelse($summary['recent_invoices'] ?? [] as $invoice)
                         <tr>
-                            <td><span class="mz-ref">#{{ $invoice->reference ?? 'N/A' }}</span></td>
-                            <td style="font-weight:700;">{{ $invoice->customer->name ?? $invoice->party_name ?? 'غير محدد' }}</td>
-                            <td>
-                                <span style="font-weight:800;">{{ number_format($invoice->total ?? 0, 2) }}</span>
-                                <span style="font-size:10px;color:var(--mz-text-muted);"> ج.م</span>
+                            <td data-label="رقم الفاتورة"><span class="mz-ref">#{{ $invoice->reference ?? 'N/A' }}</span></td>
+                            <td data-label="العميل" class="font-bold">{{ $invoice->customer->name ?? $invoice->party_name ?? 'غير محدد' }}</td>
+                            <td data-label="المبلغ">
+                                <span class="font-extrabold">{{ number_format($invoice->total ?? 0, 2) }}</span>
+                                <span class="text-xs text-muted"> ج.م</span>
                             </td>
-                            <td>
+                            <td data-label="الحالة">
                                 @php $s = $invoice->status ?? ''; @endphp
                                 @if($s == 'paid')
-                                    <span class="mz-badge mz-badge-paid"><i class="fas fa-check" style="font-size:8px;"></i> مدفوع</span>
+                                    <span class="mz-badge mz-badge-paid"><i class="fas fa-check"></i> مدفوع</span>
                                 @elseif($s == 'pending')
-                                    <span class="mz-badge mz-badge-pending"><i class="fas fa-clock" style="font-size:8px;"></i> معلق</span>
+                                    <span class="mz-badge mz-badge-pending"><i class="fas fa-clock"></i> معلق</span>
                                 @else
                                     <span class="mz-badge mz-badge-muted">{{ $s ?: 'غير محدد' }}</span>
                                 @endif
                             </td>
-                            <td style="font-size:11px;font-weight:600;color:var(--mz-text-muted);">
+                            <td data-label="التاريخ" class="text-xs font-semibold text-muted">
                                 {{ $invoice->created_at ? $invoice->created_at->format('Y-m-d') : 'N/A' }}
                             </td>
                         </tr>
@@ -332,15 +332,15 @@
                 @forelse($summary['low_stock_products'] ?? [] as $product)
                 <div class="mz-alert-item">
                     <div class="mz-alert-dot"></div>
-                    <div style="flex:1;min-width:0;">
+                    <div class="flex-1 min-w-0">
                         <div class="mz-alert-name">{{ $product->name ?? 'منتج غير محدد' }}</div>
                         <div class="mz-alert-meta">
-                            <i class="fas fa-warehouse" style="font-size:9px;margin-left:3px;"></i>
+                            <i class="fas fa-warehouse text-[10px] ms-1"></i>
                             {{ $product->warehouse ?? 'مخزن غير محدد' }}
                         </div>
-                        <div style="display:flex;justify-content:space-between;font-size:10px;font-weight:700;margin-top:6px;">
-                            <span style="color:var(--mz-danger);">متوفر: {{ $product->quantity ?? 0 }}</span>
-                            <span style="color:var(--mz-text-muted);">الحد: {{ $product->min_stock ?? 0 }}</span>
+                        <div class="mz-alert-progress-meta">
+                            <span class="text-mz-danger">متوفر: {{ $product->quantity ?? 0 }}</span>
+                            <span class="text-mz-muted">الحد: {{ $product->min_stock ?? 0 }}</span>
                         </div>
                         @php
                             $qty = $product->quantity ?? 0;
@@ -353,15 +353,15 @@
                         </div>
                     </div>
                 </div>
-                @empty
+@empty
                 <div class="mz-empty">
-                    <div class="mz-empty-icon" style="background:var(--mz-success-soft);color:var(--mz-success);">
+                    <div class="mz-empty-icon mz-empty-icon-success">
                         <i class="fas fa-check-circle"></i>
                     </div>
                     <p class="mz-empty-title">المخزون ممتاز</p>
                     <p class="mz-empty-sub">جميع المنتجات فوق الحد الأدنى</p>
                 </div>
-                @endforelse
+            @endforelse
             </div>
         </div>
     </div>

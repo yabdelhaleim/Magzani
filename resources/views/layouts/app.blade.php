@@ -750,19 +750,44 @@
             50%       { filter: drop-shadow(0 0 18px rgba(85,114,255,0.75)); }
         }
 
-        /* ── Mobile ── */
+        /* ── Mobile & Tablet ── */
         @media (max-width: 1024px) {
             .sidebar { transform: translateX(100%); }
             .sidebar.mobile-open { transform: translateX(0); }
             .main-content { margin-right: 0 !important; }
             .topbar { padding: 0 16px; }
             .logo-banner { margin: 24px 16px 0; padding: 20px 24px; gap: 16px; }
+            .bottom-brand-bar { display: none; }
+        }
+        /* Tablet — fine-tune between desktop and mobile */
+        @media (max-width: 768px) {
+            .topbar { padding: 0 12px; }
+            .topbar-title {
+                font-size: 16px;
+                max-width: 38vw;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+            .user-panel,
+            .notif-panel {
+                max-width: min(320px, calc(100vw - 24px));
+                inset-inline-end: 0;
+            }
+            .bottom-brand-bar { padding: 6px 16px; gap: 10px; bottom: 15px; }
+            .bar-brand-text { font-size: 11px; letter-spacing: 2px; }
         }
         @media (max-width: 640px) {
             .logo-banner { flex-direction: column; text-align: center; gap: 12px; padding: 24px 20px; }
+            .logo-banner { display: none; }
             .page-body { padding: 16px; }
-            .topbar-title { font-size: 17px; }
+            .topbar-title { font-size: 15px; }
             .search-wrap { display: none; }
+            .user-panel,
+            .notif-panel {
+                max-width: min(280px, calc(100vw - 16px));
+                inset-inline-end: 0;
+            }
         }
 
         /* Tooltip for collapsed sidebar */
@@ -784,16 +809,11 @@
         }
         .sidebar:not(.collapsed) .nav-item[data-tip]:hover::after { display: none; }
 
-        /* Page load animation */
-        .page-body > * { animation: fadeUp 0.45s ease both; }
+        /* Page load animation — skip toasts and inline banners to avoid double-animation */
+        .page-body > *:not(.toast):not(.alert-banner) { animation: fadeUp 0.45s ease both; }
         @keyframes fadeUp {
             from { opacity: 0; transform: translateY(14px); }
             to   { opacity: 1; transform: translateY(0); }
-        }
-
-        @media (max-width: 768px) {
-            .bottom-brand-bar { padding: 6px 16px; gap: 10px; bottom: 15px; }
-            .bar-brand-text { font-size: 11px; letter-spacing: 2px; }
         }
 
         /* Feature Gating: Disabled/Faded nav item and Upgrade badge */
@@ -1463,8 +1483,21 @@
     const backdrop    = document.getElementById('backdrop');
     const toggleIcon  = document.getElementById('toggleIcon');
 
-    let isDesktop   = window.innerWidth >= 1024;
-    let isCollapsed = false;
+    let isDesktop = window.innerWidth >= 1024;
+
+    // Persist sidebar collapse state across page loads (desktop only)
+    function getInitialCollapsed() {
+        try { return localStorage.getItem('mz_sidebar_collapsed') === '1'; }
+        catch (e) { return false; }
+    }
+    let isCollapsed = getInitialCollapsed();
+
+    // Apply persisted state on load
+    if (isCollapsed && isDesktop) {
+        sidebar.classList.add('collapsed');
+        mainContent.classList.add('sidebar-collapsed');
+        if (toggleIcon) toggleIcon.className = 'fas fa-chevron-left';
+    }
 
     function toggleSidebar() {
         if (!isDesktop) { openMobileSidebar(); return; }
@@ -1472,21 +1505,33 @@
         sidebar.classList.toggle('collapsed', isCollapsed);
         mainContent.classList.toggle('sidebar-collapsed', isCollapsed);
         toggleIcon.className = isCollapsed ? 'fas fa-chevron-left' : 'fas fa-chevron-right';
+        // Persist
+        try { localStorage.setItem('mz_sidebar_collapsed', isCollapsed ? '1' : '0'); } catch (e) {}
     }
 
     function openMobileSidebar() {
         sidebar.classList.add('mobile-open');
         backdrop.classList.add('visible');
+        document.body.style.overflow = 'hidden'; // lock body scroll
     }
 
     function closeMobileSidebar() {
         sidebar.classList.remove('mobile-open');
         backdrop.classList.remove('visible');
+        document.body.style.overflow = ''; // unlock body scroll
     }
 
     window.addEventListener('resize', () => {
         isDesktop = window.innerWidth >= 1024;
-        if (isDesktop) closeMobileSidebar();
+        if (isDesktop) {
+            closeMobileSidebar();
+            // Re-apply persisted collapse when resizing to desktop
+            if (isCollapsed && !sidebar.classList.contains('collapsed')) {
+                sidebar.classList.add('collapsed');
+                mainContent.classList.add('sidebar-collapsed');
+                if (toggleIcon) toggleIcon.className = 'fas fa-chevron-left';
+            }
+        }
     });
 
     // Auto-dismiss toasts
