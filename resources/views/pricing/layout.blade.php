@@ -396,6 +396,183 @@
             body { background: white; color: black; }
             .k-topbar, .k-btn, .drift-blob, .pulse-glow { display: none; }
         }
+
+        /* ===== MODAL (Plan Details) ===== */
+        .k-modal {
+            position: fixed;
+            inset: 0;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+            animation: kModalIn .25s ease-out;
+        }
+        .k-modal[hidden] { display: none; }
+        @keyframes kModalIn {
+            from { opacity: 0; }
+            to   { opacity: 1; }
+        }
+        .k-modal-backdrop {
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            cursor: pointer;
+        }
+        .k-modal-container {
+            position: relative;
+            width: 100%;
+            max-width: 640px;
+            max-height: min(90vh, 720px);
+            display: flex;
+            flex-direction: column;
+            background: linear-gradient(160deg, rgba(15, 23, 42, 0.98) 0%, rgba(11, 15, 25, 0.98) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 24px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(168, 85, 247, 0.15);
+            animation: kModalSlide .35s cubic-bezier(.16, 1, .3, 1);
+            overflow: hidden;
+        }
+        @keyframes kModalSlide {
+            from { opacity: 0; transform: translateY(20px) scale(.97); }
+            to   { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .k-modal-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 1rem;
+            padding: 1.5rem 1.5rem 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        }
+        .k-modal-header--featured {
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.08) 0%, rgba(239, 68, 68, 0.05) 100%);
+            border-bottom-color: rgba(245, 158, 11, 0.2);
+        }
+        .k-modal-close {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--k-text);
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: background .2s, border-color .2s, transform .2s;
+            flex-shrink: 0;
+        }
+        .k-modal-close:hover {
+            background: rgba(255, 255, 255, 0.12);
+            border-color: rgba(255, 255, 255, 0.25);
+            transform: rotate(90deg);
+        }
+        .k-modal-body {
+            padding: 1.25rem 1.5rem 1.5rem;
+            overflow-y: auto;
+            flex: 1 1 auto;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255,255,255,.2) transparent;
+        }
+        .k-modal-body::-webkit-scrollbar { width: 8px; }
+        .k-modal-body::-webkit-scrollbar-track { background: transparent; }
+        .k-modal-body::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,.15);
+            border-radius: 4px;
+        }
+        .k-modal-body::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,.25); }
+        .k-modal-footer {
+            padding: 1rem 1.5rem 1.5rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+            background: rgba(0, 0, 0, 0.2);
+        }
+        .k-feature-row {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.85rem;
+            padding: 0.85rem 1rem;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: background .2s, border-color .2s;
+        }
+        .k-feature-row:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+        .k-feature-row--enabled {
+            background: rgba(16, 185, 129, 0.05);
+            border-color: rgba(16, 185, 129, 0.2);
+        }
+        .k-feature-row--featured.k-feature-row--enabled {
+            background: rgba(245, 158, 11, 0.06);
+            border-color: rgba(245, 158, 11, 0.22);
+        }
+        .k-feature-row--disabled {
+            opacity: 0.5;
+        }
+        .k-feature-row__icon {
+            flex-shrink: 0;
+            width: 28px;
+            height: 28px;
+            border-radius: 8px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 2px;
+        }
+        .k-feature-row__icon--on {
+            background: rgba(16, 185, 129, 0.15);
+            color: #34d399;
+        }
+        .k-feature-row__icon--featured-on {
+            background: rgba(245, 158, 11, 0.18);
+            color: #fbbf24;
+        }
+        .k-feature-row__icon--off {
+            background: rgba(100, 116, 139, 0.2);
+            color: #64748b;
+        }
+        .k-feature-row__body { flex: 1 1 auto; min-width: 0; }
+        .k-feature-row__title {
+            font-weight: 700;
+            color: var(--k-text);
+            font-size: 0.95rem;
+            line-height: 1.4;
+        }
+        .k-feature-row__limit {
+            font-size: 0.75rem;
+            color: var(--k-text-muted);
+            margin-top: 0.15rem;
+        }
+        .k-feature-row__status {
+            flex-shrink: 0;
+            font-size: 0.7rem;
+            font-weight: 700;
+            padding: 0.2rem 0.55rem;
+            border-radius: 999px;
+            letter-spacing: 0.02em;
+            white-space: nowrap;
+            align-self: center;
+        }
+        .k-feature-row__status--on {
+            background: rgba(16, 185, 129, 0.15);
+            color: #6ee7b7;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+        .k-feature-row__status--off {
+            background: rgba(100, 116, 139, 0.15);
+            color: #94a3b8;
+            border: 1px solid rgba(100, 116, 139, 0.25);
+        }
+        .k-feature-row__status--featured-on {
+            background: rgba(245, 158, 11, 0.15);
+            color: #fcd34d;
+            border: 1px solid rgba(245, 158, 11, 0.3);
+        }
     </style>
 
     @stack('head')
@@ -478,6 +655,71 @@
                     const icon = btn.querySelector('i');
                     if (icon) icon.className = 'fas fa-bars';
                 });
+            });
+        })();
+
+        // Plan Details Modal — open/close
+        (function() {
+            var openTriggers = document.querySelectorAll('[data-modal-target]');
+            if (!openTriggers.length) return;
+
+            function openModal(id) {
+                var modal = document.getElementById(id);
+                if (!modal) return;
+                modal.hidden = false;
+                modal.setAttribute('aria-hidden', 'false');
+                document.body.style.overflow = 'hidden';
+                // Move focus to the close button for accessibility
+                var closeBtn = modal.querySelector('.k-modal-close');
+                if (closeBtn) setTimeout(function() { closeBtn.focus(); }, 50);
+            }
+
+            function closeModal(modal) {
+                if (!modal || modal.hidden) return;
+                modal.hidden = true;
+                modal.setAttribute('aria-hidden', 'true');
+                document.body.style.overflow = '';
+            }
+
+            openTriggers.forEach(function(btn) {
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    openModal(btn.getAttribute('data-modal-target'));
+                });
+            });
+
+            // Close on [data-modal-close] click (backdrop, close button, footer close)
+            document.addEventListener('click', function(e) {
+                var closer = e.target.closest('[data-modal-close]');
+                if (!closer) return;
+                var modal = closer.closest('.k-modal');
+                if (modal) closeModal(modal);
+            });
+
+            // Close on ESC key
+            document.addEventListener('keydown', function(e) {
+                if (e.key !== 'Escape') return;
+                var open = document.querySelectorAll('.k-modal:not([hidden])');
+                if (!open.length) return;
+                open.forEach(closeModal);
+            });
+
+            // Trap focus inside modal while open
+            document.addEventListener('keydown', function(e) {
+                if (e.key !== 'Tab') return;
+                var modal = document.querySelector('.k-modal:not([hidden])');
+                if (!modal) return;
+                var focusables = modal.querySelectorAll('a, button, [tabindex]:not([tabindex="-1"])');
+                if (!focusables.length) return;
+                var first = focusables[0];
+                var last  = focusables[focusables.length - 1];
+                if (e.shiftKey && document.activeElement === first) {
+                    e.preventDefault();
+                    last.focus();
+                } else if (!e.shiftKey && document.activeElement === last) {
+                    e.preventDefault();
+                    first.focus();
+                }
             });
         })();
     </script>

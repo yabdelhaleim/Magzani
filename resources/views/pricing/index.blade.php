@@ -266,6 +266,12 @@
                     </ul>
 
                     <div class="space-y-3 mt-auto">
+                        <button type="button"
+                                data-modal-target="planModal-{{ $plan->id }}"
+                                class="k-btn k-btn-ghost w-full">
+                            <i class="fas fa-list-check"></i>
+                            <span>عرض التفاصيل</span>
+                        </button>
                         <a href="{{ $demoLink }}" target="_blank" rel="noopener"
                            class="k-btn {{ $isFeatured ? 'k-btn-featured' : 'k-btn-primary' }} w-full">
                             <i class="fas fa-calendar-check"></i>
@@ -282,6 +288,86 @@
         </p>
     </div>
 </section>
+
+{{-- ===================== PLAN DETAILS MODALS ===================== --}}
+@foreach($plans as $plan)
+    @php $modalId = 'planModal-' . $plan->id; @endphp
+    <div id="{{ $modalId }}" class="k-modal" data-modal hidden aria-hidden="true" role="dialog" aria-labelledby="{{ $modalId }}-title">
+        <div class="k-modal-backdrop" data-modal-close aria-label="إغلاق"></div>
+        <div class="k-modal-container">
+
+            {{-- Header --}}
+            <div class="k-modal-header {{ $plan->is_featured ? 'k-modal-header--featured' : '' }}">
+                <div class="flex-1 min-w-0">
+                    <span class="block text-xs font-extrabold tracking-widest uppercase {{ $plan->is_featured ? 'text-amber-400' : 'text-indigo-400' }} mb-1">
+                        {{ $plan->display_label ?: $plan->name }}
+                    </span>
+                    <h3 id="{{ $modalId }}-title" class="k-h k-h-3 text-white truncate">{{ $plan->name }}</h3>
+                    <div class="mt-2">
+                        @if((float) $plan->price == 0)
+                            <span class="text-2xl font-black text-white">مخصص</span>
+                            <span class="text-sm text-slate-400 font-bold">تواصل معنا</span>
+                        @else
+                            <span class="text-3xl font-black text-white">{{ number_format((float) $plan->price, 0) }}</span>
+                            <span class="text-sm text-slate-400 font-bold">ج.م / {{ ($plan->billing_period ?? 'monthly') === 'yearly' ? 'سنوياً' : 'شهرياً' }}</span>
+                        @endif
+                    </div>
+                </div>
+                <button type="button" class="k-modal-close" data-modal-close aria-label="إغلاق">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            {{-- Body --}}
+            <div class="k-modal-body">
+                @if($plan->description)
+                    <p class="text-sm text-slate-400 leading-relaxed mb-5">{{ $plan->description }}</p>
+                @endif
+
+                <h4 class="text-xs font-extrabold tracking-widest uppercase {{ $plan->is_featured ? 'text-amber-400' : 'text-indigo-400' }} mb-3">
+                    <i class="fas fa-cubes ml-1.5"></i>
+                    الأنظمة والميزات المشمولة
+                </h4>
+
+                <ul class="space-y-2">
+                    @foreach(\App\Support\FeatureLabels::all() as $key => $label)
+                        @php
+                            $feat = $plan->featuresList->firstWhere('feature_key', $key);
+                            $enabled = $feat && $feat->is_enabled;
+                            $limit   = ($feat && $feat->limit_value !== null) ? $feat->limit_value : null;
+                        @endphp
+                        <li class="k-feature-row {{ $enabled ? 'k-feature-row--enabled' : 'k-feature-row--disabled' }} {{ $plan->is_featured ? 'k-feature-row--featured' : '' }}">
+                            <span class="k-feature-row__icon {{ $enabled ? ($plan->is_featured ? 'k-feature-row__icon--featured-on' : 'k-feature-row__icon--on') : 'k-feature-row__icon--off' }}">
+                                <i class="fas {{ $enabled ? 'fa-check' : 'fa-xmark' }} text-xs"></i>
+                            </span>
+                            <div class="k-feature-row__body">
+                                <div class="k-feature-row__title">{{ $label }}</div>
+                                @if($enabled && $limit !== null)
+                                    <div class="k-feature-row__limit">حتى {{ $limit }}</div>
+                                @endif
+                            </div>
+                            <span class="k-feature-row__status {{ $enabled ? ($plan->is_featured ? 'k-feature-row__status--featured-on' : 'k-feature-row__status--on') : 'k-feature-row__status--off' }}">
+                                {{ $enabled ? 'مفعّل' : 'غير مشمول' }}
+                            </span>
+                        </li>
+                    @endforeach
+                </ul>
+            </div>
+
+            {{-- Footer --}}
+            <div class="k-modal-footer">
+                <button type="button" data-modal-close class="k-btn k-btn-ghost w-full mb-2 text-xs">
+                    <i class="fas fa-xmark"></i>
+                    <span>إغلاق</span>
+                </button>
+                <a href="{{ $demoLink }}" target="_blank" rel="noopener" class="k-btn {{ $plan->is_featured ? 'k-btn-featured' : 'k-btn-primary' }} w-full">
+                    <i class="fas fa-calendar-check"></i>
+                    <span>احجز ديمو مجاني</span>
+                </a>
+            </div>
+        </div>
+    </div>
+@endforeach
 
 {{-- ===================== SECTION 6: COMPARISON TABLE ===================== --}}
 <section id="compare" class="py-16 sm:py-20 lg:py-24 bg-gradient-to-b from-transparent via-slate-900/40 to-transparent">
