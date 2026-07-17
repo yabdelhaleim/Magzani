@@ -247,10 +247,6 @@
                                 <span class="text-sm text-slate-400 font-bold">ج.م / {{ $periodLabel }}</span>
                             @endif
                         </div>
-                        <p class="text-xs text-slate-500 mt-2">
-                            <i class="fas fa-shield-halved ml-1"></i>
-                            بدون رسوم إعداد • إلغاء في أي وقت
-                        </p>
                     </div>
 
                     <ul class="space-y-3 mb-8 flex-grow">
