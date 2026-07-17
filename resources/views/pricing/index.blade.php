@@ -24,7 +24,7 @@
             'name'          => $p->name,
             'description'   => $p->description,
             'price'         => number_format((float) $p->price, 2, '.', ''),
-            'priceCurrency' => 'SAR',
+            'priceCurrency' => 'EGP',
             'category'      => 'subscription',
             'availability'  => 'https://schema.org/InStock',
         ])->values()->all(),
@@ -244,7 +244,7 @@
                                 <span class="text-sm text-slate-400 font-bold">تواصل معنا</span>
                             @else
                                 <span class="text-5xl sm:text-6xl font-black text-white tracking-tight">{{ number_format((float) $plan->price, 0) }}</span>
-                                <span class="text-sm text-slate-400 font-bold">ريال / {{ $periodLabel }}</span>
+                                <span class="text-sm text-slate-400 font-bold">ج.م / {{ $periodLabel }}</span>
                             @endif
                         </div>
                         <p class="text-xs text-slate-500 mt-2">

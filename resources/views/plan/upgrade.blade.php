@@ -281,7 +281,7 @@
 
             <div class="my-5 sm:my-6 flex items-baseline gap-2">
                 <span class="upg-price text-slate-900">99</span>
-                <span class="upg-price-currency text-slate-400">ريال / شهرياً</span>
+                <span class="upg-price-currency text-slate-400">ج.م / شهرياً</span>
             </div>
 
             <div class="upg-divider"></div>
@@ -342,7 +342,7 @@
 
             <div class="my-5 sm:my-6 flex items-baseline gap-2">
                 <span class="upg-price text-white">299</span>
-                <span class="upg-price-currency text-slate-400">ريال / شهرياً</span>
+                <span class="upg-price-currency text-slate-400">ج.م / شهرياً</span>
             </div>
 
             <div class="upg-divider"></div>
@@ -405,7 +405,7 @@
 
             <div class="my-5 sm:my-6 flex items-baseline gap-2">
                 <span class="upg-price text-slate-900">599</span>
-                <span class="upg-price-currency text-slate-400">ريال / شهرياً</span>
+                <span class="upg-price-currency text-slate-400">ج.م / شهرياً</span>
             </div>
 
             <div class="upg-divider"></div>

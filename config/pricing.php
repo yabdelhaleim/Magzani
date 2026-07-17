@@ -29,6 +29,6 @@ return [
 
     // SEO defaults
     'seo_title'       => env('KAYYAN_SEO_TITLE', 'الأسعار | كيان SaaS - نظام إدارة الأعمال الذكي'),
-    'seo_description' => env('KAYYAN_SEO_DESCRIPTION', 'اختر باقة كيان SaaS المناسبة لنمو أعمالك. باقات مرنة تبدأ من 99 ريال شهرياً تشمل نقاط البيع، التصنيع، المحاسبة المتقدمة، والتقارير المالية.'),
+    'seo_description' => env('KAYYAN_SEO_DESCRIPTION', 'اختر باقة كيان SaaS المناسبة لنمو أعمالك. باقات مرنة تبدأ من 99 ج.م شهرياً تشمل نقاط البيع، التصنيع، المحاسبة المتقدمة، والتقارير المالية.'),
     'seo_keywords'    => env('KAYYAN_SEO_KEYWORDS', 'نظام إدارة أعمال, نقاط بيع, محاسبة, تصنيع, مخازن, فواتير, كيان SaaS, Magzani, ERP, POS'),
 ];

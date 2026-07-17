@@ -226,7 +226,7 @@ class CashTransaction extends Model
      */
     public function getFormattedAmountAttribute(): string
     {
-        return number_format($this->amount, 2) . ' ريال';
+        return number_format($this->amount, 2) . ' ج.م';
     }
 
     /**
