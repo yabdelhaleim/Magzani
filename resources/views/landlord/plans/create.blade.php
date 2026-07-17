@@ -32,7 +32,7 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <!-- Price -->
                 <div class="space-y-2">
-                    <label for="price" class="block text-sm font-bold text-slate-300">السعر الشهري/السنوي ($) *</label>
+                    <label for="price" class="block text-sm font-bold text-slate-300">السعر الشهري/السنوي (ج.م) *</label>
                     <input type="number" id="price" name="price" step="0.01" min="0" required class="w-full bg-slate-900 border border-slate-800 focus:border-indigo-500 rounded-xl px-4 py-3 text-white outline-none transition" placeholder="مثال: 39.00">
                     @error('price') <p class="text-xs text-rose-400 mt-1">{{ $message }}</p> @enderror
                 </div>

@@ -31,7 +31,7 @@
                 </div>
 
                 <div class="text-xl sm:text-2xl font-black text-purple-400">
-                    ${{ $plan->price }} <span class="text-xs text-slate-500 font-normal">/ {{ $plan->billing_period === 'monthly' ? 'شهرياً' : 'سنوياً' }}</span>
+                    {{ $plan->price }} <span class="text-xs text-slate-500 font-normal">ج.م / {{ $plan->billing_period === 'monthly' ? 'شهرياً' : 'سنوياً' }}</span>
                 </div>
 
                 <p class="text-xs sm:text-sm text-slate-400 leading-relaxed">{{ $plan->description ?: 'لا يوجد وصف لهذه الباقة.' }}</p>
