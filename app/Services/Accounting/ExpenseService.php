@@ -4,7 +4,9 @@ namespace App\Services\Accounting;
 
 use App\Models\Expense;
 use App\Models\Account;
+use App\Exports\ExpenseExport;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Response;
 use Carbon\Carbon;
 
 class ExpenseService
@@ -339,12 +341,19 @@ class ExpenseService
     }
 
     /**
-     * Export report
+     * Export تقرير المصروفات إلى Excel.
+     *
+     * @param  array  $filters  ['type', 'from_date', 'to_date', 'payment_method', 'status']
+     * @return \Symfony\Component\HttpFoundation\BinaryFileResponse
      */
     public function exportReport(array $filters)
     {
-        // This would integrate with Laravel Excel
-        return response()->json(['message' => 'Export functionality coming soon']);
+        $filename = 'expenses_'.now()->format('Ymd_His').'.xlsx';
+
+        return \Maatwebsite\Excel\Facades\Excel::download(
+            new ExpenseExport($filters),
+            $filename
+        );
     }
 
     /**

@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Account;
 use App\Models\CashTransaction;
 use App\Models\Transaction;
+use App\Exports\CashTransactionExport;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
@@ -373,13 +374,19 @@ class CashService
     }
 
     /**
-     * Export report
+     * Export تقرير حركات النقدية/البنك إلى Excel.
+     *
+     * @param  array  $filters  ['type', 'account_id', 'from_date', 'to_date']
+     * @return \Symfony\Component\HttpFoundation\BinaryFileResponse
      */
     public function exportReport(array $filters)
     {
-        // This would integrate with Laravel Excel or similar
-        // For now, returning a placeholder
-        return response()->json(['message' => 'Export functionality coming soon']);
+        $filename = 'cash_transactions_'.now()->format('Ymd_His').'.xlsx';
+
+        return \Maatwebsite\Excel\Facades\Excel::download(
+            new CashTransactionExport($filters),
+            $filename
+        );
     }
 
     /**

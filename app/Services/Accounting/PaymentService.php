@@ -3,9 +3,10 @@
 namespace App\Services\Accounting;
 
 use App\Models\Payment;
-use App\Models\Account;
 use App\Models\Transaction;
+use App\Exports\PaymentExport;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
 class PaymentService
@@ -449,12 +450,19 @@ class PaymentService
     }
 
     /**
-     * Export report
+     * Export تقرير المدفوعات إلى Excel.
+     *
+     * @param  array  $filters  ['type', 'method', 'from_date', 'to_date', 'account_id']
+     * @return \Symfony\Component\HttpFoundation\BinaryFileResponse
      */
     public function exportReport(array $filters)
     {
-        // This would integrate with Laravel Excel
-        return response()->json(['message' => 'Export functionality coming soon']);
+        $filename = 'payments_'.now()->format('Ymd_His').'.xlsx';
+
+        return \Maatwebsite\Excel\Facades\Excel::download(
+            new PaymentExport($filters),
+            $filename
+        );
     }
 
     /**

@@ -5,7 +5,10 @@ namespace App\Http\Controllers;
 use App\Models\Warehouse;
 use App\Models\Product;
 use App\Services\InventoryMovementService;
+use App\Exports\InventoryMovementExport;
 use Illuminate\Http\Request;
+use Maatwebsite\Excel\Facades\Excel;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class InventoryMovementController extends Controller
 {
@@ -110,11 +113,18 @@ public function warehouseMovements($warehouseId, Request $request)
 }
 
     /**
-     * تصدير التقرير
+     * تصدير حركات المخزون إلى Excel.
+     *
+     * GET /movements/export?...filters
      */
-    public function export(Request $request)
+    public function export(Request $request): BinaryFileResponse
     {
-        // TODO: إضافة Export Excel/PDF
-        return back()->with('info', 'قريباً - تصدير التقارير');
+        $filters = $request->only([
+            'warehouse_id', 'product_id', 'movement_type', 'date_from', 'date_to',
+        ]);
+
+        $filename = 'inventory_movements_'.now()->format('Ymd_His').'.xlsx';
+
+        return Excel::download(new InventoryMovementExport($filters), $filename);
     }
 }

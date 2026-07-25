@@ -101,8 +101,8 @@ class SalesController extends Controller
         $statistics = $this->calculateStatistics($request);
 
         // جلب البيانات للفلاتر
-        $customers = Customer::where('is_active', 1)->get();
-        $warehouses = Warehouse::where('is_active', 1)->get();
+        $customers = Customer::where('is_active', true)->get();
+        $warehouses = Warehouse::where('is_active', true)->get();
 
         return view('invoices.sales.index', compact('invoices', 'statistics', 'customers', 'warehouses'));
     }
@@ -222,8 +222,8 @@ class SalesController extends Controller
      */
     public function create(Request $request)
     {
-        $customers = Customer::where('is_active', 1)->get();
-        $warehouses = Warehouse::where('is_active', 1)->get();
+        $customers = Customer::where('is_active', true)->get();
+        $warehouses = Warehouse::where('is_active', true)->get();
 
         // جلب بيانات الشركة
         $company = \App\Models\Company::first();
@@ -310,21 +310,32 @@ class SalesController extends Controller
      */
     public function show($id)
     {
-        $invoice = SalesInvoice::with([
-            'customer',
-            'warehouse',
-            'items.product',
-            'items.sellingUnit',
-            'payments',
-        ])
-            ->findOrFail($id); // ← هينا المشكلة، خلصها كده:
+        try {
+            $invoice = SalesInvoice::with([
+                'customer',
+                'warehouse',
+                'items.product',
+                'items.sellingUnit',
+                'payments',
+            ])
+                ->findOrFail($id);
 
-        $invoice->calculated_details = $this->invoiceService->calculateInvoiceDetails($invoice);
+            $invoice->calculated_details = $this->invoiceService->calculateInvoiceDetails($invoice);
 
-        // جلب بيانات الشركة للطباعة
-        $company = \App\Models\Company::first();
+            // جلب بيانات الشركة للطباعة
+            $company = \App\Models\Company::first();
 
-        return view('invoices.sales.show', compact('invoice', 'company'));
+            return view('invoices.sales.show', compact('invoice', 'company'));
+
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            abort(404, 'الفاتورة غير موجودة');
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Failed to show sales invoice', [
+                'invoice_id' => $id,
+                'error'      => $e->getMessage(),
+            ]);
+            return back()->with('error', '❌ حدث خطأ أثناء عرض الفاتورة: '.$e->getMessage());
+        }
     }
 
     /**
@@ -332,43 +343,56 @@ class SalesController extends Controller
      */
     public function edit($id)
     {
-        $invoice = SalesInvoice::with(['items.product', 'items.sellingUnit'])->findOrFail($id);
+        try {
+            $invoice = SalesInvoice::with(['items.product', 'items.sellingUnit'])->findOrFail($id);
 
-        // منع التعديل للفواتير الملغاة أو المكتملة
-        if ($invoice->status === 'cancelled') {
+            // منع التعديل للفواتير الملغاة أو المكتملة
+            if ($invoice->status === 'cancelled') {
+                return redirect()
+                    ->route('invoices.sales.index')
+                    ->with('error', '❌ لا يمكن تعديل فاتورة ملغاة');
+            }
+
+            if ($invoice->payment_status === 'paid') {
+                return redirect()
+                    ->route('invoices.sales.show', $invoice->id)
+                    ->with('error', '❌ لا يمكن تعديل فاتورة مكتملة (مدفوعة بالكامل)');
+            }
+
+            $invoice->calculated_details = $this->invoiceService->calculateInvoiceDetails($invoice);
+
+            $customers = Customer::where('is_active', true)->get();
+            $warehouses = Warehouse::where('is_active', true)->get();
+
+            // ✅ جلب المنتجات - نفس طريقة create
+            $products = Product::active()
+                ->with([
+                    'baseunit',
+                    'basePricing',
+                    'activeSellingUnits' => function ($q) {
+                        $q->ordered();
+                    },
+                    'warehouses' => function ($q) {
+                        $q->where('warehouses.is_active', true);
+                    },
+                ])
+                ->get();
+
+            $company = \App\Models\Company::first();
+
+            return view('invoices.sales.edit', compact('invoice', 'customers', 'warehouses', 'products', 'company'));
+
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            abort(404, 'الفاتورة غير موجودة');
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Failed to load edit page', [
+                'invoice_id' => $id,
+                'error'      => $e->getMessage(),
+            ]);
             return redirect()
                 ->route('invoices.sales.index')
-                ->with('error', '❌ لا يمكن تعديل فاتورة ملغاة');
+                ->with('error', '❌ حدث خطأ أثناء تحميل صفحة التعديل: '.$e->getMessage());
         }
-
-        if ($invoice->payment_status === 'paid') {
-            return redirect()
-                ->route('invoices.sales.show', $invoice->id)
-                ->with('error', '❌ لا يمكن تعديل فاتورة مكتملة (مدفوعة بالكامل)');
-        }
-
-        $invoice->calculated_details = $this->invoiceService->calculateInvoiceDetails($invoice);
-
-        $customers = Customer::where('is_active', 1)->get();
-        $warehouses = Warehouse::where('is_active', 1)->get();
-
-        // ✅ جلب المنتجات - نفس طريقة create
-        $products = Product::active()
-            ->with([
-                'baseunit',
-                'basePricing',
-                'activeSellingUnits' => function ($q) {
-                    $q->ordered();
-                },
-                'warehouses' => function ($q) {
-                    $q->where('warehouses.is_active', true);
-                },
-            ])
-            ->get();
-
-        $company = \App\Models\Company::first();
-
-        return view('invoices.sales.edit', compact('invoice', 'customers', 'warehouses', 'products', 'company'));
     }
 
     /**
@@ -440,46 +464,58 @@ class SalesController extends Controller
         $search = $request->get('q', '');
         $warehouseId = $request->get('warehouse_id');
 
-        $products = Product::active()
-            ->with(['activeSellingUnits', 'warehouses', 'basePricing'])
-            ->where(function ($query) use ($search) {
-                $query->where('name', 'like', '%'.$search.'%')
-                    ->orWhere('code', 'like', '%'.$search.'%')
-                    ->orWhere('sku', 'like', '%'.$search.'%');
-            })
-            ->limit(20)
-            ->get()
-            ->map(function ($product) use ($warehouseId) {
-                $stock = 0;
+        try {
+            $products = Product::active()
+                ->with(['activeSellingUnits', 'warehouses', 'basePricing'])
+                ->where(function ($query) use ($search) {
+                    $query->where('name', 'like', '%'.$search.'%')
+                        ->orWhere('code', 'like', '%'.$search.'%')
+                        ->orWhere('sku', 'like', '%'.$search.'%');
+                })
+                ->limit(20)
+                ->get()
+                ->map(function ($product) use ($warehouseId) {
+                    $stock = 0;
 
-                if ($warehouseId) {
-                    $productWarehouse = $product->warehouses->firstWhere('id', $warehouseId);
-                    $stock = $productWarehouse ? $productWarehouse->pivot->quantity : 0;
-                }
+                    if ($warehouseId) {
+                        $productWarehouse = $product->warehouses->firstWhere('id', $warehouseId);
+                        $stock = $productWarehouse ? $productWarehouse->pivot->quantity : 0;
+                    }
 
-                return [
-                    'id' => $product->id,
-                    'name' => $product->name,
-                    'code' => $product->code ?? $product->sku,
-                    'base_price' => $product->base_selling_price,
-                    'stock' => $stock,
-                    'base_unit' => $product->base_unit_label ?? 'قطعة',
-                    'selling_units' => $product->activeSellingUnits->map(function ($unit) use ($product) {
-                        return [
-                            'id' => $unit->id,
-                            'unit_name' => $unit->unit_name,
-                            'conversion_factor' => $unit->quantity_in_base_unit,
-                            'selling_price' => round($product->base_selling_price * $unit->quantity_in_base_unit, 2),
-                            'purchase_price' => round($product->base_purchase_price * $unit->quantity_in_base_unit, 2),
-                        ];
-                    }),
-                ];
-            });
+                    return [
+                        'id' => $product->id,
+                        'name' => $product->name,
+                        'code' => $product->code ?? $product->sku,
+                        'base_price' => $product->base_selling_price,
+                        'stock' => $stock,
+                        'base_unit' => $product->base_unit_label ?? 'قطعة',
+                        'selling_units' => $product->activeSellingUnits->map(function ($unit) use ($product) {
+                            return [
+                                'id' => $unit->id,
+                                'unit_name' => $unit->unit_name,
+                                'conversion_factor' => $unit->quantity_in_base_unit,
+                                'selling_price' => round($product->base_selling_price * $unit->quantity_in_base_unit, 2),
+                                'purchase_price' => round($product->base_purchase_price * $unit->quantity_in_base_unit, 2),
+                            ];
+                        }),
+                    ];
+                });
 
-        return response()->json([
-            'success' => true,
-            'data' => $products,
-        ]);
+            return response()->json([
+                'success' => true,
+                'data' => $products,
+            ]);
+
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Product search failed', [
+                'query' => $search,
+                'error' => $e->getMessage(),
+            ]);
+            return response()->json([
+                'success' => false,
+                'message' => '❌ حدث خطأ أثناء البحث: '.$e->getMessage(),
+            ], 500);
+        }
     }
 
     /**
@@ -487,17 +523,28 @@ class SalesController extends Controller
      */
     public function printReceipt($id)
     {
-        $invoice = SalesInvoice::with([
-            'customer',
-            'warehouse',
-            'items.product',
-            'items.sellingUnit',
-            'payments',
-        ])->findOrFail($id);
+        try {
+            $invoice = SalesInvoice::with([
+                'customer',
+                'warehouse',
+                'items.product',
+                'items.sellingUnit',
+                'payments',
+            ])->findOrFail($id);
 
-        $invoice->calculated_details = $this->invoiceService->calculateInvoiceDetails($invoice);
-        $company = \App\Models\Company::first();
+            $invoice->calculated_details = $this->invoiceService->calculateInvoiceDetails($invoice);
+            $company = \App\Models\Company::first();
 
-        return view('invoices.sales.thermal_receipt', compact('invoice', 'company'));
+            return view('invoices.sales.thermal_receipt', compact('invoice', 'company'));
+
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            abort(404, 'الفاتورة غير موجودة');
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Failed to print receipt', [
+                'invoice_id' => $id,
+                'error'      => $e->getMessage(),
+            ]);
+            return back()->with('error', '❌ حدث خطأ أثناء طباعة الفاتورة: '.$e->getMessage());
+        }
     }
 }
