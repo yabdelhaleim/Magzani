@@ -224,12 +224,26 @@ class SuperAdminController extends Controller
             }
         }
 
-        try {
+try {
             $tenant = Tenant::findOrFail($id);
+
+            // ── تنظيف المفاتيح القديمة لمنع التكرار (مثل "purchases" و "purchase") ──
+            $rawFeatures = $request->custom_features ?? [];
+            if ($request->plan_id === 'custom') {
+                $normalized = [];
+                foreach ($rawFeatures as $f) {
+                    $normalized[] = \App\Models\Tenant::resolveFeatureKey($f);
+                }
+                $rawFeatures = array_values(array_unique($normalized));
+            }
+
             $tenant->update([
                 'plan_id' => $request->plan_id,
-                'custom_features' => $request->plan_id === 'custom' ? ($request->custom_features ?? []) : [],
+                'custom_features' => $request->plan_id === 'custom' ? $rawFeatures : [],
             ]);
+
+            // 🐛 Bug #4 Fix: إبطال كاش المميزات عند تغيير الخطة
+            $tenant->invalidateFeatureCache();
 
             return redirect()->route('super-admin.tenants.index')->with('success', 'تم تحديث إعدادات باقة العميل بنجاح!');
         } catch (\Exception $e) {
@@ -242,10 +256,13 @@ class SuperAdminController extends Controller
         try {
             $tenant = Tenant::findOrFail($id);
             $isSuspended = isset($tenant->is_suspended) ? $tenant->is_suspended : false;
-            
+
             $tenant->update([
                 'is_suspended' => !$isSuspended,
             ]);
+
+            // إبطال الكاش عند تغيير الحالة
+            $tenant->invalidateFeatureCache();
 
             $message = !$isSuspended ? 'تم إيقاف حساب الشركة بنجاح!' : 'تم إعادة تنشيط حساب الشركة بنجاح!';
             return redirect()->route('super-admin.tenants.index')->with('success', $message);

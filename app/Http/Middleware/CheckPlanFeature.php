@@ -75,8 +75,20 @@ class CheckPlanFeature
                 ->where('slug', $planId)
                 ->first();
             if ($plan) {
-                $features = json_decode($plan->features, true) ?? [];
-                $hasFeature = is_array($features) && in_array($feature, $features);
+                $rawFeatures = json_decode($plan->features, true) ?? [];
+
+                // 🐛 Bug #3 Fix: تنظيف features المستخرجة من JSON
+                // قد يحتوي على objects مثل {id, plan_id, feature_key} بدلاً من strings
+                $features = collect($rawFeatures)
+                    ->map(function ($item) {
+                        if (is_array($item) && isset($item['feature_key'])) {
+                            return (string) $item['feature_key'];
+                        }
+                        return (string) $item;
+                    })
+                    ->toArray();
+
+                $hasFeature = in_array($feature, $features, true);
             }
         }
 
