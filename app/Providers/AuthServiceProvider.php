@@ -3,6 +3,11 @@
 namespace App\Providers;
 
 use App\Models\Product;
+use App\Models\Customer;
+use App\Models\Supplier;
+use App\Models\Warehouse;
+use App\Models\SalesInvoice;
+use App\Models\PurchaseInvoice;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 
 class AuthServiceProvider extends ServiceProvider
@@ -13,7 +18,12 @@ class AuthServiceProvider extends ServiceProvider
      * @var array<class-string, class-string>
      */
     protected $policies = [
-        Product::class => \App\Policies\ProductPolicy::class,
+        Product::class         => \App\Policies\ProductPolicy::class,
+        Customer::class        => \App\Policies\CustomerPolicy::class,
+        Supplier::class        => \App\Policies\SupplierPolicy::class,
+        Warehouse::class       => \App\Policies\WarehousePolicy::class,
+        SalesInvoice::class    => \App\Policies\SalesInvoicePolicy::class,
+        PurchaseInvoice::class => \App\Policies\PurchaseInvoicePolicy::class,
     ];
 
     /**

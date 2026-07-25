@@ -263,13 +263,13 @@ Route::middleware([
     Route::prefix('warehouses')->name('warehouses.')->middleware(['auth', 'role', 'feature:warehouses'])->group(function () {
         Route::get('/', [WarehouseController::class, 'index'])->name('index');
         Route::get('/create', [WarehouseController::class, 'create'])->name('create');
-        Route::post('/', [WarehouseController::class, 'store'])->name('store');
+        Route::post('/', [WarehouseController::class, 'store'])->middleware('throttle:30,1')->name('store');
         Route::get('/{warehouse}', [WarehouseController::class, 'show'])->name('show');
         Route::get('/{warehouse}/edit', [WarehouseController::class, 'edit'])->name('edit');
-        Route::put('/{warehouse}', [WarehouseController::class, 'update'])->name('update');
-        Route::delete('/{warehouse}', [WarehouseController::class, 'destroy'])->name('destroy');
+        Route::put('/{warehouse}', [WarehouseController::class, 'update'])->middleware('throttle:30,1')->name('update');
+        Route::delete('/{warehouse}', [WarehouseController::class, 'destroy'])->middleware('throttle:30,1')->name('destroy');
         Route::get('/{warehouse}/add-product', [WarehouseController::class, 'createProduct'])->name('add-product');
-        Route::post('/{warehouse}/products', [WarehouseController::class, 'addProduct'])->name('products.store');
+        Route::post('/{warehouse}/products', [WarehouseController::class, 'addProduct'])->middleware('throttle:30,1')->name('products.store');
         Route::get('/{warehouse}/low-stock', [WarehouseController::class, 'lowStock'])->name('low-stock');
         Route::get('/{warehouse}/movements', [WarehouseController::class, 'movements'])->name('movements');
         Route::get('/{warehouse}/search', [WarehouseController::class, 'search'])->name('search');
@@ -329,7 +329,7 @@ Route::middleware([
     Route::prefix('movements')->name('movements.')->middleware(['auth', 'feature:warehouses'])->group(function () {
         Route::get('/', [InventoryMovementController::class, 'index'])->name('index');
         Route::get('/product/{product}', [InventoryMovementController::class, 'productMovements'])->name('product');
-        Route::get('/export', [InventoryMovementController::class, 'export'])->name('export');
+        Route::get('/export', [InventoryMovementController::class, 'export'])->middleware('throttle:30,1')->name('export');
     });
 
     /*
@@ -352,7 +352,7 @@ Route::middleware([
         Route::get('/ajax/convert-unit-price', [PriceUpdateController::class, 'convertUnitPrice'])->name('ajax.convert-unit-price');
         Route::get('/ajax/unit-details', [PriceUpdateController::class, 'getUnitDetails'])->name('ajax.unit-details');
 
-        Route::middleware('admin.only')->group(function () {
+        Route::middleware(['admin.only', 'throttle:30,1'])->group(function () {
             Route::get('/create', [ProductController::class, 'create'])->name('create');
             Route::post('/', [ProductController::class, 'store'])->name('store');
             Route::get('/{product}/edit', [ProductController::class, 'edit'])->name('edit');
@@ -360,7 +360,7 @@ Route::middleware([
             Route::delete('/{product}', [ProductController::class, 'destroy'])->name('destroy');
         });
 
-        Route::post('/{product}/update-price', [ProductController::class, 'updatePrice'])->name('update-price');
+        Route::post('/{product}/update-price', [ProductController::class, 'updatePrice'])->middleware('throttle:30,1')->name('update-price');
         Route::get('/{product}/price-history', [ProductController::class, 'priceHistory'])->name('price-history');
         Route::get('/{product}', [ProductController::class, 'show'])->name('show');
     });
@@ -372,10 +372,10 @@ Route::middleware([
     */
     Route::prefix('categories')->name('categories.')->middleware('auth')->group(function () {
         Route::get('/', [\App\Http\Controllers\CategoryController::class, 'index'])->name('index');
-        Route::post('/', [\App\Http\Controllers\CategoryController::class, 'store'])->name('store');
-        Route::put('/{category}', [\App\Http\Controllers\CategoryController::class, 'update'])->name('update');
-        Route::delete('/{category}', [\App\Http\Controllers\CategoryController::class, 'destroy'])->name('destroy');
-        Route::post('/{category}/toggle-status', [\App\Http\Controllers\CategoryController::class, 'toggleStatus'])->name('toggle-status');
+        Route::post('/', [\App\Http\Controllers\CategoryController::class, 'store'])->middleware('throttle:30,1')->name('store');
+        Route::put('/{category}', [\App\Http\Controllers\CategoryController::class, 'update'])->middleware('throttle:30,1')->name('update');
+        Route::delete('/{category}', [\App\Http\Controllers\CategoryController::class, 'destroy'])->middleware('throttle:30,1')->name('destroy');
+        Route::post('/{category}/toggle-status', [\App\Http\Controllers\CategoryController::class, 'toggleStatus'])->middleware('throttle:30,1')->name('toggle-status');
         Route::get('/list', [\App\Http\Controllers\CategoryController::class, 'list'])->name('list');
     });
 
@@ -434,9 +434,9 @@ Route::middleware([
     */
     Route::prefix('customers')->name('customers.')->middleware('auth')->group(function () {
         Route::get('/', [CustomerController::class, 'index'])->name('index');
-        Route::get('/export', [CustomerController::class, 'export'])->name('export');
+        Route::get('/export', [CustomerController::class, 'export'])->middleware('throttle:30,1')->name('export');
 
-        Route::middleware('admin.only')->group(function () {
+        Route::middleware(['admin.only', 'throttle:30,1'])->group(function () {
             Route::get('/create', [CustomerController::class, 'create'])->name('create');
             Route::post('/', [CustomerController::class, 'store'])->name('store');
             Route::get('/{customer}/edit', [CustomerController::class, 'edit'])->name('edit');
@@ -446,7 +446,7 @@ Route::middleware([
 
         Route::get('/{customer}', [CustomerController::class, 'show'])->name('show');
         Route::get('/{customer}/statement', [CustomerController::class, 'statement'])->name('statement');
-        Route::get('/{customer}/statement/export', [CustomerController::class, 'exportStatement'])->name('statement.export');
+        Route::get('/{customer}/statement/export', [CustomerController::class, 'exportStatement'])->middleware('throttle:30,1')->name('statement.export');
     });
 
     /*
@@ -456,9 +456,9 @@ Route::middleware([
     */
     Route::prefix('suppliers')->name('suppliers.')->middleware('auth')->group(function () {
         Route::get('/', [SupplierController::class, 'index'])->name('index');
-        Route::get('/export', [SupplierController::class, 'export'])->name('export');
+        Route::get('/export', [SupplierController::class, 'export'])->middleware('throttle:30,1')->name('export');
 
-        Route::middleware('admin.only')->group(function () {
+        Route::middleware(['admin.only', 'throttle:30,1'])->group(function () {
             Route::get('/create', [SupplierController::class, 'create'])->name('create');
             Route::post('/', [SupplierController::class, 'store'])->name('store');
             Route::get('/{supplier}/edit', [SupplierController::class, 'edit'])->name('edit');
@@ -468,7 +468,7 @@ Route::middleware([
 
         Route::get('/{supplier}', [SupplierController::class, 'show'])->name('show');
         Route::get('/{supplier}/statement', [SupplierController::class, 'statement'])->name('statement');
-        Route::get('/{supplier}/statement/export', [SupplierController::class, 'exportStatement'])->name('statement.export');
+        Route::get('/{supplier}/statement/export', [SupplierController::class, 'exportStatement'])->middleware('throttle:30,1')->name('statement.export');
     });
 
     /*
