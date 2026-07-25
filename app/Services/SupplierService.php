@@ -9,34 +9,39 @@ use Exception;
 
 class SupplierService
 {
-    /**
-     * إنشاء مورد جديد
-     */
-    public function create(array $data): Supplier
-    {
+/**
+ * إنشاء مورد جديد
+ */
+public function create(array $data): Supplier
+{
+    try {
         return DB::transaction(function () use ($data) {
-            try {
-                // إضافة معلومات المستخدم
-                $data['created_by'] = auth()->id();
-                $data['current_balance'] = $data['opening_balance'] ?? 0;
-                $data['balance'] = $data['opening_balance'] ?? 0;
+            // إضافة معلومات المستخدم
+            $data['created_by'] = auth()->id();
+            $data['current_balance'] = $data['opening_balance'] ?? 0;
+            $data['balance'] = $data['opening_balance'] ?? 0;
 
-                $supplier = Supplier::create($data);
+            $supplier = Supplier::create($data);
 
-                Log::info('تم إنشاء مورد جديد', [
-                    'supplier_id' => $supplier->id,
-                    'supplier_code' => $supplier->code,
-                    'name' => $supplier->name,
-                ]);
+            Log::info('تم إنشاء مورد جديد', [
+                'supplier_id' => $supplier->id,
+                'supplier_code' => $supplier->code,
+                'name' => $supplier->name,
+            ]);
 
-                return $supplier;
-
-            } catch (Exception $e) {
-                Log::error('خطأ في إنشاء المورد: ' . $e->getMessage());
-                throw $e;
-            }
+            return $supplier;
         });
+    } catch (\Illuminate\Database\QueryException $e) {
+        Log::error('DB error creating supplier', [
+            'code' => $e->getCode(),
+            'error' => $e->getMessage(),
+        ]);
+        throw new \RuntimeException('حدث خطأ أثناء حفظ بيانات المورد. تأكد من عدم تكرار الكود.');
+    } catch (Exception $e) {
+        Log::error('خطأ في إنشاء المورد: ' . $e->getMessage());
+        throw new \RuntimeException('حدث خطأ غير متوقع أثناء إنشاء المورد.');
     }
+}
 
     /**
      * تحديث بيانات مورد
@@ -64,33 +69,40 @@ class SupplierService
         });
     }
 
-    /**
-     * حذف مورد (Soft Delete)
-     */
-    public function delete(Supplier $supplier): bool
-    {
+/**
+ * حذف مورد (Soft Delete)
+ */
+public function delete(Supplier $supplier): bool
+{
+    try {
         return DB::transaction(function () use ($supplier) {
-            try {
-                // التحقق من عدم وجود فواتير مرتبطة
-                if ($supplier->purchaseInvoices()->count() > 0) {
-                    throw new Exception('لا يمكن حذف المورد لوجود فواتير مرتبطة به');
-                }
-
-                $supplier->delete();
-
-                Log::info('تم حذف المورد', [
-                    'supplier_id' => $supplier->id,
-                    'supplier_code' => $supplier->code,
-                ]);
-
-                return true;
-
-            } catch (Exception $e) {
-                Log::error('خطأ في حذف المورد: ' . $e->getMessage());
-                throw $e;
+            // التحقق من عدم وجود فواتير مرتبطة
+            if ($supplier->purchaseInvoices()->count() > 0) {
+                throw new \RuntimeException('لا يمكن حذف المورد لوجود فواتير مرتبطة به');
             }
+
+            $supplier->delete();
+
+            Log::info('تم حذف المورد', [
+                'supplier_id' => $supplier->id,
+                'supplier_code' => $supplier->code,
+            ]);
+
+            return true;
         });
+    } catch (\RuntimeException $e) {
+        throw $e;
+    } catch (\Illuminate\Database\QueryException $e) {
+        Log::error('DB error deleting supplier', [
+            'supplier_id' => $supplier->id,
+            'error' => $e->getMessage(),
+        ]);
+        throw new \RuntimeException('لا يمكن حذف المورد لوجود بيانات مرتبطة به في النظام.');
+    } catch (Exception $e) {
+        Log::error('خطأ في حذف المورد: ' . $e->getMessage());
+        throw new \RuntimeException('حدث خطأ غير متوقع أثناء حذف المورد.');
     }
+}
 
     /**
      * الحصول على قائمة الموردين مع الفلترة
@@ -127,39 +139,50 @@ class SupplierService
         return $query->paginate($filters['per_page'] ?? 20);
     }
 
-    /**
-     * تحديث رصيد المورد
-     */
-    public function updateBalance(Supplier $supplier, float $amount, string $operation): Supplier
-    {
+/**
+ * تحديث رصيد المورد
+ */
+public function updateBalance(Supplier $supplier, float $amount, string $operation): Supplier
+{
+    try {
         return DB::transaction(function () use ($supplier, $amount, $operation) {
-            try {
-                if ($operation === 'add') {
-                    $supplier->current_balance += $amount;
-                } elseif ($operation === 'subtract') {
-                    $supplier->current_balance -= $amount;
-                } else {
-                    throw new Exception("عملية غير معروفة: $operation");
-                }
-
-                $supplier->balance = $supplier->current_balance;
-                $supplier->save();
-
-                Log::info('تم تحديث رصيد المورد', [
-                    'supplier_id' => $supplier->id,
-                    'operation' => $operation,
-                    'amount' => $amount,
-                    'new_balance' => $supplier->current_balance,
-                ]);
-
-                return $supplier;
-
-            } catch (Exception $e) {
-                Log::error('خطأ في تحديث رصيد المورد: ' . $e->getMessage());
-                throw $e;
+            if ($amount < 0) {
+                throw new \RuntimeException('القيمة غير صالحة - يجب أن تكون أكبر من صفر');
             }
+
+            if ($operation === 'add') {
+                $supplier->current_balance += $amount;
+            } elseif ($operation === 'subtract') {
+                $supplier->current_balance -= $amount;
+            } else {
+                throw new \RuntimeException("عملية غير معروفة: $operation. استخدم add أو subtract");
+            }
+
+            $supplier->balance = $supplier->current_balance;
+            $supplier->save();
+
+            Log::info('تم تحديث رصيد المورد', [
+                'supplier_id' => $supplier->id,
+                'operation' => $operation,
+                'amount' => $amount,
+                'new_balance' => $supplier->current_balance,
+            ]);
+
+            return $supplier;
         });
+    } catch (\RuntimeException $e) {
+        throw $e;
+    } catch (\Illuminate\Database\QueryException $e) {
+        Log::error('DB error updating supplier balance', [
+            'supplier_id' => $supplier->id,
+            'error' => $e->getMessage(),
+        ]);
+        throw new \RuntimeException('حدث خطأ أثناء تحديث رصيد المورد.');
+    } catch (Exception $e) {
+        Log::error('خطأ في تحديث رصيد المورد: ' . $e->getMessage());
+        throw new \RuntimeException('حدث خطأ غير متوقع أثناء تحديث الرصيد.');
     }
+}
 
     /**
      * احصائيات الموردين

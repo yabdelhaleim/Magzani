@@ -36,11 +36,12 @@ class CustomerService
         }
     }
 
-    /**
-     * تحديث بيانات العميل
-     */
-    public function update(int $customerId, array $data): Customer
-    {
+/**
+ * تحديث بيانات العميل
+ */
+public function update(int $customerId, array $data): Customer
+{
+    try {
         $customer = Customer::findOrFail($customerId);
 
         // تحقق من عدم وجود عميل آخر بنفس الاسم أو الهاتف
@@ -58,21 +59,46 @@ class CustomerService
         ]);
 
         return $customer->fresh();
+    } catch (RuntimeException $e) {
+        throw $e;
+    } catch (\Illuminate\Database\QueryException $e) {
+        $this->handleDbError($e, 'تحديث');
+    } catch (\Exception $e) {
+        \Illuminate\Support\Facades\Log::error('Unexpected error updating customer', [
+            'customer_id' => $customerId,
+            'error'       => $e->getMessage(),
+        ]);
+        throw new RuntimeException('حدث خطأ غير متوقع أثناء تحديث العميل.');
     }
+}
 
-    /**
-     * حذف عميل
-     */
-    public function delete(int $customerId): bool
-    {
+/**
+ * حذف عميل
+ */
+public function delete(int $customerId): bool
+{
+    try {
         $customer = Customer::findOrFail($customerId);
 
         if ($customer->salesInvoices()->exists()) {
             throw new RuntimeException('لا يمكن حذف العميل - لديه فواتير مسجلة');
         }
 
-        return (bool) $customer->delete();
+        $deleteResult = $customer->delete();
+
+        return (bool) $deleteResult;
+    } catch (RuntimeException $e) {
+        throw $e;
+    } catch (\Illuminate\Database\QueryException $e) {
+        $this->handleDbError($e, 'حذف');
+    } catch (\Exception $e) {
+        \Illuminate\Support\Facades\Log::error('Unexpected error deleting customer', [
+            'customer_id' => $customerId,
+            'error'       => $e->getMessage(),
+        ]);
+        throw new RuntimeException('حدث خطأ غير متوقع أثناء حذف العميل.');
     }
+}
 
     /**
      * الحصول على رصيد العميل
@@ -82,11 +108,12 @@ class CustomerService
         return (float) Customer::findOrFail($customerId)->balance;
     }
 
-    /**
-     * تحديث رصيد العميل (add | subtract | set)
-     */
-    public function updateBalance(int $customerId, float $amount, string $type = 'add'): float
-    {
+/**
+ * تحديث رصيد العميل (add | subtract | set)
+ */
+public function updateBalance(int $customerId, float $amount, string $type = 'add'): float
+{
+    try {
         return DB::transaction(function () use ($customerId, $amount, $type) {
 
             if ($amount < 0) {
@@ -107,12 +134,25 @@ class CustomerService
             $this->validateCreditLimit($customer, $newBalance);
 
             $customer->update([
-                'balance' => $newBalance
+                'balance' => $newBalance,
             ]);
 
             return $newBalance;
         });
+    } catch (RuntimeException $e) {
+        throw $e;
+    } catch (\Illuminate\Database\QueryException $e) {
+        $this->handleDbError($e, 'تحديث رصيد');
+    } catch (\Exception $e) {
+        \Illuminate\Support\Facades\Log::error('Unexpected error updating customer balance', [
+            'customer_id' => $customerId,
+            'type'        => $type,
+            'amount'      => $amount,
+            'error'       => $e->getMessage(),
+        ]);
+        throw new RuntimeException('حدث خطأ غير متوقع أثناء تحديث رصيد العميل.');
     }
+}
 
     /**
      * التحقق من الحد الائتماني
@@ -124,21 +164,33 @@ class CustomerService
         return true;
     }
 
-    /**
-     * منطق التحقق المحاسبي للـ Credit Limit
-     */
-    protected function validateCreditLimit(Customer $customer, float $newBalance): void
-    {
-        if ($customer->credit_limit <= 0) {
-            return;
-        }
-
-        $debt = $newBalance < 0 ? abs($newBalance) : 0;
-
-        if ($debt > $customer->credit_limit) {
-            throw new RuntimeException('تجاوز الحد الائتماني المسموح للعميل');
-        }
+/**
+ * منطق التحقق المحاسبي للـ Credit Limit
+ */
+protected function validateCreditLimit(Customer $customer, float $newBalance): void
+{
+    if ($customer->credit_limit <= 0) {
+        return;
     }
+
+    $debt = $newBalance < 0 ? abs($newBalance) : 0;
+
+    if ($debt > $customer->credit_limit) {
+        throw new RuntimeException('تجاوز الحد الائتماني المسموح للعميل');
+    }
+}
+
+/**
+ * Helper موحّد لمعالجة أخطاء قاعدة البيانات.
+ */
+protected function handleDbError(\Illuminate\Database\QueryException $e, string $action): void
+{
+    \Illuminate\Support\Facades\Log::error("DB error during {$action} customer", [
+        'error_code' => $e->getCode(),
+        'error'      => $e->getMessage(),
+    ]);
+    throw new RuntimeException("حدث خطأ أثناء {$action} العميل. يرجى المحاولة مرة أخرى.");
+}
 
     /**
      * العملاء المدينين
