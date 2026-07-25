@@ -332,9 +332,11 @@
                 <ul class="space-y-2">
                     @foreach(\App\Support\FeatureLabels::all() as $key => $label)
                         @php
-                            $feat = $plan->featuresList->firstWhere('feature_key', $key);
-                            $enabled = $feat && $feat->is_enabled;
-                            $limit   = ($feat && $feat->limit_value !== null) ? $feat->limit_value : null;
+                            // hasFeature() has a JSON-column fallback, so plans edited
+                            // via the super-admin dashboard (which only writes to plans.features JSON)
+                            // still show up as enabled here.
+                            $enabled = $plan->hasFeature($key);
+                            $limit   = $plan->getLimit($key);
                         @endphp
                         <li class="k-feature-row {{ $enabled ? 'k-feature-row--enabled' : 'k-feature-row--disabled' }} {{ $plan->is_featured ? 'k-feature-row--featured' : '' }}">
                             <span class="k-feature-row__icon {{ $enabled ? ($plan->is_featured ? 'k-feature-row__icon--featured-on' : 'k-feature-row__icon--on') : 'k-feature-row__icon--off' }}">
