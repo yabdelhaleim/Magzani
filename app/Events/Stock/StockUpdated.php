@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Events\Stock;
 
 use Illuminate\Broadcasting\InteractsWithSockets;
@@ -12,17 +13,22 @@ class StockUpdated implements ShouldBroadcast
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
     public int $productId;
+
     public int $warehouseId;
-    public int $oldQuantity;
-    public int $newQuantity;
+
+    public float $oldQuantity;
+
+    public float $newQuantity;
+
     public string $operation;
+
     public string $updatedBy;
 
     public function __construct(
-        int $productId, 
-        int $warehouseId, 
-        int $oldQuantity, 
-        int $newQuantity,
+        int $productId,
+        int $warehouseId,
+        float $oldQuantity,
+        float $newQuantity,
         string $operation = 'update',
         ?string $updatedBy = null
     ) {

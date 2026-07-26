@@ -14,6 +14,7 @@ class TransferCompleted implements ShouldBroadcast
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
     public WarehouseTransfer $transfer;
+
     public string $completedBy;
 
     public function __construct(WarehouseTransfer $transfer, ?string $completedBy = null)
@@ -37,7 +38,7 @@ class TransferCompleted implements ShouldBroadcast
             'from_warehouse' => $this->transfer->fromWarehouse->name,
             'to_warehouse' => $this->transfer->toWarehouse->name,
             'completed_by' => $this->completedBy,
-            'completed_at' => $this->transfer->completed_at?->diffForHumans(),
+            'completed_at' => ($this->transfer->received_date ?? $this->transfer->confirmed_at)?->diffForHumans(),
         ];
     }
 }

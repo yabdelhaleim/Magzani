@@ -4,22 +4,26 @@ namespace App\Listeners\Return;
 
 use App\Events\Return\SalesReturnProcessed;
 use App\Notifications\Return\SalesReturnNotification;
+use App\Services\NotificationDeliveryService;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Notification;
 
 class HandleSalesReturnProcessed
 {
+    public function __construct(
+        private NotificationDeliveryService $notifications
+    ) {}
+
     public function handle(SalesReturnProcessed $event): void
     {
         try {
-            // إرسال إشعار للمدراء
-            $admins = \App\Models\User::role('admin')->get();
-            Notification::send($admins, new SalesReturnNotification($event->salesReturn));
+            $this->notifications->sendToAdmins(
+                new SalesReturnNotification($event->salesReturn)
+            );
 
             // مسح الـ Cache
             Cache::forget('inventory_report_all');
-            Cache::forget('daily_sales_' . now()->format('Y-m-d'));
+            Cache::forget('daily_sales_'.now()->format('Y-m-d'));
 
             Log::info('Sales Return Processed', [
                 'return_id' => $event->salesReturn->id,

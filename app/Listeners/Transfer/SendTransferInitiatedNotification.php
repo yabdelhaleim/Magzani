@@ -1,19 +1,24 @@
 <?php
+
 namespace App\Listeners\Transfer;
 
 use App\Events\Transfer\TransferInitiated;
 use App\Notifications\Transfer\TransferInitiatedNotification;
+use App\Services\NotificationDeliveryService;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Notification;
 
 class SendTransferInitiatedNotification
 {
+    public function __construct(
+        private NotificationDeliveryService $notifications
+    ) {}
+
     public function handle(TransferInitiated $event): void
     {
         try {
-            // إرسال إشعار لمسؤولي المخازن
-            $managers = \App\Models\User::role('warehouse_manager')->get();
-            Notification::send($managers, new TransferInitiatedNotification($event->transfer));
+            $this->notifications->sendToAdmins(
+                new TransferInitiatedNotification($event->transfer)
+            );
 
             Log::info('Transfer Initiated', [
                 'transfer_id' => $event->transfer->id,

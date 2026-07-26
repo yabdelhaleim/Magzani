@@ -3,11 +3,10 @@
 namespace App\Console\Commands;
 
 use App\Models\SalesInvoice;
-use App\Models\User;
 use App\Notifications\Accounting\OverdueInvoiceNotification;
+use App\Services\NotificationDeliveryService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Notification;
 
 class RemindOverdueInvoices extends Command
 {
@@ -18,7 +17,7 @@ class RemindOverdueInvoices extends Command
     public function handle(): int
     {
         $minDays = (int) $this->option('days');
-        $today   = now()->toDateString();
+        $today = now()->toDateString();
 
         $invoices = SalesInvoice::with('customer')
             ->whereIn('payment_status', ['unpaid', 'partial'])
@@ -30,29 +29,32 @@ class RemindOverdueInvoices extends Command
 
         if ($invoices->isEmpty()) {
             $this->info('No overdue invoices found.');
+
             return self::SUCCESS;
         }
 
-        $admins = User::where('role', 'admin')->get();
-
-        if ($admins->isEmpty()) {
-            $this->warn('No admin users found to notify.');
-        }
-
+        $notifications = app(NotificationDeliveryService::class);
         $count = 0;
+        $deliveries = 0;
+
         foreach ($invoices as $invoice) {
             $daysOverdue = now()->diffInDays($invoice->due_date);
 
             Log::info("[OverdueReminder] Invoice #{$invoice->invoice_number} overdue by {$daysOverdue} days");
 
-            if ($admins->isNotEmpty()) {
-                Notification::send($admins, new OverdueInvoiceNotification($invoice, $daysOverdue));
-            }
+            $deliveries += $notifications->sendToAdmins(
+                new OverdueInvoiceNotification($invoice, $daysOverdue)
+            );
 
             $count++;
         }
 
+        if ($deliveries === 0) {
+            $this->warn('No active admin users found to notify.');
+        }
+
         $this->info("Sent reminders for {$count} overdue invoice(s).");
+
         return self::SUCCESS;
     }
 }

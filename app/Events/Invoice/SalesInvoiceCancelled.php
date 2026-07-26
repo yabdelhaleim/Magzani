@@ -1,19 +1,23 @@
 <?php
+
 namespace App\Events\Invoice;
 
 use App\Models\SalesInvoice;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
+use Illuminate\Contracts\Events\ShouldDispatchAfterCommit;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
-class SalesInvoiceCancelled implements ShouldBroadcast
+class SalesInvoiceCancelled implements ShouldBroadcast, ShouldDispatchAfterCommit
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
     public SalesInvoice $invoice;
+
     public string $cancelledBy;
+
     public ?string $reason;
 
     public function __construct(SalesInvoice $invoice, ?string $reason = null, ?string $cancelledBy = null)

@@ -3,14 +3,24 @@
 namespace App\Listeners\Return;
 
 use App\Events\Return\PurchaseReturnProcessed;
+use App\Notifications\Return\PurchaseReturnNotification;
+use App\Services\NotificationDeliveryService;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
 class HandlePurchaseReturnProcessed
 {
+    public function __construct(
+        private NotificationDeliveryService $notifications
+    ) {}
+
     public function handle(PurchaseReturnProcessed $event): void
     {
         try {
+            $this->notifications->sendToAdmins(
+                new PurchaseReturnNotification($event->purchaseReturn)
+            );
+
             Cache::forget('inventory_report_all');
             Cache::forget('dashboard_summary');
 

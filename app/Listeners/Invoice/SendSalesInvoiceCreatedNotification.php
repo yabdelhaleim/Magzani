@@ -1,19 +1,24 @@
 <?php
+
 namespace App\Listeners\Invoice;
 
 use App\Events\Invoice\SalesInvoiceCreated;
 use App\Notifications\Invoice\NewSalesInvoiceNotification;
+use App\Services\NotificationDeliveryService;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Notification;
 
 class SendSalesInvoiceCreatedNotification
 {
+    public function __construct(
+        private NotificationDeliveryService $notifications
+    ) {}
+
     public function handle(SalesInvoiceCreated $event): void
     {
         try {
-            // إرسال إشعار للمدراء
-            $admins = \App\Models\User::role('admin')->get();
-            Notification::send($admins, new NewSalesInvoiceNotification($event->invoice));
+            $this->notifications->sendToAdmins(
+                new NewSalesInvoiceNotification($event->invoice)
+            );
 
             // تسجيل في اللوج
             Log::info('Sales Invoice Created', [

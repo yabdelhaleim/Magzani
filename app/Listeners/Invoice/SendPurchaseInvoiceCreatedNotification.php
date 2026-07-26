@@ -4,17 +4,21 @@ namespace App\Listeners\Invoice;
 
 use App\Events\Invoice\PurchaseInvoiceCreated;
 use App\Notifications\Invoice\NewPurchaseInvoiceNotification;
+use App\Services\NotificationDeliveryService;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Notification;
 
 class SendPurchaseInvoiceCreatedNotification
 {
+    public function __construct(
+        private NotificationDeliveryService $notifications
+    ) {}
+
     public function handle(PurchaseInvoiceCreated $event): void
     {
         try {
-            // إرسال إشعار للمدراء والمشتريات
-            $users = \App\Models\User::role(['admin', 'purchaser'])->get();
-            Notification::send($users, new NewPurchaseInvoiceNotification($event->invoice));
+            $this->notifications->sendToAdmins(
+                new NewPurchaseInvoiceNotification($event->invoice)
+            );
 
             Log::info('Purchase Invoice Created', [
                 'invoice_id' => $event->invoice->id,
@@ -31,4 +35,3 @@ class SendPurchaseInvoiceCreatedNotification
         }
     }
 }
-

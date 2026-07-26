@@ -1,20 +1,26 @@
 <?php
+
 namespace App\Listeners\Payment;
 
 use App\Events\Payment\PaymentReceived;
 use App\Notifications\Payment\PaymentReceivedNotification;
+use App\Services\NotificationDeliveryService;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Notification;
 
 class HandlePaymentReceived
 {
+    public function __construct(
+        private NotificationDeliveryService $notifications
+    ) {}
+
     public function handle(PaymentReceived $event): void
     {
         try {
-            // إرسال إشعار للمحاسبين
-            $accountants = \App\Models\User::role('accountant')->get();
-            Notification::send($accountants, new PaymentReceivedNotification($event->payment));
+            // Routine payment feedback stays a temporary toast, not a bell item.
+            $this->notifications->sendToAdmins(
+                new PaymentReceivedNotification($event->payment)
+            );
 
             // مسح Cache الرصيد النقدي
             Cache::forget('cash_balance');

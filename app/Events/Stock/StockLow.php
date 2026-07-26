@@ -15,22 +15,26 @@ class StockLow implements ShouldBroadcast
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
     public Product $product;
+
     public Warehouse $warehouse;
-    public int $currentQuantity;
-    public int $minimumStock;
+
+    public float $currentQuantity;
+
+    public float $minimumStock;
+
     public string $severity;
 
-    public function __construct(Product $product, Warehouse $warehouse, int $currentQuantity, int $minimumStock)
+    public function __construct(Product $product, Warehouse $warehouse, float $currentQuantity, float $minimumStock)
     {
         $this->product = $product;
         $this->warehouse = $warehouse;
         $this->currentQuantity = $currentQuantity;
         $this->minimumStock = $minimumStock;
-        
+
         // تحديد مستوى الخطورة
-        $percentage = ($currentQuantity / $minimumStock) * 100;
+        $percentage = $minimumStock > 0 ? ($currentQuantity / $minimumStock) * 100 : 100;
         $this->severity = match (true) {
-            $currentQuantity == 0 => 'critical',
+            $currentQuantity <= 0 => 'critical',
             $percentage <= 25 => 'high',
             $percentage <= 50 => 'medium',
             default => 'low'
@@ -57,4 +61,3 @@ class StockLow implements ShouldBroadcast
         ];
     }
 }
-
