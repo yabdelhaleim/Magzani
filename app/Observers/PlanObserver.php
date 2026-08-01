@@ -5,14 +5,13 @@ namespace App\Observers;
 use App\Models\Plan;
 use App\Models\PlanFeature;
 use App\Models\Tenant;
-use Illuminate\Support\Facades\Cache;
 
 class PlanObserver
 {
     /**
      * Invalidate every tenant that subscribes to the affected plan slugs.
      *
-     * @param array<int, string|null> $slugs
+     * @param  array<int, string|null>  $slugs
      */
     private function invalidateTenants(array $slugs): void
     {

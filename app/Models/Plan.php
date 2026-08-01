@@ -34,12 +34,12 @@ class Plan extends Model
      * @var array<string, string>
      */
     protected $casts = [
-        'features'    => 'array',
+        'features' => 'array',
         'value_props' => 'array',
-        'is_active'   => 'boolean',
+        'is_active' => 'boolean',
         'is_featured' => 'boolean',
-        'price'       => 'decimal:2',
-        'sort_order'  => 'integer',
+        'price' => 'decimal:2',
+        'sort_order' => 'integer',
     ];
 
     /**
@@ -58,9 +58,9 @@ class Plan extends Model
         if ($this->relationLoaded('features')) {
             return $this->getRelation('features');
         }
+
         return $this->featuresList()->where('is_enabled', true)->get();
     }
-
 
     /**
      * Check if this plan has a specific feature enabled.
@@ -70,7 +70,7 @@ class Plan extends Model
      */
     public function hasFeature(string $feature): bool
     {
-        $feature = \App\Models\Tenant::resolveFeatureKey($feature);
+        $feature = Tenant::resolveFeatureKey($feature);
 
         $feat = $this->featuresList()->where('feature_key', $feature)->first();
         if ($feat) {
@@ -88,7 +88,7 @@ class Plan extends Model
                 return is_scalar($item) ? (string) $item : null;
             })
             ->filter()
-            ->map(fn (string $key) => \App\Models\Tenant::resolveFeatureKey($key));
+            ->map(fn (string $key) => Tenant::resolveFeatureKey($key));
 
         return $keys->contains($feature);
     }
@@ -99,6 +99,7 @@ class Plan extends Model
     public function getLimit(string $feature): ?int
     {
         $feat = $this->featuresList()->where('feature_key', $feature)->first();
+
         return $feat ? $feat->limit_value : null;
     }
 }
