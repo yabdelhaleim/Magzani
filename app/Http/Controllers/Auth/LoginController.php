@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
@@ -28,16 +29,16 @@ class LoginController extends Controller
         ]);
 
         // Find user by email
-        $user = \App\Models\User::where('email', $credentials['email'])->first();
+        $user = User::where('email', $credentials['email'])->first();
 
         // Check if user exists and is active
-        if (!$user) {
+        if (! $user) {
             throw ValidationException::withMessages([
                 'email' => ['بيانات الدخول غير صحيحة'],
             ]);
         }
 
-        if (!$user->is_active) {
+        if (! $user->is_active) {
             throw ValidationException::withMessages([
                 'email' => ['الحساب غير نشط. يرجى التواصل مع المدير'],
             ]);
@@ -46,8 +47,17 @@ class LoginController extends Controller
         // Attempt to login
         if (Auth::attempt($credentials, $request->filled('remember'))) {
             $request->session()->regenerate();
-            
-            return redirect()->intended(route('dashboard'))->with('success', 'مرحباً بك ' . $user->name);
+
+            // Super-admin accounts land on the central dashboard; everyone
+            // else falls back to whatever the redirect target was, or the
+            // tenant dashboard.
+            if ($user->isSuperAdmin()) {
+                return redirect()->intended(route('super-admin.dashboard'))
+                    ->with('success', 'مرحباً بك '.$user->name);
+            }
+
+            return redirect()->intended(route('dashboard'))
+                ->with('success', 'مرحباً بك '.$user->name);
         }
 
         throw ValidationException::withMessages([
@@ -61,7 +71,7 @@ class LoginController extends Controller
     public function logout(Request $request)
     {
         Auth::logout();
-        
+
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 

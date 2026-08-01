@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Landlord\SuperAdminController;
 use App\Http\Controllers\PricingController;
 use Illuminate\Support\Facades\Route;
@@ -30,6 +31,23 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/pricing', [PricingController::class, 'index'])->name('pricing.public');
+
+/*
+|--------------------------------------------------------------------------
+| Central Auth Routes (Landlord / Super-Admin Login)
+|--------------------------------------------------------------------------
+| The login form and POST are only reachable from the central domains
+| (superdashboard / localhost). Tenant login continues to live in
+| routes/tenant.php.
+*/
+Route::middleware('guest')->group(function () {
+    Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
+    Route::post('/login', [LoginController::class, 'login'])->middleware('throttle:5,1');
+});
+
+Route::middleware('auth')->group(function () {
+    Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
+});
 
 Route::prefix('super-admin')->name('super-admin.')->middleware(['auth', 'super.admin'])->group(function () {
     Route::get('/dashboard', [SuperAdminController::class, 'dashboard'])->name('dashboard');
