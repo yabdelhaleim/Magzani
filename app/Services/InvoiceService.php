@@ -12,6 +12,7 @@ use App\Models\ProductPurchaseUnit;
 use App\Models\Payment;
 use App\Models\Customer;
 use App\Models\Supplier;
+use App\Exceptions\BusinessLogicException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Http\Request;
@@ -238,24 +239,25 @@ class InvoiceService
     private function calculateSalesTotalProfit($query): float
     {
         try {
-            // ✅ استخدام JOIN للحصول على الربح مباشرة من SQL
+            // ✅ حساب الربح مباشرة من SQL باستخدام sii.total (المخزّن بعد كل الخصومات والضرائب)
+            //    و sii.base_quantity × purchase_price للتكلفة بالوحدة الأساسية.
+            //    (الإصلاح السابق كان يضرب بـ conversion_factor خطأً، فكان يضاعف التكلفة
+            //    ويخصم sii.discount غير الموجود أصلاً في الـ schema).
             $profit = DB::table('sales_invoices as si')
                 ->join('sales_invoice_items as sii', 'si.id', '=', 'sii.sales_invoice_id')
                 ->join('products as p', 'sii.product_id', '=', 'p.id')
-                ->join('product_selling_units as psu', 'sii.selling_unit_id', '=', 'psu.id')
                 ->whereIn('si.id', $query->pluck('id'))
                 ->where('si.status', '!=', 'cancelled')
                 ->selectRaw('
                     SUM(
-                        (sii.quantity * sii.price) - 
-                        (sii.quantity * COALESCE(p.purchase_price, 0) * psu.conversion_factor) - 
-                        COALESCE(sii.discount, 0)
+                        sii.total
+                        - (sii.base_quantity * COALESCE(p.purchase_price, 0))
                     ) as total_profit
                 ')
                 ->value('total_profit');
-            
-            return round($profit ?? 0, 2);
-            
+
+            return round((float) ($profit ?? 0), 2);
+
         } catch (\Exception $e) {
             // في حالة الخطأ، نرجع 0
             \Log::error('Error calculating profit: ' . $e->getMessage());
@@ -421,17 +423,18 @@ class InvoiceService
             
             // ==================== 4️⃣ التحقق من حد الائتمان ====================
             if ($remaining < 0) {
-                throw new RuntimeException('المبلغ المدفوع أكبر من الإجمالي');
+                throw new BusinessLogicException('المبلغ المدفوع أكبر من الإجمالي');
             }
-            
+
             if ($remaining > 0) {
                 $customer = Customer::lockForUpdate()->findOrFail($data['customer_id']);
-                
+
                 $newBalance = $customer->balance + $remaining;
-                
+
                 if ($customer->credit_limit > 0 && $newBalance > $customer->credit_limit) {
-                    throw new RuntimeException(
-                        "تجاوز حد الائتمان المسموح. الحد: {$customer->credit_limit}، الرصيد الجديد: {$newBalance}"
+                    throw new BusinessLogicException(
+                        "تجاوز حد الائتمان المسموح. الحد: {$customer->credit_limit}، الرصيد الجديد: {$newBalance}",
+                        ['customer_id' => $customer->id, 'credit_limit' => $customer->credit_limit, 'new_balance' => $newBalance]
                     );
                 }
             }
@@ -500,14 +503,15 @@ class InvoiceService
                 // التحقق من المخزون
                 $warehouse = $product->warehouses->first();
                 if (!$warehouse) {
-                    throw new RuntimeException("المنتج {$product->name} غير موجود في المخزن المحدد");
+                    throw new BusinessLogicException("المنتج {$product->name} غير موجود في المخزن المحدد", ['product_id' => $product->id, 'warehouse_id' => $data['warehouse_id']]);
                 }
-                
+
                 $availableQty = $warehouse->quantity - ($warehouse->reserved_quantity ?? 0);
-                
+
                 if ($availableQty < $baseQuantity) {
-                    throw new RuntimeException(
-                        "الكمية غير متاحة للمنتج: {$product->name}. المطلوب: {$baseQuantity}، المتوفر: {$availableQty}"
+                    throw new BusinessLogicException(
+                        "الكمية غير متاحة للمنتج: {$product->name}. المطلوب: {$baseQuantity}، المتوفر: {$availableQty}",
+                        ['product_id' => $product->id, 'requested' => $baseQuantity, 'available' => $availableQty]
                     );
                 }
                 
@@ -574,13 +578,36 @@ class InvoiceService
             $this->clearSalesInvoiceCache($data['customer_id']);
             
             $invoiceFresh = $invoice->fresh([
-                'items.product', 
-                'items.sellingUnit', 
-                'customer', 
+                'items.product',
+                'items.sellingUnit',
+                'customer',
                 'warehouse'
             ]);
 
             event(new \App\Events\Invoice\SalesInvoiceConfirmed($invoiceFresh));
+
+            // ==================== 1️⃣4️⃣ حساب وترحيل COGS للمحاسبة ====================
+            // (كان مفقوداً قبل الإصلاح — لم يكن يتم استدعاء postSalesInvoiceCogs عند إنشاء فاتورة)
+            try {
+                $cogsAmount = 0.0;
+                foreach ($invoiceFresh->items as $item) {
+                    // أولوية لـ cost_price المخزّن وقت البيع (snapshot دقيق)،
+                    // وإلا purchase_price الحالي للمنتج كـ fallback.
+                    $unitCost = (float) ($item->cost_price ?: ($item->product->purchase_price ?? 0));
+                    $cogsAmount += (float) $item->base_quantity * $unitCost;
+                }
+                $cogsAmount = round($cogsAmount, 2);
+
+                if ($cogsAmount > 0) {
+                    app(\App\Services\Accounting\PostingService::class)
+                        ->postSalesInvoiceCogs($invoiceFresh, $cogsAmount);
+                }
+            } catch (\Throwable $e) {
+                \Log::warning('COGS posting failed for sales invoice', [
+                    'invoice_id' => $invoiceFresh->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
 
             return $invoiceFresh;
         });
@@ -594,26 +621,26 @@ class InvoiceService
         foreach ($data['items'] as $index => $item) {
             // التحقق من وجود المنتج
             if (!isset($products[$item['product_id']])) {
-                throw new RuntimeException("المنتج غير موجود: ID {$item['product_id']}");
+                throw new BusinessLogicException("المنتج غير موجود: ID {$item['product_id']}", ['product_id' => $item['product_id'], 'item_index' => $index]);
             }
-            
+
             // إذا كانت هناك وحدة بيع، تحقق من ملكيتها للمنتج
             if (!empty($item['selling_unit_id']) && isset($sellingUnits[$item['selling_unit_id']])) {
                 $unit = $sellingUnits[$item['selling_unit_id']];
                 if ($unit->product_id != $item['product_id']) {
-                    throw new RuntimeException("وحدة البيع لا تنتمي للمنتج المحدد في الصنف رقم " . ($index + 1));
+                    throw new BusinessLogicException("وحدة البيع لا تنتمي للمنتج المحدد في الصنف رقم " . ($index + 1), ['item_index' => $index, 'unit_id' => $item['selling_unit_id']]);
                 }
             }
-            
+
             // التحقق من الكمية
             $quantity = $item['quantity'] ?? 0;
             if ($quantity <= 0) {
-                throw new RuntimeException("الكمية يجب أن تكون أكبر من صفر في الصنف رقم " . ($index + 1));
+                throw new BusinessLogicException("الكمية يجب أن تكون أكبر من صفر في الصنف رقم " . ($index + 1), ['item_index' => $index, 'quantity' => $quantity]);
             }
-            
+
             // التحقق من السعر
             if (($item['price'] ?? 0) < 0) {
-                throw new RuntimeException("السعر لا يمكن أن يكون سالباً في الصنف رقم " . ($index + 1));
+                throw new BusinessLogicException("السعر لا يمكن أن يكون سالباً في الصنف رقم " . ($index + 1), ['item_index' => $index, 'price' => $item['price'] ?? 0]);
             }
         }
     }
@@ -715,7 +742,7 @@ class InvoiceService
             
             // ==================== التحقق ====================
             if ($invoice->status === 'cancelled') {
-                throw new RuntimeException('الفاتورة ملغاة بالفعل');
+                throw new BusinessLogicException('الفاتورة ملغاة بالفعل', ['invoice_id' => $invoiceId]);
             }
             
             // ==================== إرجاع المخزون ====================
@@ -818,18 +845,18 @@ class InvoiceService
             
             // ==================== التحقق ====================
             if ($invoice->status === 'cancelled') {
-                throw new RuntimeException('لا يمكن إضافة دفعة لفاتورة ملغاة');
+                throw new BusinessLogicException('لا يمكن إضافة دفعة لفاتورة ملغاة', ['invoice_id' => $invoiceId]);
             }
             
             $amount = round($paymentData['amount'], 2);
             $remaining = round($invoice->total - $invoice->paid, 2);
             
             if ($amount <= 0) {
-                throw new RuntimeException('المبلغ يجب أن يكون أكبر من صفر');
+                throw new BusinessLogicException('المبلغ يجب أن يكون أكبر من صفر', ['amount' => $amount]);
             }
             
             if ($amount > $remaining) {
-                throw new RuntimeException("المبلغ المدفوع ({$amount}) أكبر من المبلغ المتبقي ({$remaining})");
+                throw new BusinessLogicException("المبلغ المدفوع ({$amount}) أكبر من المبلغ المتبقي ({$remaining})", ['amount' => $amount, 'remaining' => $remaining]);
             }
             
             // ==================== تحديث الفاتورة ====================
@@ -1026,12 +1053,12 @@ class InvoiceService
             $remaining = round($totals['grand_total'] - $paid, 2);
             
             if ($remaining < 0) {
-                throw new RuntimeException('المبلغ المدفوع أكبر من الإجمالي');
+                throw new BusinessLogicException('المبلغ المدفوع أكبر من الإجمالي');
             }
-            
+
             // تحديد حالة الدفع
             $paymentStatus = $this->determinePaymentStatus($paid, $totals['grand_total']);
-            
+
             // توليد رقم الفاتورة
             $invoiceNumber = $data['invoice_number'] ?? $this->generateInvoiceNumber('purchase');
             
@@ -1142,24 +1169,24 @@ class InvoiceService
     {
         foreach ($data['items'] as $index => $item) {
             if (!isset($products[$item['product_id']])) {
-                throw new RuntimeException("المنتج غير موجود: ID {$item['product_id']}");
+                throw new BusinessLogicException("المنتج غير موجود: ID {$item['product_id']}", ['product_id' => $item['product_id'], 'item_index' => $index]);
             }
-            
+
             if (!isset($purchaseUnits[$item['purchase_unit_id']])) {
-                throw new RuntimeException("وحدة الشراء غير موجودة أو غير نشطة في الصنف رقم " . ($index + 1));
+                throw new BusinessLogicException("وحدة الشراء غير موجودة أو غير نشطة في الصنف رقم " . ($index + 1), ['item_index' => $index, 'purchase_unit_id' => $item['purchase_unit_id'] ?? null]);
             }
-            
+
             $unit = $purchaseUnits[$item['purchase_unit_id']];
             if ($unit->product_id != $item['product_id']) {
-                throw new RuntimeException("وحدة الشراء لا تنتمي للمنتج المحدد في الصنف رقم " . ($index + 1));
+                throw new BusinessLogicException("وحدة الشراء لا تنتمي للمنتج المحدد في الصنف رقم " . ($index + 1), ['item_index' => $index, 'unit_id' => $item['purchase_unit_id']]);
             }
-            
+
             if ($item['quantity'] <= 0) {
-                throw new RuntimeException("الكمية يجب أن تكون أكبر من صفر في الصنف رقم " . ($index + 1));
+                throw new BusinessLogicException("الكمية يجب أن تكون أكبر من صفر في الصنف رقم " . ($index + 1), ['item_index' => $index, 'quantity' => $item['quantity']]);
             }
-            
+
             if ($item['cost'] < 0) {
-                throw new RuntimeException("التكلفة لا يمكن أن تكون سالبة في الصنف رقم " . ($index + 1));
+                throw new BusinessLogicException("التكلفة لا يمكن أن تكون سالبة في الصنف رقم " . ($index + 1), ['item_index' => $index, 'cost' => $item['cost']]);
             }
         }
     }
@@ -1176,7 +1203,7 @@ class InvoiceService
                 ->findOrFail($invoiceId);
             
             if ($invoice->status === 'cancelled') {
-                throw new RuntimeException('الفاتورة ملغاة بالفعل');
+                throw new BusinessLogicException('الفاتورة ملغاة بالفعل', ['invoice_id' => $invoiceId]);
             }
             
             // خصم المخزون
@@ -1229,38 +1256,8 @@ class InvoiceService
      */
     private function generateInvoiceNumber(string $type): string
     {
-        return DB::transaction(function() use ($type) {
-            $prefix = $type === 'sales' ? 'S' : 'P';
-            $year = date('Y');
-            
-            // 🔒 قفل الـ sequence
-            $sequence = DB::table('invoice_sequences')
-                ->where('type', $type)
-                ->where('year', $year)
-                ->lockForUpdate()
-                ->first();
-            
-            if (!$sequence) {
-                DB::table('invoice_sequences')->insert([
-                    'type' => $type,
-                    'year' => $year,
-                    'last_number' => 1,
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]);
-                $number = 1;
-            } else {
-                $number = $sequence->last_number + 1;
-                DB::table('invoice_sequences')
-                    ->where('id', $sequence->id)
-                    ->update([
-                        'last_number' => $number,
-                        'updated_at' => now()
-                    ]);
-            }
-            
-            return sprintf('%s%s%05d', $prefix, $year, $number);
-        });
+        $prefix = $type === 'sales' ? 'S' : 'P';
+        return app(\App\Services\SequenceService::class)->generateNext($type, $prefix, 5);
     }
 
     /**
@@ -1327,7 +1324,7 @@ class InvoiceService
 
             // منع التعديل للفواتير الملغاة
             if ($invoice->status === 'cancelled') {
-                throw new RuntimeException('لا يمكن تعديل فاتورة ملغاة');
+                throw new BusinessLogicException('لا يمكن تعديل فاتورة ملغاة', ['invoice_id' => $invoiceId]);
             }
 
             // ==================== حفظ قيم قبل التعديل (لرصيد العميل) ====================
@@ -1401,8 +1398,9 @@ class InvoiceService
                 $newBalance = round((float) $customer->balance + $oldRemaining - $newRemaining, 2);
 
                 if ($customer->credit_limit > 0 && $newBalance < 0 && abs($newBalance) > (float) $customer->credit_limit) {
-                    throw new RuntimeException(
-                        "تجاوز حد الائتمان المسموح. الحد: {$customer->credit_limit}، الرصيد الجديد: {$newBalance}"
+                    throw new BusinessLogicException(
+                        "تجاوز حد الائتمان المسموح. الحد: {$customer->credit_limit}، الرصيد الجديد: {$newBalance}",
+                        ['customer_id' => $customer->id, 'credit_limit' => $customer->credit_limit, 'new_balance' => $newBalance]
                     );
                 }
 
@@ -1417,8 +1415,9 @@ class InvoiceService
                 $newCustomerNewBalance = round((float) $newCustomer->balance - $newRemaining, 2);
 
                 if ($newCustomer->credit_limit > 0 && $newCustomerNewBalance < 0 && abs($newCustomerNewBalance) > (float) $newCustomer->credit_limit) {
-                    throw new RuntimeException(
-                        "تجاوز حد الائتمان المسموح. الحد: {$newCustomer->credit_limit}، الرصيد الجديد: {$newCustomerNewBalance}"
+                    throw new BusinessLogicException(
+                        "تجاوز حد الائتمان المسموح. الحد: {$newCustomer->credit_limit}، الرصيد الجديد: {$newCustomerNewBalance}",
+                        ['customer_id' => $newCustomer->id, 'credit_limit' => $newCustomer->credit_limit, 'new_balance' => $newCustomerNewBalance]
                     );
                 }
 

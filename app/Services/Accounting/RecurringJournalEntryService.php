@@ -5,6 +5,7 @@ namespace App\Services\Accounting;
 use App\Enums\JournalEntrySource;
 use App\Models\JournalEntry;
 use App\Models\RecurringJournalEntry;
+use App\Exceptions\BusinessLogicException;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -102,7 +103,7 @@ class RecurringJournalEntryService
         ])->toArray();
 
         if (empty($lines)) {
-            throw new RuntimeException("القالب [{$template->template_name}] لا يحتوي على أسطر.");
+            throw new BusinessLogicException("القالب [{$template->template_name}] لا يحتوي على أسطر.", ['template_id' => $template->id]);
         }
 
         $eventKey = "recurring:{$template->id}:{$runDate->toDateString()}";

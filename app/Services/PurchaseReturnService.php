@@ -2,12 +2,14 @@
 
 namespace App\Services;
 
+use App\Events\Return\PurchaseReturnProcessed;
+use App\Models\PurchaseInvoice;
+use App\Models\PurchaseInvoiceItem;
 use App\Models\PurchaseReturn;
 use App\Models\PurchaseReturnItem;
-use App\Models\PurchaseInvoice;
+use Exception;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Exception;
 
 class PurchaseReturnService
 {
@@ -40,10 +42,19 @@ class PurchaseReturnService
                     'invoice_number' => $invoice->invoice_number,
                 ]);
 
-                return $return->fresh(['items.purchaseInvoiceItem.product', 'purchaseInvoice.supplier']);
+                $processedReturn = $return->fresh([
+                    'items.purchaseInvoiceItem.product',
+                    'purchaseInvoice.supplier',
+                ]);
+
+                DB::afterCommit(function () use ($processedReturn): void {
+                    event(new PurchaseReturnProcessed($processedReturn));
+                });
+
+                return $processedReturn;
 
             } catch (Exception $e) {
-                Log::error('خطأ في إنشاء مرتجع الشراء: ' . $e->getMessage());
+                Log::error('خطأ في إنشاء مرتجع الشراء: '.$e->getMessage());
                 throw $e;
             }
         });
@@ -92,7 +103,7 @@ class PurchaseReturnService
                 return $return->fresh(['items.purchaseInvoiceItem.product', 'purchaseInvoice.supplier']);
 
             } catch (Exception $e) {
-                Log::error('خطأ في تحديث مرتجع الشراء: ' . $e->getMessage());
+                Log::error('خطأ في تحديث مرتجع الشراء: '.$e->getMessage());
                 throw $e;
             }
         });
@@ -121,7 +132,7 @@ class PurchaseReturnService
                 return true;
 
             } catch (Exception $e) {
-                Log::error('خطأ في حذف مرتجع الشراء: ' . $e->getMessage());
+                Log::error('خطأ في حذف مرتجع الشراء: '.$e->getMessage());
                 throw $e;
             }
         });
@@ -156,7 +167,7 @@ class PurchaseReturnService
     {
         foreach ($items as $item) {
             // جلب بيانات الصنف من الفاتورة الأصلية
-            $originalItem = \App\Models\PurchaseInvoiceItem::findOrFail($item['purchase_invoice_item_id']);
+            $originalItem = PurchaseInvoiceItem::findOrFail($item['purchase_invoice_item_id']);
 
             $qty = $item['quantity_returned'];
             $price = $originalItem->unit_price;
@@ -203,11 +214,11 @@ class PurchaseReturnService
     {
         $purchaseReturn = $return;
         foreach ($purchaseReturn->items as $item) {
-            app(\App\Services\StockService::class)->adjust(
+            app(StockService::class)->adjust(
                 warehouseId: $purchaseReturn->warehouse_id,
                 productId: $item->product_id,
                 qty: -$item->quantity,
-                type: \App\Services\StockService::PURCHASE_RETURN,
+                type: StockService::PURCHASE_RETURN,
                 referenceId: $purchaseReturn->id
             );
         }
@@ -220,11 +231,11 @@ class PurchaseReturnService
     {
         $purchaseReturn = $return;
         foreach ($purchaseReturn->items as $item) {
-            app(\App\Services\StockService::class)->adjust(
+            app(StockService::class)->adjust(
                 warehouseId: $purchaseReturn->warehouse_id,
                 productId: $item->product_id,
                 qty: $item->quantity,
-                type: \App\Services\StockService::PURCHASE_RETURN,
+                type: StockService::PURCHASE_RETURN,
                 referenceId: $purchaseReturn->id
             );
         }
@@ -241,7 +252,7 @@ class PurchaseReturnService
             ->first();
 
         $number = $lastReturn ? $lastReturn->id + 1 : 1;
-        
+
         return sprintf('RET-%s-%03d', $year, $number);
     }
 
@@ -254,35 +265,35 @@ class PurchaseReturnService
             ->orderBy('return_date', 'desc');
 
         // فلتر بالمورد
-        if (!empty($filters['supplier_id'])) {
+        if (! empty($filters['supplier_id'])) {
             $query->where('supplier_id', $filters['supplier_id']);
         }
 
         // فلتر بالحالة
-        if (!empty($filters['status'])) {
+        if (! empty($filters['status'])) {
             $query->where('status', $filters['status']);
         }
 
         // فلتر بالتاريخ
-        if (!empty($filters['date'])) {
+        if (! empty($filters['date'])) {
             $query->whereDate('return_date', $filters['date']);
         }
 
         // بحث (برقم المرتجع أو اسم المورد أو اسم المنتج)
-        if (!empty($filters['search'])) {
+        if (! empty($filters['search'])) {
             $search = $filters['search'];
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('return_number', 'like', "%{$search}%")
-                  ->orWhereHas('purchaseInvoice.supplier', function($q) use ($search) {
-                      $q->where('name', 'like', "%{$search}%");
-                  })
-                  ->orWhereHas('items.purchaseInvoiceItem.product', function($q) use ($search) {
-                      $q->where('name', 'like', "%{$search}%");
-                  });
+                    ->orWhereHas('purchaseInvoice.supplier', function ($q) use ($search) {
+                        $q->where('name', 'like', "%{$search}%");
+                    })
+                    ->orWhereHas('items.purchaseInvoiceItem.product', function ($q) use ($search) {
+                        $q->where('name', 'like', "%{$search}%");
+                    });
             });
         }
 
-           return $query->paginate($filters['per_page'] ?? 15);
+        return $query->paginate($filters['per_page'] ?? 15);
     }
 
     /**
@@ -304,15 +315,15 @@ class PurchaseReturnService
     public function getAvailableItemsForReturn($invoiceId)
     {
         $invoice = PurchaseInvoice::with(['items.product'])->findOrFail($invoiceId);
-        
+
         $availableItems = [];
-        
+
         foreach ($invoice->items as $item) {
             // حساب الكمية المرتجعة سابقاً
             $returnedQty = PurchaseReturnItem::where('purchase_invoice_item_id', $item->id)->sum('quantity_returned');
-            
+
             $availableQty = $item->quantity - $returnedQty;
-            
+
             if ($availableQty > 0) {
                 $availableItems[] = [
                     'purchase_invoice_item_id' => $item->id,
@@ -324,7 +335,7 @@ class PurchaseReturnService
                 ];
             }
         }
-        
+
         return $availableItems;
     }
 }

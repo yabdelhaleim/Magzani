@@ -112,12 +112,13 @@ class FrontendManualTest extends TestCase
 
     protected function tearDown(): void
     {
-        if ($this->tenant) {
-            try {
-                $this->tenant->domains()->delete();
-                $this->tenant->delete();
-            } catch (\Exception $e) {}
-        }
+        try {
+            tenancy()->end();
+            DB::disconnect('tenant');
+            DB::purge('tenant');
+            $this->tenant->domains()->delete();
+            $this->tenant->delete();
+        } catch (\Exception $e) {}
         parent::tearDown();
     }
 

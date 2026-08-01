@@ -522,27 +522,6 @@
         </div>
     </div>
 
-    {{-- ── Alerts ── --}}
-    @if(session('success'))
-    <div class="tf-alert tf-alert-success">
-        <div class="tf-alert-content">
-            <i class="fas fa-check-circle fa-lg"></i>
-            <span class="tf-alert-text">{{ session('success') }}</span>
-        </div>
-        <i class="tf-alert-close fas fa-times" onclick="this.parentElement.remove()"></i>
-    </div>
-    @endif
-
-    @if(session('error'))
-    <div class="tf-alert tf-alert-error">
-        <div class="tf-alert-content">
-            <i class="fas fa-exclamation-circle fa-lg"></i>
-            <span class="tf-alert-text">{{ session('error') }}</span>
-        </div>
-        <i class="tf-alert-close fas fa-times" onclick="this.parentElement.remove()"></i>
-    </div>
-    @endif
-
     {{-- ── Filters ── --}}
     <div class="tf-card tf-section">
         <div class="tf-card-head">

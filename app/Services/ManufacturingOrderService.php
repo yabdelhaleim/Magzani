@@ -9,6 +9,7 @@ use App\Models\MaterialBatch;
 use App\Models\MaterialDispensing;
 use App\Models\Product;
 use App\Models\RawMaterialTemplate;
+use App\Exceptions\BusinessLogicException;
 use Exception;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -25,12 +26,14 @@ class ManufacturingOrderService
         private ?CostVariancePostingService $costVariancePostingService = null,
         // Gap 4 — Batch/Lot Tracking (genealogy recording).
         private ?BatchGenealogyService $batchGenealogyService = null,
+        private ?SequenceService $sequenceService = null,
     ) {
         // Resolve via container when not explicitly injected — keeps manual
         // instantiation (e.g. unit tests, queued jobs) cheap.
         $this->standardCostingService      ??= app(StandardCostingService::class);
         $this->costVariancePostingService  ??= app(CostVariancePostingService::class);
         $this->batchGenealogyService       ??= app(BatchGenealogyService::class);
+        $this->sequenceService             ??= app(SequenceService::class);
     }
 
     /**
@@ -79,7 +82,7 @@ class ManufacturingOrderService
             $totalProfitAmount = $profitAmountPerUnit * $quantityProduced;
 
             $order = ManufacturingOrder::create([
-                'order_number' => ManufacturingOrder::generateOrderNumber(),
+                'order_number' => $this->sequenceService->generateNext('manufacturing', 'MO-', 4),
                 'product_id' => $data['product_id'] ?? null,
                 'product_name' => $data['product_name'],
                 'quantity_produced' => $quantityProduced,
@@ -161,13 +164,20 @@ class ManufacturingOrderService
             }
 
             // Calculate extra costs
+            // ✅ إصلاح LOGIC-03: استثناء 'labor' من extra_costs لأنه محسوب منفصلاً
+            //    عبر $laborCost أدناه (عمود manufacturing_orders.labor_cost).
+            //    ده يحمي من التكرار في الحالتين: بيانات جديدة من الفورم أو قراءة من DB.
             $extraTotal = 0;
             if (isset($data['extra_costs'])) {
                 foreach ($data['extra_costs'] as $extra) {
-                    $extraTotal += (float) ($extra['amount'] ?? 0);
+                    if (($extra['cost_type'] ?? null) !== 'labor') {
+                        $extraTotal += (float) ($extra['amount'] ?? 0);
+                    }
                 }
             } else {
-                $extraTotal = $order->extraCosts()->sum('amount');
+                $extraTotal = (float) $order->extraCosts()
+                    ->where('cost_type', '!=', 'labor')
+                    ->sum('amount');
             }
 
             $laborCost = (float) ($data['labor_cost'] ?? $order->labor_cost);
@@ -450,7 +460,10 @@ class ManufacturingOrderService
     public function cancelOrder(ManufacturingOrder $order, ?string $reason = null): ManufacturingOrder
     {
         if (!in_array($order->status, ['draft', 'confirmed'])) {
-            throw new Exception('Cannot cancel an order that is ' . $order->status);
+            throw new BusinessLogicException(
+                'لا يمكن إلغاء أمر التصنيع في حالته الحالية: ' . $order->status,
+                ['order_id' => $order->id, 'order_number' => $order->order_number, 'status' => $order->status]
+            );
         }
 
         return DB::transaction(function () use ($order, $reason) {
@@ -497,6 +510,38 @@ class ManufacturingOrderService
                             $rawMaterial->increment('quantity', $requiredQty);
                         }
                     }
+                }
+
+                // ✅ إرجاع صرف الخشب (WoodDispensings) عند إلغاء أمر confirmed
+                //    كان مفقوداً قبل الإصلاح — الخشب كان يُخصم ولا يُعاد أبداً عند الإلغاء.
+                //    ملاحظة: WoodStock ما عندوش عمود remaining_volume/remaining_cm3 مخزّن،
+                //    المتبقي محسوب عبر accessor = volume_cm3 - SUM(dispensings). فلما نحذف
+                //    سجل WoodDispensing، المتبقي يرتفع تلقائياً بدون أي تعديل على wood_stock.
+                $woodDispensings = WoodDispensing::where('manufacturing_order_id', $order->id)->get();
+                foreach ($woodDispensings as $wd) {
+                    if ($wd->wood_stock_id) {
+                        $woodStock = WoodStock::find($wd->wood_stock_id);
+
+                        // تسجيل حركة عكسية في الـ inventory (محمي بـ try/catch
+                        //  لأن غياب المنتج قد يمنع الحركة، لكن المخزون لازم يرجع)
+                        try {
+                            $this->inventoryService->recordMovement([
+                                'warehouse_id' => ($woodStock?->warehouse_id) ?? $order->warehouse_id,
+                                'product_id' => $woodStock?->product_id,
+                                'movement_type' => 'material_in',
+                                'quantity_change' => $wd->volume_cm3_taken,
+                                'notes' => 'إعادة خشب لإلغاء أمر التصنيع ' . $order->order_number,
+                                'created_by' => auth()->id(),
+                            ]);
+                        } catch (\Throwable $e) {
+                            \Log::warning('Failed to log wood reverse movement', [
+                                'manufacturing_order_id' => $order->id,
+                                'wood_dispensing_id' => $wd->id,
+                                'error' => $e->getMessage(),
+                            ]);
+                        }
+                    }
+                    $wd->delete();
                 }
             }
 

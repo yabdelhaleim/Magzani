@@ -2,11 +2,15 @@
 
 namespace App\Services;
 
+use App\Events\Return\SalesReturnProcessed;
+use App\Models\PosShift;
+use App\Models\Product;
 use App\Models\PurchaseInvoice;
 use App\Models\PurchaseReturn;
 use App\Models\SalesInvoice;
 use App\Models\SalesInvoiceItem;
 use App\Models\SalesReturn;
+use App\Exceptions\BusinessLogicException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use RuntimeException;
@@ -135,7 +139,7 @@ class ReturnService
 
             // التحقق من صحة الفاتورة
             if ($invoice->status === 'cancelled') {
-                throw new RuntimeException('لا يمكن إرجاع أصناف من فاتورة ملغاة');
+                throw new BusinessLogicException('لا يمكن إرجاع أصناف من فاتورة ملغاة', ['sales_invoice_id' => $data['sales_invoice_id']]);
             }
 
             $this->validateSalesReturnQuantities(
@@ -149,7 +153,7 @@ class ReturnService
             $total = $this->calculateTotal($data['items']);
 
             // جلب الوردية النشطة إن وجدت للمستخدم الحالي
-            $activeShift = \App\Models\PosShift::getActiveShift();
+            $activeShift = PosShift::getActiveShift();
             $shiftId = $activeShift ? $activeShift->id : null;
 
             // إنشاء المرتجع
@@ -203,11 +207,11 @@ class ReturnService
                     'return_reason' => $data['notes'] ?? null,
                 ]);
 
-                app(\App\Services\StockService::class)->adjust(
+                app(StockService::class)->adjust(
                     warehouseId: (int) $invoice->warehouse_id,
                     productId: (int) $item['product_id'],
                     qty: (float) $baseQty,
-                    type: \App\Services\StockService::RETURN_IN,
+                    type: StockService::RETURN_IN,
                     referenceId: (int) $return->id
                 );
             }
@@ -233,7 +237,13 @@ class ReturnService
                 $this->handleReturnImages($return, $data['images']);
             }
 
-            return $return->load('items.product', 'salesInvoice.customer');
+            $processedReturn = $return->load('items.product', 'salesInvoice.customer');
+
+            DB::afterCommit(function () use ($processedReturn): void {
+                event(new SalesReturnProcessed($processedReturn));
+            });
+
+            return $processedReturn;
         });
     }
 
@@ -259,11 +269,11 @@ class ReturnService
                     ? (float) $item->base_quantity_returned
                     : round((float) $item->quantity_returned * $factor, 6);
 
-                app(\App\Services\StockService::class)->adjust(
+                app(StockService::class)->adjust(
                     warehouseId: (int) $return->salesInvoice->warehouse_id,
                     productId: (int) $item->product_id,
                     qty: -(float) $baseQty,
-                    type: \App\Services\StockService::RETURN_IN,
+                    type: StockService::RETURN_IN,
                     referenceId: (int) $return->id
                 );
             }
@@ -283,7 +293,7 @@ class ReturnService
 
             // تعديل إجماليات الوردية إذا كان المرتجع مرتبطاً بوردية
             if ($return->shift_id) {
-                $shift = \App\Models\PosShift::find($return->shift_id);
+                $shift = PosShift::find($return->shift_id);
                 if ($shift) {
                     $shift->decrement('total_returns', $return->total);
                     $shift->decrement('returns_count');
@@ -314,7 +324,7 @@ class ReturnService
                 ->findOrFail($data['purchase_invoice_id']);
 
             if ($invoice->status === 'cancelled') {
-                throw new RuntimeException('لا يمكن إرجاع أصناف من فاتورة ملغاة');
+                throw new BusinessLogicException('لا يمكن إرجاع أصناف من فاتورة ملغاة', ['purchase_invoice_id' => $data['purchase_invoice_id']]);
             }
 
             $this->validatePurchaseReturnQuantities(
@@ -346,7 +356,7 @@ class ReturnService
                 $invoiceItem = $invoice->items->firstWhere('product_id', $item['product_id']);
 
                 if (! $invoiceItem) {
-                    throw new RuntimeException('لم يتم العثور على الصنف في الفاتورة');
+                    throw new BusinessLogicException('لم يتم العثور على الصنف في الفاتورة', ['product_id' => $item['product_id'] ?? null]);
                 }
 
                 $return->items()->create([
@@ -451,9 +461,10 @@ class ReturnService
             $invoiceItem = $invoiceItems->firstWhere('product_id', $returnItem['product_id']);
 
             if (! $invoiceItem) {
-                $product = \App\Models\Product::find($returnItem['product_id']);
-                throw new RuntimeException(
-                    "المنتج '".($product->name ?? '#')."' غير موجود في الفاتورة"
+                $product = Product::find($returnItem['product_id']);
+                throw new BusinessLogicException(
+                    "المنتج '".($product->name ?? '#')."' غير موجود في الفاتورة",
+                    ['product_id' => $returnItem['product_id']]
                 );
             }
 
@@ -465,9 +476,10 @@ class ReturnService
             $availableQty = (float) $invoiceItem->quantity - $previousReturnedQty;
 
             if ((float) $returnItem['quantity'] > $availableQty + 0.000001) {
-                $product = \App\Models\Product::find($returnItem['product_id']);
-                throw new RuntimeException(
-                    "الكمية المرتجعة ({$returnItem['quantity']}) للمنتج '".($product->name ?? '#')."' أكبر من المتاح للإرجاع ({$availableQty})"
+                $product = Product::find($returnItem['product_id']);
+                throw new BusinessLogicException(
+                    "الكمية المرتجعة ({$returnItem['quantity']}) للمنتج '".($product->name ?? '#')."' أكبر من المتاح للإرجاع ({$availableQty})",
+                    ['product_id' => $returnItem['product_id'], 'requested' => $returnItem['quantity'], 'available' => $availableQty]
                 );
             }
         }
@@ -486,10 +498,11 @@ class ReturnService
             $availableQty = (float) $invoiceItem->quantity - $previousReturnedQty;
 
             if ((float) $returnItem['quantity'] > $availableQty + 0.000001) {
-                $product = \App\Models\Product::find($returnItem['product_id']);
+                $product = Product::find($returnItem['product_id']);
                 $name = $product?->name ?? 'الصنف';
-                throw new RuntimeException(
-                    "الكمية المرتجعة ({$returnItem['quantity']}) للمنتج '{$name}' أكبر من المتاح لهذا السطر ({$availableQty})"
+                throw new BusinessLogicException(
+                    "الكمية المرتجعة ({$returnItem['quantity']}) للمنتج '{$name}' أكبر من المتاح لهذا السطر ({$availableQty})",
+                    ['product_id' => $returnItem['product_id'], 'requested' => $returnItem['quantity'], 'available' => $availableQty]
                 );
             }
         }
@@ -503,10 +516,10 @@ class ReturnService
         if (! empty($returnItem['sales_invoice_item_id'])) {
             $line = $invoiceItems->firstWhere('id', (int) $returnItem['sales_invoice_item_id']);
             if (! $line || (int) $line->sales_invoice_id !== $invoiceId) {
-                throw new RuntimeException('معرّف سطر الفاتورة غير صالح أو لا يتبع هذه الفاتورة.');
+                throw new BusinessLogicException('معرّف سطر الفاتورة غير صالح أو لا يتبع هذه الفاتورة.', ['invoice_id' => $invoiceId, 'line_id' => $returnItem['sales_invoice_item_id'] ?? null]);
             }
             if ((int) $line->product_id !== (int) $returnItem['product_id']) {
-                throw new RuntimeException('المنتج لا يطابق سطر الفاتورة المحدد.');
+                throw new BusinessLogicException('المنتج لا يطابق سطر الفاتورة المحدد.', ['expected_product_id' => $returnItem['product_id']]);
             }
 
             return $line;
@@ -514,15 +527,17 @@ class ReturnService
 
         $candidates = $invoiceItems->where('product_id', $returnItem['product_id'])->values();
         if ($candidates->isEmpty()) {
-            $product = \App\Models\Product::find($returnItem['product_id']);
-            throw new RuntimeException(
-                "المنتج '".($product->name ?? '#')."' غير موجود في الفاتورة"
+            $product = Product::find($returnItem['product_id']);
+            throw new BusinessLogicException(
+                "المنتج '".($product->name ?? '#')."' غير موجود في الفاتورة",
+                ['product_id' => $returnItem['product_id']]
             );
         }
 
         if ($candidates->count() > 1) {
-            throw new RuntimeException(
-                'نفس المنتج مكرر في أكثر من سطر في الفاتورة. أرسل الحقل sales_invoice_item_id لكل صنف مرتجع.'
+            throw new BusinessLogicException(
+                'نفس المنتج مكرر في أكثر من سطر في الفاتورة. أرسل الحقل sales_invoice_item_id لكل صنف مرتجع.',
+                ['product_id' => $returnItem['product_id'], 'candidates_count' => $candidates->count()]
             );
         }
 

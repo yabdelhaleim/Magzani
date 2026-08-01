@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Cache;
 
 class AccountingPostingFailure extends Model
 {
@@ -24,19 +25,28 @@ class AccountingPostingFailure extends Model
 
     protected $casts = [
         'resolved_at' => 'datetime',
-        'failed_at'   => 'datetime',
-        'resolved'    => 'boolean',
+        'failed_at' => 'datetime',
+        'resolved' => 'boolean',
     ];
 
     protected static function booted()
     {
         static::saved(function () {
-            \Illuminate\Support\Facades\Cache::forget('posting_failures_count');
+            Cache::forget(static::unresolvedCountCacheKey());
         });
 
         static::deleted(function () {
-            \Illuminate\Support\Facades\Cache::forget('posting_failures_count');
+            Cache::forget(static::unresolvedCountCacheKey());
         });
+    }
+
+    public static function unresolvedCountCacheKey(): string
+    {
+        $tenantKey = function_exists('tenant') && tenant()
+            ? tenant()->getTenantKey()
+            : 'central';
+
+        return "posting_failures_count:{$tenantKey}";
     }
 
     public function resolvedBy()
@@ -50,15 +60,15 @@ class AccountingPostingFailure extends Model
     public function getTransactionTypeLabelAttribute(): string
     {
         return match ($this->source_type) {
-            'sales_invoice'    => 'فاتورة مبيعات',
+            'sales_invoice' => 'فاتورة مبيعات',
             'purchase_invoice' => 'فاتورة مشتريات',
-            'payment'          => 'سند قبض عميل',
+            'payment' => 'سند قبض عميل',
             'supplier_payment' => 'سند صرف مورد',
-            'sales_return'     => 'مرتجع مبيعات',
-            'purchase_return'  => 'مرتجع مشتريات',
-            'cash_tx'          => 'حركة نقدية',
-            'manufacturing'    => 'أمر تصنيع',
-            default            => $this->source_type ?? 'غير معروف',
+            'sales_return' => 'مرتجع مبيعات',
+            'purchase_return' => 'مرتجع مشتريات',
+            'cash_tx' => 'حركة نقدية',
+            'manufacturing' => 'أمر تصنيع',
+            default => $this->source_type ?? 'غير معروف',
         };
     }
 
@@ -70,21 +80,21 @@ class AccountingPostingFailure extends Model
         try {
             switch ($this->source_type) {
                 case 'sales_invoice':
-                    return \App\Models\SalesInvoice::where('id', $this->source_id)->value('total_amount');
+                    return SalesInvoice::where('id', $this->source_id)->value('total_amount');
                 case 'purchase_invoice':
-                    return \App\Models\PurchaseInvoice::where('id', $this->source_id)->value('total_amount');
+                    return PurchaseInvoice::where('id', $this->source_id)->value('total_amount');
                 case 'payment':
-                    return \App\Models\Payment::where('id', $this->source_id)->value('amount');
+                    return Payment::where('id', $this->source_id)->value('amount');
                 case 'supplier_payment':
-                    return \App\Models\SupplierPayment::where('id', $this->source_id)->value('amount');
+                    return SupplierPayment::where('id', $this->source_id)->value('amount');
                 case 'sales_return':
-                    return \App\Models\SalesReturn::where('id', $this->source_id)->value('total_amount');
+                    return SalesReturn::where('id', $this->source_id)->value('total_amount');
                 case 'purchase_return':
-                    return \App\Models\PurchaseReturn::where('id', $this->source_id)->value('total_amount');
+                    return PurchaseReturn::where('id', $this->source_id)->value('total_amount');
                 case 'cash_tx':
-                    return \App\Models\CashTransaction::where('id', $this->source_id)->value('amount');
+                    return CashTransaction::where('id', $this->source_id)->value('amount');
                 case 'manufacturing':
-                    return \App\Models\ManufacturingOrder::where('id', $this->source_id)->value('total_cost');
+                    return ManufacturingOrder::where('id', $this->source_id)->value('total_cost');
                 default:
                     return null;
             }

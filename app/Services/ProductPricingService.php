@@ -7,6 +7,7 @@ use App\Models\Product;
 use App\Models\ProductBaseUnit;
 use App\Models\ProductSellingUnit;
 use App\Models\PriceChangeHistory;
+use App\Exceptions\BusinessLogicException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
@@ -204,7 +205,7 @@ class ProductPricingService
     ): array {
         
         if (empty($selectedProductIds)) {
-            throw new RuntimeException('لم يتم تحديد أي منتجات');
+            throw new BusinessLogicException('لم يتم تحديد أي منتجات');
         }
 
         $profit = $this->calculateProfit($purchasePrice, $profitValue, $profitType);

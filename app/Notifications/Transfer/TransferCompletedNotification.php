@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Notifications\Transfer;
 
 use App\Models\WarehouseTransfer;
@@ -33,7 +34,7 @@ class TransferCompletedNotification extends Notification implements ShouldQueue
             'transfer_number' => $this->transfer->transfer_number,
             'from_warehouse' => $this->transfer->fromWarehouse->name,
             'to_warehouse' => $this->transfer->toWarehouse->name,
-            'action_url' => route('warehouses.transfer'),
+            'action_url' => route('transfers.show', $this->transfer->id),
             'icon' => 'check-circle',
             'type' => 'success',
         ];
@@ -47,6 +48,6 @@ class TransferCompletedNotification extends Notification implements ShouldQueue
             ->line("تم إتمام التحويل رقم: {$this->transfer->transfer_number}")
             ->line("من: {$this->transfer->fromWarehouse->name}")
             ->line("إلى: {$this->transfer->toWarehouse->name}")
-            ->action('عرض التفاصيل', route('warehouses.transfer'));
+            ->action('عرض التفاصيل', route('transfers.show', $this->transfer->id));
     }
 }

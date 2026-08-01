@@ -106,6 +106,25 @@ class Handler extends ExceptionHandler
                 ->with('error', 'يجب تسجيل الدخول أولاً');
         }
 
+        // معالجة أخطاء منطق الأعمال (Business Logic Errors)
+        // تُرجع 422 بدل 500 — لأن هذه أخطاء متوقعة وليست خلل في النظام
+        if ($e instanceof BusinessLogicException) {
+            $payload = [
+                'success' => false,
+                'message' => $e->getMessage(),
+                'context' => $e->getContext(),
+            ];
+
+            if ($request->expectsJson()) {
+                return response()->json($payload, 422);
+            }
+
+            return back()
+                ->withInput()
+                ->with('error', $e->getMessage())
+                ->with('business_error_context', $e->getContext());
+        }
+
         // في بيئة الإنتاج، لا نعرض تفاصيل الخطأ
         if (!config('app.debug')) {
             if ($request->expectsJson()) {

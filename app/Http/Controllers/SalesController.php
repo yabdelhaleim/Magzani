@@ -8,6 +8,7 @@ use App\Models\SalesInvoice;
 use App\Models\Warehouse;
 use App\Services\InvoiceService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 
 class SalesController extends Controller
 {
@@ -21,7 +22,19 @@ class SalesController extends Controller
     public function index(Request $request)
     {
         // بناء الاستعلام الأساسي
-        $query = SalesInvoice::with(['customer', 'warehouse', 'items.product']);
+        // ✅ PERF-01: إزالة 'items.product' من with() لتفادي N+1 في قائمة الفواتير.
+        //    كان يجلب كل الأصناف (200+ سجل) في صفحة لا تحتاجهم.
+        //    select() بالأعمدة المطلوبة فقط لتقليل حجم البيانات المنقولة.
+        $query = SalesInvoice::with([
+                'customer:id,name,phone',
+                'warehouse:id,name,code',
+            ])
+            ->select([
+                'id', 'invoice_number', 'invoice_date', 'customer_id', 'warehouse_id',
+                'subtotal', 'discount_amount', 'tax_amount', 'shipping_cost',
+                'other_charges', 'total', 'paid', 'remaining',
+                'payment_status', 'status', 'notes', 'created_by', 'created_at',
+            ]);
 
         // 🔍 البحث الذكي - يبحث في عدة حقول
         if ($request->filled('search')) {
@@ -84,9 +97,15 @@ class SalesController extends Controller
             $query->where('total', '<=', $request->amount_to);
         }
 
-        // الترتيب
-        $sortBy = $request->get('sort_by', 'invoice_date');
-        $sortOrder = $request->get('sort_order', 'desc');
+        // الترتيب — whitelist للأعمدة المسموح بها (حماية من SQL Injection)
+        $allowedSortColumns = [
+            'invoice_date', 'invoice_number', 'total',
+            'paid', 'created_at', 'customer_id', 'warehouse_id',
+        ];
+        $sortBy = in_array($request->get('sort_by'), $allowedSortColumns, true)
+            ? $request->get('sort_by')
+            : 'invoice_date';
+        $sortOrder = strtolower((string) $request->get('sort_order', 'desc')) === 'asc' ? 'asc' : 'desc';
         $query->orderBy($sortBy, $sortOrder);
 
         // جلب الفواتير مع الترقيم
@@ -222,8 +241,21 @@ class SalesController extends Controller
      */
     public function create(Request $request)
     {
-        $customers = Customer::where('is_active', true)->get();
-        $warehouses = Warehouse::where('is_active', true)->get();
+        // ✅ PERF-02: Cache للقوائم الثابتة.
+//    نستخدم نفس الـ cache key ('active_warehouses') اللي WarehouseService بيستخدمه
+//    عشان Cache::forget في WarehouseService يـ invalidate الكاش هنا تلقائياً.
+$customers = Cache::remember('customers.active.list', 3600, function () {
+    return Customer::where('is_active', true)
+        ->select('id', 'name', 'phone')
+        ->orderBy('name')
+        ->get();
+});
+
+$warehouses = Cache::remember('active_warehouses', 3600, function () {
+    return Warehouse::where('is_active', true)
+        ->select('id', 'name', 'code')
+        ->get();
+});
 
         // جلب بيانات الشركة
         $company = \App\Models\Company::first();

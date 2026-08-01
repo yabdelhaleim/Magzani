@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Notifications\Transfer;
 
 use App\Models\WarehouseTransfer;
@@ -35,7 +36,7 @@ class TransferInitiatedNotification extends Notification implements ShouldQueue
             'to_warehouse' => $this->transfer->toWarehouse->name,
             'items_count' => $this->transfer->items->count(),
             'status' => 'pending',
-            'action_url' => route('warehouses.transfer'),
+            'action_url' => route('transfers.show', $this->transfer->id, false),
             'icon' => 'truck',
             'type' => 'info',
         ];
@@ -49,6 +50,6 @@ class TransferInitiatedNotification extends Notification implements ShouldQueue
             ->line("من: {$this->transfer->fromWarehouse->name}")
             ->line("إلى: {$this->transfer->toWarehouse->name}")
             ->line("عدد الأصناف: {$this->transfer->items->count()}")
-            ->action('عرض التحويل', route('warehouses.transfer'));
+            ->action('عرض التحويل', route('transfers.show', $this->transfer->id));
     }
 }

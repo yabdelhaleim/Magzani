@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Notifications\Return;
 
 use App\Models\PurchaseReturn;
@@ -31,10 +32,9 @@ class PurchaseReturnNotification extends Notification implements ShouldQueue
             'return_id' => $this->purchaseReturn->id,
             'return_number' => $this->purchaseReturn->return_number,
             'total' => $this->purchaseReturn->total,
-            'action_url' => route('purchase-returns.index'),
+            'action_url' => route('invoices.purchase-returns.show', $this->purchaseReturn->id, false),
             'icon' => 'rotate-cw',
             'type' => 'info',
         ];
     }
 }
- 

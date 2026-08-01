@@ -7,6 +7,7 @@ use App\Models\FiscalPeriod;
 use App\Models\FiscalYear;
 use App\Models\AccountingSetting;
 use App\Models\JournalEntryLine;
+use App\Exceptions\BusinessLogicException;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use RuntimeException;
@@ -41,7 +42,7 @@ class FiscalPeriodService
             })->exists();
 
             if ($conflict) {
-                throw new RuntimeException("يوجد سنة مالية مسجلة تتداخل مع الفترة المطلوبة.");
+                throw new BusinessLogicException("يوجد سنة مالية مسجلة تتداخل مع الفترة المطلوبة.");
             }
 
             $fiscalYear = FiscalYear::create([
@@ -97,7 +98,7 @@ class FiscalPeriodService
     public function closePeriod(FiscalPeriod $period, int $closedBy): void
     {
         if ($period->is_closed) {
-            throw new RuntimeException("الفترة [{$period->name}] مغلقة بالفعل.");
+            throw new BusinessLogicException("الفترة [{$period->name}] مغلقة بالفعل.", ['period_id' => $period->id]);
         }
 
         // التحقق من عدم وجود قيود مسودة في هذه الفترة
@@ -106,8 +107,9 @@ class FiscalPeriodService
             ->count();
 
         if ($draftCount > 0) {
-            throw new RuntimeException(
-                "لا يمكن إغلاق الفترة لوجود {$draftCount} قيد في حالة مسودة. يجب اعتمادها أو حذفها أولاً."
+            throw new BusinessLogicException(
+                "لا يمكن إغلاق الفترة لوجود {$draftCount} قيد في حالة مسودة. يجب اعتمادها أو حذفها أولاً.",
+                ['period_id' => $period->id, 'draft_entries_count' => $draftCount]
             );
         }
 

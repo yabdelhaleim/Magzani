@@ -62,12 +62,16 @@
                 <p class="text-xs text-slate-500 mb-3">اختر الميزات المفتوحة لهذه الباقة:</p>
                 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    @php 
-                        $features = is_array($plan->features) ? $plan->features : [];
+                    @php
+                        $features = $plan->features->pluck('feature_key')->all();
+                        if ($features === []) {
+                            $features = json_decode($plan->getRawOriginal('features') ?: '[]', true) ?? [];
+                        }
+                        $features = \App\Models\Tenant::normalizeFeatureKeys($features);
                     @endphp
                     <!-- Feature: Sales -->
                     <label class="flex items-start gap-3 p-4 rounded-xl bg-slate-900 border border-slate-800 hover:border-slate-700 transition cursor-pointer select-none">
-                        <input type="checkbox" name="features[]" value="sales" {{ in_array('sales', $features) ? 'checked' : '' }} class="w-5 h-5 accent-indigo-500 rounded cursor-pointer mt-0.5">
+                        <input type="checkbox" name="features[]" value="pos" {{ in_array('pos', $features, true) ? 'checked' : '' }} class="w-5 h-5 accent-indigo-500 rounded cursor-pointer mt-0.5">
                         <div>
                             <span class="font-bold text-sm text-slate-200 block">المبيعات والعملاء (Sales)</span>
                             <span class="text-xs text-slate-500 block">فواتير المبيعات، المرتجعات، وإدارة حسابات وكشوفات العملاء.</span>
@@ -76,7 +80,7 @@
 
                     <!-- Feature: Purchases -->
                     <label class="flex items-start gap-3 p-4 rounded-xl bg-slate-900 border border-slate-800 hover:border-slate-700 transition cursor-pointer select-none">
-                        <input type="checkbox" name="features[]" value="purchases" {{ in_array('purchases', $features) ? 'checked' : '' }} class="w-5 h-5 accent-indigo-500 rounded cursor-pointer mt-0.5">
+                        <input type="checkbox" name="features[]" value="purchase" {{ in_array('purchase', $features, true) ? 'checked' : '' }} class="w-5 h-5 accent-indigo-500 rounded cursor-pointer mt-0.5">
                         <div>
                             <span class="font-bold text-sm text-slate-200 block">المشتريات والموردين (Purchases)</span>
                             <span class="text-xs text-slate-500 block">فواتير المشتريات، المرتجعات، وإدارة حسابات الموردين.</span>
@@ -85,7 +89,7 @@
 
                     <!-- Feature: Warehouses -->
                     <label class="flex items-start gap-3 p-4 rounded-xl bg-slate-900 border border-slate-800 hover:border-slate-700 transition cursor-pointer select-none">
-                        <input type="checkbox" name="features[]" value="warehouses" {{ in_array('warehouses', $features) ? 'checked' : '' }} class="w-5 h-5 accent-indigo-500 rounded cursor-pointer mt-0.5">
+                        <input type="checkbox" name="features[]" value="multi_warehouse" {{ in_array('multi_warehouse', $features, true) ? 'checked' : '' }} class="w-5 h-5 accent-indigo-500 rounded cursor-pointer mt-0.5">
                         <div>
                             <span class="font-bold text-sm text-slate-200 block">المخازن والمخزون (Warehouses)</span>
                             <span class="text-xs text-slate-500 block">إدارة المستودعات، التحويلات، الجرد، والمنتجات.</span>
@@ -94,7 +98,7 @@
 
                     <!-- Feature: POS -->
                     <label class="flex items-start gap-3 p-4 rounded-xl bg-slate-900 border border-slate-800 hover:border-slate-700 transition cursor-pointer select-none">
-                        <input type="checkbox" name="features[]" value="pos" {{ in_array('pos', $features) ? 'checked' : '' }} class="w-5 h-5 accent-indigo-500 rounded cursor-pointer mt-0.5">
+                        <input type="checkbox" name="features[]" value="pos" {{ in_array('pos', $features, true) ? 'checked' : '' }} class="w-5 h-5 accent-indigo-500 rounded cursor-pointer mt-0.5">
                         <div>
                             <span class="font-bold text-sm text-slate-200 block">نقاط البيع الكاشير (POS)</span>
                             <span class="text-xs text-slate-500 block">واجهة المبيعات السريعة والتعامل التلقائي مع الباركود.</span>
@@ -103,7 +107,7 @@
 
                     <!-- Feature: Manufacturing -->
                     <label class="flex items-start gap-3 p-4 rounded-xl bg-slate-900 border border-slate-800 hover:border-slate-700 transition cursor-pointer select-none">
-                        <input type="checkbox" name="features[]" value="manufacturing" {{ in_array('manufacturing', $features) ? 'checked' : '' }} class="w-5 h-5 accent-indigo-500 rounded cursor-pointer mt-0.5">
+                        <input type="checkbox" name="features[]" value="manufacturing" {{ in_array('manufacturing', $features, true) ? 'checked' : '' }} class="w-5 h-5 accent-indigo-500 rounded cursor-pointer mt-0.5">
                         <div>
                             <span class="font-bold text-sm text-slate-200 block">التصنيع وتكاليف الإنتاج</span>
                             <span class="text-xs text-slate-500 block">أوامر التصنيع، تتبع المواد الخام وتكاليف الإنتاج.</span>
@@ -112,13 +116,41 @@
 
                     <!-- Feature: Accounting -->
                     <label class="flex items-start gap-3 p-4 rounded-xl bg-slate-900 border border-slate-800 hover:border-slate-700 transition cursor-pointer select-none">
-                        <input type="checkbox" name="features[]" value="accounting" {{ in_array('accounting', $features) ? 'checked' : '' }} class="w-5 h-5 accent-indigo-500 rounded cursor-pointer mt-0.5">
+                        <input type="checkbox" name="features[]" value="accounting" {{ in_array('accounting', $features, true) ? 'checked' : '' }} class="w-5 h-5 accent-indigo-500 rounded cursor-pointer mt-0.5">
                         <div>
                             <span class="font-bold text-sm text-slate-200 block">الحسابات والمالية (Accounting)</span>
                             <span class="text-xs text-slate-500 block">الخزينة، المصروفات، الأرباح والخسائر والتقارير المالية.</span>
                         </div>
                     </label>
+
+                    <!-- Feature: Accounting Advanced -->
+                    <label class="flex items-start gap-3 p-4 rounded-xl bg-slate-900 border border-slate-800 hover:border-slate-700 transition cursor-pointer select-none">
+                        <input type="checkbox" name="features[]" value="accounting_advanced" {{ in_array('accounting_advanced', $features, true) ? 'checked' : '' }} class="w-5 h-5 accent-indigo-500 rounded cursor-pointer mt-0.5">
+                        <div>
+                            <span class="font-bold text-sm text-slate-200 block">المحاسبة المتقدمة</span>
+                            <span class="text-xs text-slate-500 block">دليل الحسابات والقيود والفترات والأصول والتقارير المحاسبية المتقدمة.</span>
+                        </div>
+                    </label>
+
+                    <!-- Feature: Reports Advanced -->
+                    <label class="flex items-start gap-3 p-4 rounded-xl bg-slate-900 border border-slate-800 hover:border-slate-700 transition cursor-pointer select-none">
+                        <input type="checkbox" name="features[]" value="reports_advanced" {{ in_array('reports_advanced', $features, true) ? 'checked' : '' }} class="w-5 h-5 accent-indigo-500 rounded cursor-pointer mt-0.5">
+                        <div>
+                            <span class="font-bold text-sm text-slate-200 block">التقارير المتقدمة</span>
+                            <span class="text-xs text-slate-500 block">تقارير المخزون والربحية والتقارير المالية التفصيلية.</span>
+                        </div>
+                    </label>
+
+                    <!-- Feature: Stock Count -->
+                    <label class="flex items-start gap-3 p-4 rounded-xl bg-slate-900 border border-slate-800 hover:border-slate-700 transition cursor-pointer select-none">
+                        <input type="checkbox" name="features[]" value="stock_count" {{ in_array('stock_count', $features, true) ? 'checked' : '' }} class="w-5 h-5 accent-indigo-500 rounded cursor-pointer mt-0.5">
+                        <div>
+                            <span class="font-bold text-sm text-slate-200 block">الجرد الدوري</span>
+                            <span class="text-xs text-slate-500 block">إدارة عمليات الجرد ومطابقة كميات المخزون.</span>
+                        </div>
+                    </label>
                 </div>
+
             </div>
 
             <!-- Active Toggle -->

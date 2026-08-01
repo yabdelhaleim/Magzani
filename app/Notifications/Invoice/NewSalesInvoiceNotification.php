@@ -1,11 +1,12 @@
 <?php
+
 namespace App\Notifications\Invoice;
 
 use App\Models\SalesInvoice;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Messages\BroadcastMessage;
+use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
 class NewSalesInvoiceNotification extends Notification implements ShouldQueue
@@ -34,7 +35,7 @@ class NewSalesInvoiceNotification extends Notification implements ShouldQueue
             'invoice_number' => $this->invoice->invoice_number,
             'customer_name' => $this->invoice->customer->name,
             'total' => $this->invoice->total,
-            'action_url' => route('sales.show', $this->invoice->id),
+            'action_url' => route('invoices.sales.show', $this->invoice->id),
             'icon' => 'receipt',
             'type' => 'success',
         ];
@@ -57,7 +58,7 @@ class NewSalesInvoiceNotification extends Notification implements ShouldQueue
             ->line("تم إنشاء فاتورة مبيعات جديدة رقم: {$this->invoice->invoice_number}")
             ->line("العميل: {$this->invoice->customer->name}")
             ->line("الإجمالي: {$this->invoice->total} جنيه")
-            ->action('عرض الفاتورة', route('sales.show', $this->invoice->id))
+            ->action('عرض الفاتورة', route('invoices.sales.show', $this->invoice->id))
             ->line('شكراً لاستخدامك نظامنا!');
     }
 }

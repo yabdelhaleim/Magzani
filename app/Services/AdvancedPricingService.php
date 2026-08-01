@@ -5,11 +5,12 @@ namespace App\Services;
 use App\Models\Product;
 use App\Models\ProductBasePricing;
 use App\Models\ProductPriceHistory;
+use App\Exceptions\BusinessLogicException;
 use App\Traits\UnitsManagement;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Collection;
+use Illuminate\Collection;
 use RuntimeException;
 
 /**
@@ -323,11 +324,11 @@ class AdvancedPricingService
     ): array {
         
         if (empty($selectedProductIds)) {
-            throw new RuntimeException('لم يتم تحديد أي منتجات');
+            throw new BusinessLogicException('لم يتم تحديد أي منتجات');
         }
 
         if (count($selectedProductIds) > 10000) {
-            throw new RuntimeException('لا يمكن تحديث أكثر من 10,000 منتج دفعة واحدة');
+            throw new BusinessLogicException('لا يمكن تحديث أكثر من 10,000 منتج دفعة واحدة', ['requested_count' => count($selectedProductIds)]);
         }
 
         $profit = $this->calculateProfit($purchasePrice, $profitValue, $profitType);

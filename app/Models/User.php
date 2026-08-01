@@ -279,6 +279,14 @@ class User extends Authenticatable
     // ==================== Scopes ====================
 
     /**
+     * المديرون فقط
+     */
+    public function scopeAdmins($query)
+    {
+        return $query->where('role', 'admin');
+    }
+
+    /**
      * المستخدمين النشطين فقط
      */
     public function scopeActive($query)

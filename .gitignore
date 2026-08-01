@@ -17,3 +17,17 @@ yarn-error.log
 /.fleet
 /.idea
 /.vscode
+
+# توثيق داخلي للتطوير — لا يذهب للإنتاج
+/PLAN.md
+/COMPLETION_SUMMARY_AR.md
+/DOCUMENTATION.md
+/ERROR_FIXES_TODO.md
+/FINAL_AUDIT_SUMMARY.md
+/MANUFACTURING_ORDERS_API_EXAMPLES.md
+/MANUFACTURING_ORDERS_IMPLEMENTATION.md
+/MANUFACTURING_ORDER_COMPLETION_FIX.md
+/QUICK_START_GUIDE.md
+/SYSTEM_AUDIT_REPORT.md
+/add-tenants-hosts.bat
+/deploy.sh

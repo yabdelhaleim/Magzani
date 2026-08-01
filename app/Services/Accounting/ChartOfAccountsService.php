@@ -4,6 +4,7 @@ namespace App\Services\Accounting;
 
 use App\Models\Account;
 use App\Models\AccountType;
+use App\Exceptions\BusinessLogicException;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Eloquent\Collection;
@@ -28,7 +29,7 @@ class ChartOfAccountsService
         return DB::transaction(function () use ($data) {
             // التحقق من الرمز الفريد
             if (Account::where('code', $data['code'])->exists()) {
-                throw new RuntimeException("رمز الحساب [{$data['code']}] مستخدم بالفعل.");
+                throw new BusinessLogicException("رمز الحساب [{$data['code']}] مستخدم بالفعل.", ['code' => $data['code']]);
             }
 
             // التحقق من الأب
@@ -78,7 +79,7 @@ class ChartOfAccountsService
                 // التحقق من التكرار في الرمز
                 if (isset($data['code']) && $data['code'] !== $account->code) {
                     if (Account::where('code', $data['code'])->where('id', '!=', $account->id)->exists()) {
-                        throw new RuntimeException("رمز الحساب [{$data['code']}] مستخدم بالفعل.");
+                        throw new BusinessLogicException("رمز الحساب [{$data['code']}] مستخدم بالفعل.", ['code' => $data['code'], 'account_id' => $account->id]);
                     }
                 }
 
@@ -95,15 +96,15 @@ class ChartOfAccountsService
     public function delete(Account $account): void
     {
         if ($account->is_system) {
-            throw new RuntimeException("لا يمكن حذف الحسابات النظامية.");
+            throw new BusinessLogicException("لا يمكن حذف الحسابات النظامية.", ['account_id' => $account->id, 'account_code' => $account->code]);
         }
 
         if ($account->children()->exists()) {
-            throw new RuntimeException("لا يمكن حذف حساب يملك حسابات فرعية.");
+            throw new BusinessLogicException("لا يمكن حذف حساب يملك حسابات فرعية.", ['account_id' => $account->id, 'children_count' => $account->children()->count()]);
         }
 
         if ($account->lines()->exists()) {
-            throw new RuntimeException("لا يمكن حذف حساب يحتوي على قيود محاسبية مسجلة.");
+            throw new BusinessLogicException("لا يمكن حذف حساب يحتوي على قيود محاسبية مسجلة.", ['account_id' => $account->id, 'lines_count' => $account->lines()->count()]);
         }
 
         DB::transaction(function () use ($account) {

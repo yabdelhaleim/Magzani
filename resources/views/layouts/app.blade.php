@@ -513,13 +513,59 @@
         }
 
         /* Notif panel */
-        .notif-panel { width: 340px; }
+        .notif-panel { width: 360px; }
         .notif-header {
-            padding: 16px 20px;
+            padding: 14px 16px;
             background: linear-gradient(135deg, rgba(99,102,241,0.08), rgba(59,130,246,0.05));
             border-bottom: 1px solid rgba(99,102,241,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
         }
-        .notif-header h3 { font-weight: 700; font-size: 14px; color: var(--text-main); }
+        .notif-header h3 { font-weight: 700; font-size: 14px; color: var(--text-main); margin: 0; }
+        .notif-count-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            min-width: 19px;
+            height: 19px;
+            padding: 0 5px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 999px;
+            background: #ef4444;
+            color: #fff;
+            border: 2px solid var(--surface);
+            font-size: 9px;
+            font-weight: 800;
+            line-height: 1;
+        }
+        .notif-list { max-height: 410px; overflow-y: auto; }
+        .notif-item {
+            display: grid;
+            grid-template-columns: 36px minmax(0, 1fr) auto;
+            gap: 10px;
+            align-items: start;
+            padding: 12px 14px;
+            color: inherit;
+            text-decoration: none;
+            border-bottom: 1px solid rgba(99,102,241,0.07);
+            transition: background 0.15s ease;
+        }
+        .notif-item:hover { background: rgba(99,102,241,0.05); }
+        .notif-item.unread { background: rgba(99,102,241,0.08); box-shadow: inset -3px 0 #6366f1; }
+        .notif-item-icon { width: 34px; height: 34px; display: grid; place-items: center; border-radius: 10px; background: #eef2ff; color: #4f46e5; font-size: 13px; }
+        .notif-item.warning .notif-item-icon { background: #fff7ed; color: #d97706; }
+        .notif-item.error .notif-item-icon { background: #fef2f2; color: #dc2626; }
+        .notif-item.success .notif-item-icon { background: #ecfdf5; color: #059669; }
+        .notif-item-title { display: flex; align-items: center; gap: 6px; font-weight: 750; font-size: 12.5px; color: var(--text-main); margin-bottom: 3px; }
+        .notif-item-message { display: block; color: var(--text-muted); font-size: 11.5px; line-height: 1.55; }
+        .notif-item-time { color: #94a3b8; font-size: 9.5px; white-space: nowrap; padding-top: 2px; }
+        .notif-unread-dot { width: 6px; height: 6px; border-radius: 999px; background: #ef4444; }
+        .notif-footer { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 14px; background: #fafbff; }
+        .notif-footer a, .notif-footer button { color: #4f46e5; font-size: 11px; font-weight: 700; text-decoration: none; background: none; border: 0; padding: 0; cursor: pointer; }
 
         /* User panel */
         .user-panel { width: 220px; }
@@ -1026,7 +1072,7 @@
         <div class="nav-divider"></div>
         <div class="nav-section-label">إدارة المخزون</div>
 
-        @if($planFeatures->contains('multi_warehouse') || $planFeatures->contains('warehouses'))
+        @if(function_exists('tenant') && tenant() && tenant()->hasFeature('multi_warehouse'))
         <div x-data="{ open: {{ request()->routeIs('warehouses.*','transfers.*','stock-counts.*','movements.*','warehouse-orders.*') ? 'true' : 'false' }} }">
             <button class="nav-item {{ request()->routeIs('warehouses.*','transfers.*','stock-counts.*','movements.*','warehouse-orders.*') ? 'active' : '' }}"
                     @click="open = !open" data-tip="المخازن">
@@ -1069,7 +1115,7 @@
             </div>
         </div>
 
-        @if($planFeatures->contains('manufacturing'))
+        @if(function_exists('tenant') && tenant() && tenant()->hasFeature('manufacturing'))
         <div x-data="{ open: {{ request()->routeIs('manufacturing.*','manufacturing-orders.*') ? 'true' : 'false' }} }">
             <button class="nav-item {{ request()->routeIs('manufacturing.*','manufacturing-orders.*') ? 'active' : '' }}"
                     @click="open = !open" data-tip="التصنيع">
@@ -1147,7 +1193,7 @@
         <div class="nav-divider"></div>
         <div class="nav-section-label">التحليل والمالية</div>
 
-        @if($planFeatures->contains('accounting'))
+        @if(function_exists('tenant') && tenant() && tenant()->hasFeature('accounting'))
         <div x-data="{ open: {{ request()->routeIs('accounting.*') ? 'true' : 'false' }} }">
             <button class="nav-item {{ request()->routeIs('accounting.*') ? 'active' : '' }}"
                     @click="open = !open" data-tip="الحسابات">
@@ -1169,7 +1215,7 @@
         </div>
         @endif
 
-        @if($planFeatures->contains('accounting_advanced'))
+        @if(function_exists('tenant') && tenant() && tenant()->hasFeature('accounting_advanced'))
         <div x-data="{ open: {{ request()->routeIs('accounting.dashboard') || request()->routeIs('accounting.coa.*') || request()->routeIs('accounting.journal.*') || request()->routeIs('accounting.vouchers.*') || request()->routeIs('accounting.fiscal.*') || request()->routeIs('accounting.fixed-assets.*') || request()->routeIs('accounting.settings.*') || request()->routeIs('accounting.reports.*') ? 'true' : 'false' }} }">
             <button class="nav-item {{ request()->routeIs('accounting.*') && !request()->routeIs('accounting.treasury') && !request()->routeIs('accounting.payments') && !request()->routeIs('accounting.expenses.*') ? 'active' : '' }}"
                     @click="open = !open" data-tip="المحاسبة المتقدمة">
@@ -1200,7 +1246,7 @@
         </div>
         @endif
 
-        @if($planFeatures->contains('reports_advanced') || $planFeatures->contains('reports'))
+        @if(function_exists('tenant') && tenant() && tenant()->hasFeature('reports_advanced'))
         <div x-data="{ open: {{ request()->routeIs('reports.*') ? 'true' : 'false' }} }">
             <button class="nav-item {{ request()->routeIs('reports.*') ? 'active' : '' }}"
                     @click="open = !open" data-tip="التقارير">
@@ -1295,19 +1341,71 @@
 
         <!-- Notifications -->
         <div style="position:relative;" x-data="{ open: false }">
-            <button class="icon-btn" @click="open = !open" @click.away="open = false">
-                <i class="fas fa-bell"></i>
-                <span class="badge"></span>
+            <button type="button"
+                    class="icon-btn"
+                    @click="open = !open"
+                    @click.away="open = false"
+                    :aria-expanded="open.toString()"
+                    aria-haspopup="true"
+                    aria-label="الإشعارات">
+                <i class="fas fa-bell" aria-hidden="true"></i>
+                @if($headerUnreadCount > 0)
+                    <span class="notif-count-badge" aria-label="{{ $headerUnreadCount }} إشعار غير مقروء">
+                        {{ $headerUnreadCount > 99 ? '99+' : $headerUnreadCount }}
+                    </span>
+                @endif
             </button>
-            <div class="dropdown-panel notif-panel" :class="open ? 'open' : ''">
-                <div class="notif-header"><h3>الإشعارات</h3></div>
-                <div style="padding:40px 20px;text-align:center;color:var(--text-muted);">
-                    <div style="width:56px;height:56px;background:rgba(99,102,241,0.08);border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;font-size:22px;color:var(--accent-2);">
-                        <i class="fas fa-bell-slash"></i>
-                    </div>
-                    <p style="font-size:13px;font-weight:600;color:var(--text-main);margin:0 0 4px;">لا توجد إشعارات</p>
-                    <p style="font-size:12px;margin:0;">أنت على اطلاع دائم بكل شيء</p>
+            <div class="dropdown-panel notif-panel"
+                 :class="open ? 'open' : ''"
+                 role="menu"
+                 aria-label="قائمة الإشعارات">
+                <div class="notif-header">
+                    <h3>الإشعارات المهمة</h3>
+                    @if($headerUnreadCount > 0)
+                        <span style="color:#64748b;font-size:10px;">{{ $headerUnreadCount }} غير مقروء</span>
+                    @endif
                 </div>
+
+                @if($headerNotifications->isEmpty())
+                    <div style="padding:38px 20px;text-align:center;color:var(--text-muted);">
+                        <div style="width:54px;height:54px;background:rgba(99,102,241,0.08);border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;font-size:21px;color:var(--accent-2);">
+                            <i class="fas fa-bell-slash" aria-hidden="true"></i>
+                        </div>
+                        <p style="font-size:13px;font-weight:700;color:var(--text-main);margin:0 0 4px;">لا توجد إشعارات مهمة</p>
+                        <p style="font-size:11.5px;margin:0;">ستظهر هنا الأمور التي تحتاج متابعة.</p>
+                    </div>
+                @else
+                    <div class="notif-list">
+                        @foreach($headerNotifications as $notification)
+                            <a href="{{ route('notifications.open', $notification['id']) }}"
+                               class="notif-item {{ $notification['type'] }} {{ $notification['is_read'] ? '' : 'unread' }}"
+                               role="menuitem">
+                                <span class="notif-item-icon" aria-hidden="true">
+                                    <i class="fas {{ $notification['icon'] }}"></i>
+                                </span>
+                                <span>
+                                    <span class="notif-item-title">
+                                        @if(! $notification['is_read'])
+                                            <span class="notif-unread-dot" aria-label="غير مقروء"></span>
+                                        @endif
+                                        {{ $notification['title'] }}
+                                    </span>
+                                    <span class="notif-item-message">{{ $notification['message'] }}</span>
+                                </span>
+                                <span class="notif-item-time">{{ $notification['created_at'] }}</span>
+                            </a>
+                        @endforeach
+                    </div>
+                    <div class="notif-footer">
+                        <a href="{{ route('notifications.index') }}">عرض كل الإشعارات</a>
+                        @if($headerUnreadCount > 0)
+                            <form action="{{ route('notifications.read-all') }}" method="POST">
+                                @csrf
+                                <button type="submit">تعليم الكل كمقروء</button>
+                            </form>
+                        @endif
+                    </div>
+                @endif
             </div>
         </div>
 
@@ -1347,57 +1445,22 @@
     <!-- Page Body -->
     <div class="page-body">
 
-        @if(session('success'))
-        <div class="toast success">
-            <div class="toast-icon"><i class="fas fa-check-circle"></i></div>
-            <div style="flex:1;">
-                <p style="font-weight:700;margin:0 0 2px;">تمت العملية بنجاح</p>
-                <p style="margin:0;font-weight:400;opacity:0.8;font-size:13px;">{{ session('success') }}</p>
-            </div>
-            <button class="toast-close" onclick="this.closest('.toast').remove()"><i class="fas fa-times"></i></button>
-        </div>
-        @endif
-
-        @if(session('error'))
-        <div class="toast error">
-            <div class="toast-icon"><i class="fas fa-times-circle"></i></div>
-            <div style="flex:1;">
-                <p style="font-weight:700;margin:0 0 2px;">حدث خطأ</p>
-                <p style="margin:0;font-weight:400;opacity:0.8;font-size:13px;">{{ session('error') }}</p>
-            </div>
-            <button class="toast-close" onclick="this.closest('.toast').remove()"><i class="fas fa-times"></i></button>
-        </div>
-        @endif
-
-        @if(session('warning'))
-        <div class="toast warning">
-            <div class="toast-icon"><i class="fas fa-exclamation-triangle"></i></div>
-            <div style="flex:1;">
-                <p style="font-weight:700;margin:0 0 2px;">تحذير</p>
-                <p style="margin:0;font-weight:400;opacity:0.8;font-size:13px;">{{ session('warning') }}</p>
-            </div>
-            <button class="toast-close" onclick="this.closest('.toast').remove()"><i class="fas fa-times"></i></button>
-        </div>
-        @endif
-
-        @if(session('info'))
-        <div class="toast info">
-            <div class="toast-icon"><i class="fas fa-info-circle"></i></div>
-            <div style="flex:1;">
-                <p style="font-weight:700;margin:0 0 2px;">معلومة</p>
-                <p style="margin:0;font-weight:400;opacity:0.8;font-size:13px;">{{ session('info') }}</p>
-            </div>
-            <button class="toast-close" onclick="this.closest('.toast').remove()"><i class="fas fa-times"></i></button>
-        </div>
-        @endif
+        <x-flash-messages />
 
         @php
-            $unresolvedCount = \Illuminate\Support\Facades\Cache::remember('posting_failures_count', 60, function () {
-                return \App\Models\AccountingPostingFailure::where('resolved', false)->count();
-            });
+            $canReviewPostingFailures = Auth::check()
+                && (Auth::user()->isAdmin() || Auth::user()->hasPermission('accounting.posting-failures.read'));
+            $showPostingFailureBanner = request()->routeIs('dashboard') && $canReviewPostingFailures;
+            $unresolvedCount = $showPostingFailureBanner
+                ? \Illuminate\Support\Facades\Cache::remember(
+                    \App\Models\AccountingPostingFailure::unresolvedCountCacheKey(),
+                    60,
+                    fn () => \App\Models\AccountingPostingFailure::where('resolved', false)->count()
+                )
+                : 0;
         @endphp
 
-        @if($unresolvedCount > 0)
+        @if($showPostingFailureBanner && $unresolvedCount > 0)
         <div class="alert alert-danger d-flex align-items-center justify-content-between p-4 mb-4" role="alert" style="background: #fef2f2; border: 1px solid #fee2e2; border-radius: 12px; box-shadow: 0 4px 15px rgba(220, 38, 38, 0.05);">
             <div class="d-flex align-items-center gap-3">
                 <div class="toast-icon bg-red-100 text-red-600 rounded-lg p-2" style="width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; background: #fee2e2; color: #dc2626; font-size: 18px; border-radius: 8px;">
@@ -1408,9 +1471,7 @@
                     <p class="mb-0 text-red-700" style="color: #b91c1c; font-size: 12.5px; margin: 0;">هناك <strong>{{ $unresolvedCount }}</strong> قيد محاسبي فشل ترحيله تلقائياً. يرجى مراجعة المشاكل وإعادة المحاولة لتجنب عدم اتساق التقارير المالية.</p>
                 </div>
             </div>
-            @if(Auth::check() && (Auth::user()->isAdmin() || Auth::user()->hasPermission('accounting.posting-failures.read')))
-                <a href="{{ route('accounting.posting-failures.index') }}" class="btn btn-danger btn-sm" style="background: #dc2626; border-color: #dc2626; color: #fff; padding: 6px 14px; border-radius: 8px; font-weight: 500; font-size: 12px; text-decoration: none;">إدارة أخطاء الترحيل</a>
-            @endif
+            <a href="{{ route('accounting.posting-failures.index') }}" class="btn btn-danger btn-sm" style="background: #dc2626; border-color: #dc2626; color: #fff; padding: 6px 14px; border-radius: 8px; font-weight: 500; font-size: 12px; text-decoration: none;">إدارة أخطاء الترحيل</a>
         </div>
         @endif
 
@@ -1534,9 +1595,29 @@
         }
     });
 
-    // Auto-dismiss toasts
+    // Keep the global flash as the single renderer when a legacy page repeats it.
+    document.querySelectorAll('[data-global-flash]').forEach(globalFlash => {
+        const message = globalFlash.querySelector('[data-flash-body]')?.textContent.trim();
+        if (!message) return;
+
+        document.querySelectorAll([
+            '.page-body .tf-alert',
+            '.page-body .alert-toast',
+            '.page-body .alert',
+            '.page-body [class*="bg-green-50"]',
+            '.page-body [class*="bg-red-50"]',
+            '.page-body [class*="bg-yellow-50"]',
+            '.page-body [class*="bg-blue-50"]'
+        ].join(',')).forEach(localAlert => {
+            if (!globalFlash.contains(localAlert) && localAlert.textContent.includes(message)) {
+                localAlert.remove();
+            }
+        });
+    });
+
+    // Auto-dismiss only non-critical flash messages.
     setTimeout(() => {
-        document.querySelectorAll('.toast').forEach(t => {
+        document.querySelectorAll('.toast-auto-dismiss').forEach(t => {
             t.style.transition = 'opacity 0.5s, transform 0.5s';
             t.style.opacity = '0';
             t.style.transform = 'translateY(-10px)';

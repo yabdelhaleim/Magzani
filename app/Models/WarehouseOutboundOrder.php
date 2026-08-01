@@ -44,19 +44,7 @@ class WarehouseOutboundOrder extends Model
 
     public function generateOrderNumber()
     {
-        $prefix = 'OUT-' . date('Y');
-        $lastOrder = self::where('order_number', 'like', $prefix . '%')
-            ->orderBy('id', 'desc')
-            ->first();
-
-        if ($lastOrder) {
-            $lastNumber = (int) substr($lastOrder->order_number, -6);
-            $newNumber = str_pad($lastNumber + 1, 6, '0', STR_PAD_LEFT);
-        } else {
-            $newNumber = '000001';
-        }
-
-        return $prefix . '-' . $newNumber;
+        return app(\App\Services\SequenceService::class)->generateNext('warehouse_outbound', 'OUT-', 6);
     }
 
     public static function boot()

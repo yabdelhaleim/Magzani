@@ -2,41 +2,56 @@
 
 namespace App\Services;
 
-use App\Models\ProductWarehouse;
-use App\Models\InventoryMovement;
+use App\Events\Stock\StockUpdated;
+use App\Exceptions\InsufficientStockException;
 use App\Exceptions\StockAdjustmentException;
-use Illuminate\Support\Facades\DB;
+use App\Models\InventoryMovement;
+use App\Models\ManufacturingOrder;
+use App\Models\PosSetting;
+use App\Models\ProductWarehouse;
+use App\Models\PurchaseInvoice;
+use App\Models\PurchaseReturn;
+use App\Models\SalesInvoice;
+use App\Models\SalesReturn;
+use App\Models\StockAdjustment;
+use App\Models\StockCount;
+use App\Models\WarehouseInboundOrder;
+use App\Models\WarehouseOutboundOrder;
+use App\Models\WarehouseTransfer;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class StockService
 {
     // constants for allowed type values
     public const SALE = 'SALE';
+
     public const PURCHASE = 'PURCHASE';
+
     public const TRANSFER_IN = 'TRANSFER_IN';
+
     public const TRANSFER_OUT = 'TRANSFER_OUT';
+
     public const MANUFACTURING_IN = 'MANUFACTURING_IN';
+
     public const MANUFACTURING_OUT = 'MANUFACTURING_OUT';
+
     public const RETURN_IN = 'RETURN_IN';
+
     public const ADJUSTMENT = 'ADJUSTMENT';
+
     public const STOCK_COUNT = 'STOCK_COUNT';
+
     public const INBOUND = 'INBOUND';
+
     public const OUTBOUND = 'OUTBOUND';
+
     public const PURCHASE_RETURN = 'PURCHASE_RETURN';
-
-
-
 
     /**
      * Adjust stock for a product in a warehouse.
      *
-     * @param int $warehouseId
-     * @param int $productId
-     * @param float $qty
-     * @param string $type
-     * @param int $referenceId
-     * @param float|null $unitCost
-     * @return void
      * @throws StockAdjustmentException
      */
     public function adjust(
@@ -62,7 +77,7 @@ class StockService
             self::PURCHASE_RETURN,
         ];
 
-        if (!in_array($type, $allowedTypes)) {
+        if (! in_array($type, $allowedTypes)) {
             throw new StockAdjustmentException("Invalid stock adjustment type: {$type}");
         }
 
@@ -74,7 +89,7 @@ class StockService
                     ->lockForUpdate()
                     ->first();
 
-                if (!$productWarehouse) {
+                if (! $productWarehouse) {
                     $productWarehouse = ProductWarehouse::create([
                         'warehouse_id' => $warehouseId,
                         'product_id' => $productId,
@@ -123,29 +138,29 @@ class StockService
                 // Check negative stock condition
                 if ($qty < 0) {
                     $currentAvailable = $currentQuantity - $currentReserved;
-                    
-                    // Fetch PosSetting for the current warehouse
-                    $posSetting = \App\Models\PosSetting::where('default_warehouse_id', $warehouseId)->first()
-                        ?? \App\Models\PosSetting::first()
-                        ?? \App\Models\PosSetting::getSolo();
 
-                    if (!$posSetting->allow_negative_stock) {
+                    // Fetch PosSetting for the current warehouse
+                    $posSetting = PosSetting::where('default_warehouse_id', $warehouseId)->first()
+                        ?? PosSetting::first()
+                        ?? PosSetting::getSolo();
+
+                    if (! $posSetting->allow_negative_stock) {
                         if ($currentAvailable + $qty < 0) {
-                            throw new \App\Exceptions\InsufficientStockException(
+                            throw new InsufficientStockException(
                                 "الكمية المتاحة {$currentAvailable} أقل من المطلوب"
                             );
                         }
                     } else {
                         if ($currentAvailable + $qty < 0) {
-                            \Illuminate\Support\Facades\Log::warning("Negative stock warning: Warehouse {$warehouseId}, Product {$productId}. Available {$currentAvailable}, requested change {$qty}. Negative stock allowed by POS settings.");
+                            Log::warning("Negative stock warning: Warehouse {$warehouseId}, Product {$productId}. Available {$currentAvailable}, requested change {$qty}. Negative stock allowed by POS settings.");
                         }
                     }
                 }
 
                 // Update product_warehouse record
                 $productWarehouse->update([
-                    'quantity'           => $newQuantity,
-                    'average_cost'       => $newAverageCost,
+                    'quantity' => $newQuantity,
+                    'average_cost' => $newAverageCost,
                 ]);
 
                 // Map type to database movement_type enum value
@@ -167,16 +182,16 @@ class StockService
 
                 // Map polymorphic reference_type
                 $referenceType = match ($type) {
-                    self::SALE => \App\Models\SalesInvoice::class,
-                    self::PURCHASE => \App\Models\PurchaseInvoice::class,
-                    self::TRANSFER_IN, self::TRANSFER_OUT => \App\Models\WarehouseTransfer::class,
-                    self::MANUFACTURING_IN, self::MANUFACTURING_OUT => \App\Models\ManufacturingOrder::class,
-                    self::RETURN_IN => \App\Models\SalesReturn::class,
-                    self::ADJUSTMENT => \App\Models\StockAdjustment::class,
-                    self::STOCK_COUNT => \App\Models\StockCount::class,
-                    self::INBOUND => \App\Models\WarehouseInboundOrder::class,
-                    self::OUTBOUND => \App\Models\WarehouseOutboundOrder::class,
-                    self::PURCHASE_RETURN => \App\Models\PurchaseReturn::class,
+                    self::SALE => SalesInvoice::class,
+                    self::PURCHASE => PurchaseInvoice::class,
+                    self::TRANSFER_IN, self::TRANSFER_OUT => WarehouseTransfer::class,
+                    self::MANUFACTURING_IN, self::MANUFACTURING_OUT => ManufacturingOrder::class,
+                    self::RETURN_IN => SalesReturn::class,
+                    self::ADJUSTMENT => StockAdjustment::class,
+                    self::STOCK_COUNT => StockCount::class,
+                    self::INBOUND => WarehouseInboundOrder::class,
+                    self::OUTBOUND => WarehouseOutboundOrder::class,
+                    self::PURCHASE_RETURN => PurchaseReturn::class,
                     default => null,
                 };
 
@@ -205,21 +220,21 @@ class StockService
 
                 // Build movement record
                 $movementData = [
-                    'movement_number'  => $movementNumber,
-                    'warehouse_id'     => $warehouseId,
-                    'product_id'       => $productId,
-                    'movement_type'    => $dbType,
-                    'quantity'         => abs($qty),
-                    'quantity_change'  => $qty,
-                    'quantity_before'  => $currentQuantity,
-                    'quantity_after'   => $newQuantity,
-                    'unit_cost'        => $unitCost ?? 0,
+                    'movement_number' => $movementNumber,
+                    'warehouse_id' => $warehouseId,
+                    'product_id' => $productId,
+                    'movement_type' => $dbType,
+                    'quantity' => abs($qty),
+                    'quantity_change' => $qty,
+                    'quantity_before' => $currentQuantity,
+                    'quantity_after' => $newQuantity,
+                    'unit_cost' => $unitCost ?? 0,
                     'unit_cost_snapshot' => $currentAverageCost,
-                    'total_cost'       => ($unitCost ?? 0) * abs($qty),
-                    'reference_type'   => $referenceType,
-                    'reference_id'     => $referenceId,
-                    'movement_date'    => now()->toDateString(),
-                    'created_by'       => auth()->id(),
+                    'total_cost' => ($unitCost ?? 0) * abs($qty),
+                    'reference_type' => $referenceType,
+                    'reference_id' => $referenceId,
+                    'movement_date' => now()->toDateString(),
+                    'created_by' => auth()->id(),
                 ];
 
                 // Link to specific invoice fields where schema supports it and record exists (prevents FK failures in tests)
@@ -241,8 +256,18 @@ class StockService
                 Cache::forget("warehouse_details_{$warehouseId}");
                 Cache::forget("warehouse_details_v2_{$warehouseId}");
                 Cache::forget("warehouse_products_stock_{$warehouseId}");
+
+                DB::afterCommit(function () use ($productId, $warehouseId, $currentQuantity, $newQuantity, $type): void {
+                    event(new StockUpdated(
+                        productId: $productId,
+                        warehouseId: $warehouseId,
+                        oldQuantity: $currentQuantity,
+                        newQuantity: $newQuantity,
+                        operation: $type
+                    ));
+                });
             });
-        } catch (\App\Exceptions\InsufficientStockException $e) {
+        } catch (InsufficientStockException $e) {
             throw $e;
         } catch (\Throwable $e) {
             throw new StockAdjustmentException($e->getMessage(), 0, $e);

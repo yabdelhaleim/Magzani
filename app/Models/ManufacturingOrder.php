@@ -224,30 +224,10 @@ class ManufacturingOrder extends Model
      * =========================== */
 
     /**
-     * Generate a unique order number
-     */
-    public static function generateOrderNumber(): string
-    {
-        $year = now()->format('Y');
-
-        // Get the last order number for this year
-        $lastOrder = self::withTrashed()
-            ->whereYear('created_at', $year)
-            ->orderBy('id', 'desc')
-            ->first();
-
-        if ($lastOrder && preg_match('/MO-'.$year.'-(\d+)/', $lastOrder->order_number, $matches)) {
-            $lastNumber = (int) $matches[1];
-            $newNumber = $lastNumber + 1;
-        } else {
-            $newNumber = 1;
-        }
-
-        return sprintf('MO-%s-%04d', $year, $newNumber);
-    }
-
-    /**
      * Get the total components cost for this order
+     *
+     * ⚠️ تم حذف generateOrderNumber() القديم — كان يستخدم lastOrder->id بدون lockForUpdate
+     * ويسبب Race Condition. الـ Service يستخدم SequenceService (آمن بـ lockForUpdate).
      */
     public function getComponentsTotalCost(): float
     {
@@ -272,7 +252,8 @@ class ManufacturingOrder extends Model
     public function canBeCompleted(): bool
     {
         return $this->status === 'confirmed'
-            && $this->quantity_produced > 0;
+            && $this->quantity_produced > 0
+            && $this->warehouse_id !== null;
     }
 
     /* ===========================

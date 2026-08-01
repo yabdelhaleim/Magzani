@@ -1,10 +1,10 @@
 <?php
+
 namespace App\Notifications\Invoice;
 
 use App\Models\SalesInvoice;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
 class InvoiceCancelledNotification extends Notification implements ShouldQueue
@@ -12,6 +12,7 @@ class InvoiceCancelledNotification extends Notification implements ShouldQueue
     use Queueable;
 
     public SalesInvoice $invoice;
+
     public ?string $reason;
 
     public function __construct(SalesInvoice $invoice, ?string $reason = null)
@@ -34,7 +35,7 @@ class InvoiceCancelledNotification extends Notification implements ShouldQueue
             'invoice_id' => $this->invoice->id,
             'invoice_number' => $this->invoice->invoice_number,
             'reason' => $this->reason,
-            'action_url' => route('sales.show', $this->invoice->id),
+            'action_url' => route('invoices.sales.show', $this->invoice->id, false),
             'icon' => 'x-circle',
             'type' => 'warning',
         ];
@@ -48,4 +49,3 @@ class InvoiceCancelledNotification extends Notification implements ShouldQueue
         ];
     }
 }
-

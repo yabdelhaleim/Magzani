@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Notifications\Return;
 
 use App\Models\SalesReturn;
@@ -33,7 +34,7 @@ class SalesReturnNotification extends Notification implements ShouldQueue
             'return_number' => $this->salesReturn->return_number,
             'invoice_number' => $this->salesReturn->salesInvoice->invoice_number,
             'total' => $this->salesReturn->total,
-            'action_url' => route('sales-returns.index'),
+            'action_url' => route('invoices.sales-returns.show', $this->salesReturn->id, false),
             'icon' => 'rotate-ccw',
             'type' => 'warning',
         ];
@@ -46,6 +47,6 @@ class SalesReturnNotification extends Notification implements ShouldQueue
             ->line("تم معالجة مرتجع مبيعات رقم: {$this->salesReturn->return_number}")
             ->line("الفاتورة الأصلية: {$this->salesReturn->salesInvoice->invoice_number}")
             ->line("قيمة المرتجع: {$this->salesReturn->total} جنيه")
-            ->action('عرض المرتجعات', route('sales-returns.index'));
+            ->action('عرض المرتجعات', route('invoices.sales-returns.show', $this->salesReturn->id));
     }
 }

@@ -63,7 +63,7 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <!-- Feature: Sales -->
                     <label class="flex items-start gap-3 p-4 rounded-xl bg-slate-900 border border-slate-800 hover:border-slate-700 transition cursor-pointer select-none">
-                        <input type="checkbox" name="features[]" value="sales" class="w-5 h-5 accent-indigo-500 rounded cursor-pointer mt-0.5" checked>
+                        <input type="checkbox" name="features[]" value="pos" class="w-5 h-5 accent-indigo-500 rounded cursor-pointer mt-0.5" checked>
                         <div>
                             <span class="font-bold text-sm text-slate-200 block">المبيعات والعملاء (Sales)</span>
                             <span class="text-xs text-slate-500 block">فواتير المبيعات، المرتجعات، وإدارة حسابات وكشوفات العملاء.</span>
@@ -72,7 +72,7 @@
 
                     <!-- Feature: Purchases -->
                     <label class="flex items-start gap-3 p-4 rounded-xl bg-slate-900 border border-slate-800 hover:border-slate-700 transition cursor-pointer select-none">
-                        <input type="checkbox" name="features[]" value="purchases" class="w-5 h-5 accent-indigo-500 rounded cursor-pointer mt-0.5" checked>
+                        <input type="checkbox" name="features[]" value="purchase" class="w-5 h-5 accent-indigo-500 rounded cursor-pointer mt-0.5" checked>
                         <div>
                             <span class="font-bold text-sm text-slate-200 block">المشتريات والموردين (Purchases)</span>
                             <span class="text-xs text-slate-500 block">فواتير المشتريات، المرتجعات، وإدارة حسابات الموردين.</span>
@@ -81,7 +81,7 @@
 
                     <!-- Feature: Warehouses -->
                     <label class="flex items-start gap-3 p-4 rounded-xl bg-slate-900 border border-slate-800 hover:border-slate-700 transition cursor-pointer select-none">
-                        <input type="checkbox" name="features[]" value="warehouses" class="w-5 h-5 accent-indigo-500 rounded cursor-pointer mt-0.5" checked>
+                        <input type="checkbox" name="features[]" value="multi_warehouse" class="w-5 h-5 accent-indigo-500 rounded cursor-pointer mt-0.5" checked>
                         <div>
                             <span class="font-bold text-sm text-slate-200 block">المخازن والمخزون (Warehouses)</span>
                             <span class="text-xs text-slate-500 block">إدارة المستودعات، التحويلات، الجرد، والمنتجات.</span>
@@ -112,6 +112,33 @@
                         <div>
                             <span class="font-bold text-sm text-slate-200 block">الحسابات والمالية (Accounting)</span>
                             <span class="text-xs text-slate-500 block">الخزينة، المصروفات، الأرباح والخسائر والتقارير المالية.</span>
+                        </div>
+                    </label>
+
+                    <!-- Feature: Accounting Advanced -->
+                    <label class="flex items-start gap-3 p-4 rounded-xl bg-slate-900 border border-slate-800 hover:border-slate-700 transition cursor-pointer select-none">
+                        <input type="checkbox" name="features[]" value="accounting_advanced" class="w-5 h-5 accent-indigo-500 rounded cursor-pointer mt-0.5">
+                        <div>
+                            <span class="font-bold text-sm text-slate-200 block">المحاسبة المتقدمة</span>
+                            <span class="text-xs text-slate-500 block">دليل الحسابات والقيود والفترات والأصول والتقارير المحاسبية المتقدمة.</span>
+                        </div>
+                    </label>
+
+                    <!-- Feature: Reports Advanced -->
+                    <label class="flex items-start gap-3 p-4 rounded-xl bg-slate-900 border border-slate-800 hover:border-slate-700 transition cursor-pointer select-none">
+                        <input type="checkbox" name="features[]" value="reports_advanced" class="w-5 h-5 accent-indigo-500 rounded cursor-pointer mt-0.5">
+                        <div>
+                            <span class="font-bold text-sm text-slate-200 block">التقارير المتقدمة</span>
+                            <span class="text-xs text-slate-500 block">تقارير المخزون والربحية والتقارير المالية التفصيلية.</span>
+                        </div>
+                    </label>
+
+                    <!-- Feature: Stock Count -->
+                    <label class="flex items-start gap-3 p-4 rounded-xl bg-slate-900 border border-slate-800 hover:border-slate-700 transition cursor-pointer select-none">
+                        <input type="checkbox" name="features[]" value="stock_count" class="w-5 h-5 accent-indigo-500 rounded cursor-pointer mt-0.5">
+                        <div>
+                            <span class="font-bold text-sm text-slate-200 block">الجرد الدوري</span>
+                            <span class="text-xs text-slate-500 block">إدارة عمليات الجرد ومطابقة كميات المخزون.</span>
                         </div>
                     </label>
                 </div>

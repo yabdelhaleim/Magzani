@@ -42,24 +42,24 @@
             <div id="custom-features-wrapper" class="hidden space-y-3 border-t border-slate-800/60 pt-6">
                 <label class="block text-sm font-bold text-slate-200">تخصيص ميزات الباقة المخصصة</label>
                 <p class="text-xs text-slate-500 mb-3">اختر الميزات المفتوحة لهذه الباقة المخصصة فقط:</p>
-                
+
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <label class="flex items-center gap-3 p-4 rounded-xl bg-slate-900 border border-slate-800 hover:border-slate-700 transition cursor-pointer select-none">
-                        <input type="checkbox" name="custom_features[]" value="sales" class="w-5 h-5 accent-indigo-500 rounded cursor-pointer" checked>
+                        <input type="checkbox" name="custom_features[]" value="pos" class="w-5 h-5 accent-indigo-500 rounded cursor-pointer" checked>
                         <div>
                             <span class="font-bold text-sm text-slate-200 block">المبيعات والعملاء (Sales)</span>
                         </div>
                     </label>
 
                     <label class="flex items-center gap-3 p-4 rounded-xl bg-slate-900 border border-slate-800 hover:border-slate-700 transition cursor-pointer select-none">
-                        <input type="checkbox" name="custom_features[]" value="purchases" class="w-5 h-5 accent-indigo-500 rounded cursor-pointer" checked>
+                        <input type="checkbox" name="custom_features[]" value="purchase" class="w-5 h-5 accent-indigo-500 rounded cursor-pointer" checked>
                         <div>
                             <span class="font-bold text-sm text-slate-200 block">المشتريات والموردين (Purchases)</span>
                         </div>
                     </label>
 
                     <label class="flex items-center gap-3 p-4 rounded-xl bg-slate-900 border border-slate-800 hover:border-slate-700 transition cursor-pointer select-none">
-                        <input type="checkbox" name="custom_features[]" value="warehouses" class="w-5 h-5 accent-indigo-500 rounded cursor-pointer" checked>
+                        <input type="checkbox" name="custom_features[]" value="multi_warehouse" class="w-5 h-5 accent-indigo-500 rounded cursor-pointer" checked>
                         <div>
                             <span class="font-bold text-sm text-slate-200 block">المخازن والمخزون (Warehouses)</span>
                         </div>
@@ -83,6 +83,27 @@
                         <input type="checkbox" name="custom_features[]" value="accounting" class="w-5 h-5 accent-indigo-500 rounded cursor-pointer" checked>
                         <div>
                             <span class="font-bold text-sm text-slate-200 block">الحسابات والمالية (Accounting)</span>
+                        </div>
+                    </label>
+
+                    <label class="flex items-center gap-3 p-4 rounded-xl bg-slate-900 border border-slate-800 hover:border-slate-700 transition cursor-pointer select-none">
+                        <input type="checkbox" name="custom_features[]" value="accounting_advanced" class="w-5 h-5 accent-indigo-500 rounded cursor-pointer">
+                        <div>
+                            <span class="font-bold text-sm text-slate-200 block">المحاسبة المتقدمة</span>
+                        </div>
+                    </label>
+
+                    <label class="flex items-center gap-3 p-4 rounded-xl bg-slate-900 border border-slate-800 hover:border-slate-700 transition cursor-pointer select-none">
+                        <input type="checkbox" name="custom_features[]" value="reports_advanced" class="w-5 h-5 accent-indigo-500 rounded cursor-pointer">
+                        <div>
+                            <span class="font-bold text-sm text-slate-200 block">التقارير المتقدمة</span>
+                        </div>
+                    </label>
+
+                    <label class="flex items-center gap-3 p-4 rounded-xl bg-slate-900 border border-slate-800 hover:border-slate-700 transition cursor-pointer select-none">
+                        <input type="checkbox" name="custom_features[]" value="stock_count" class="w-5 h-5 accent-indigo-500 rounded cursor-pointer">
+                        <div>
+                            <span class="font-bold text-sm text-slate-200 block">الجرد الدوري</span>
                         </div>
                     </label>
                 </div>

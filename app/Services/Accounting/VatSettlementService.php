@@ -5,6 +5,7 @@ namespace App\Services\Accounting;
 use App\Models\AccountingSetting;
 use App\Models\JournalEntry;
 use App\Models\JournalEntryLine;
+use App\Exceptions\BusinessLogicException;
 use RuntimeException;
 
 class VatSettlementService
@@ -21,7 +22,7 @@ class VatSettlementService
         $settings = AccountingSetting::first();
 
         if (!$settings || !$settings->tax_account_output_id || !$settings->tax_account_input_id) {
-            throw new RuntimeException('حسابات ضريبة القيمة المضافة غير مُعدّة في الإعدادات المحاسبية.');
+            throw new BusinessLogicException('حسابات ضريبة القيمة المضافة غير مُعدّة في الإعدادات المحاسبية.');
         }
 
         $outputBalance = $this->accountBalanceInPeriod($settings->tax_account_output_id, $from, $to);
@@ -103,7 +104,7 @@ class VatSettlementService
         }
 
         if (empty($lines)) {
-            throw new RuntimeException('لا توجد أرصدة ضريبية للتسوية في هذه الفترة.');
+            throw new BusinessLogicException('لا توجد أرصدة ضريبية للتسوية في هذه الفترة.');
         }
 
         return $this->journalService->createAndPost([

@@ -530,21 +530,6 @@
 
 </div>
 
-{{-- Alerts --}}
-@if(session('success'))
-<div class="tf-alert tf-alert-success">
-    <i class="fas fa-check-circle"></i>
-    <span>{{ session('success') }}</span>
-</div>
-@endif
-
-@if(session('error'))
-<div class="tf-alert tf-alert-error">
-    <i class="fas fa-exclamation-circle"></i>
-    <span>{{ session('error') }}</span>
-</div>
-@endif
-
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {

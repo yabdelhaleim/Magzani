@@ -7,6 +7,7 @@ use App\Enums\JournalEntrySource;
 use App\Exceptions\Accounting\ClosedPeriodException;
 use App\Exceptions\Accounting\NonLeafAccountException;
 use App\Exceptions\Accounting\UnbalancedEntryException;
+use App\Exceptions\BusinessLogicException;
 use App\Models\Account;
 use App\Models\AccountingSetting;
 use App\Models\FiscalPeriod;
@@ -115,8 +116,9 @@ class JournalEntryService
     {
         return DB::transaction(function () use ($entry) {
             if ($entry->status !== JournalEntryStatus::DRAFT) {
-                throw new RuntimeException(
-                    "لا يمكن اعتماد قيد بحالة [{$entry->status->value}]. يجب أن يكون في حالة مسودة."
+                throw new BusinessLogicException(
+                    "لا يمكن اعتماد قيد بحالة [{$entry->status->value}]. يجب أن يكون في حالة مسودة.",
+                    ['entry_id' => $entry->id, 'current_status' => $entry->status->value]
                 );
             }
 
@@ -180,14 +182,16 @@ class JournalEntryService
     ): JournalEntry {
         return DB::transaction(function () use ($originalEntry, $reason, $reversalDate) {
             if ($originalEntry->status !== JournalEntryStatus::POSTED) {
-                throw new RuntimeException(
-                    "لا يمكن عكس قيد بحالة [{$originalEntry->status->value}]. يجب أن يكون مُعتمَداً."
+                throw new BusinessLogicException(
+                    "لا يمكن عكس قيد بحالة [{$originalEntry->status->value}]. يجب أن يكون مُعتمَداً.",
+                    ['entry_id' => $originalEntry->id, 'current_status' => $originalEntry->status->value]
                 );
             }
 
             if ($originalEntry->reversed_entry_id) {
-                throw new RuntimeException(
-                    "هذا القيد مُعكوس بالفعل (رقم قيد العكس: {$originalEntry->reversed_entry_id})."
+                throw new BusinessLogicException(
+                    "هذا القيد مُعكوس بالفعل (رقم قيد العكس: {$originalEntry->reversed_entry_id}).",
+                    ['entry_id' => $originalEntry->id, 'reversed_entry_id' => $originalEntry->reversed_entry_id]
                 );
             }
 
@@ -323,7 +327,7 @@ class JournalEntryService
     private function validateLines(array $lines): void
     {
         if (count($lines) < 2) {
-            throw new RuntimeException('القيد اليومي يجب أن يحتوي على سطرَين على الأقل (مدين ودائن).');
+            throw new BusinessLogicException('القيد اليومي يجب أن يحتوي على سطرَين على الأقل (مدين ودائن).', ['lines_count' => count($lines)]);
         }
 
         $accountIds = array_unique(array_column($lines, 'account_id'));
@@ -331,7 +335,7 @@ class JournalEntryService
 
         foreach ($lines as $i => $line) {
             if (empty($line['account_id'])) {
-                throw new RuntimeException("السطر #{$i}: account_id مطلوب.");
+                throw new BusinessLogicException("السطر #{$i}: account_id مطلوب.", ['line_index' => $i]);
             }
 
             // التحقق أن الحساب ورقي (leaf) — لا يُسمح بالترحيل لحساب أب
@@ -344,15 +348,15 @@ class JournalEntryService
             $credit = (float) ($line['credit'] ?? 0);
 
             if ($debit < 0 || $credit < 0) {
-                throw new RuntimeException("السطر #{$i}: لا يُسمح بأرقام سالبة في المدين أو الدائن.");
+                throw new BusinessLogicException("السطر #{$i}: لا يُسمح بأرقام سالبة في المدين أو الدائن.", ['line_index' => $i, 'debit' => $debit, 'credit' => $credit]);
             }
 
             if ($debit > 0 && $credit > 0) {
-                throw new RuntimeException("السطر #{$i}: لا يمكن أن يحمل السطر الواحد مدين ودائن في نفس الوقت.");
+                throw new BusinessLogicException("السطر #{$i}: لا يمكن أن يحمل السطر الواحد مدين ودائن في نفس الوقت.", ['line_index' => $i, 'debit' => $debit, 'credit' => $credit]);
             }
 
             if ($debit === 0.0 && $credit === 0.0) {
-                throw new RuntimeException("السطر #{$i}: يجب أن يحمل إما مدين أو دائن.");
+                throw new BusinessLogicException("السطر #{$i}: يجب أن يحمل إما مدين أو دائن.", ['line_index' => $i]);
             }
         }
     }

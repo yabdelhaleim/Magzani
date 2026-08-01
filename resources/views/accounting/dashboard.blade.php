@@ -25,18 +25,6 @@
         </div>
     </div>
 
-    @if(session('success'))
-        <div class="p-4 bg-green-50 text-green-700 rounded-lg border border-green-200 font-sans">
-            {!! session('success') !!}
-        </div>
-    @endif
-
-    @if(session('error'))
-        <div class="p-4 bg-red-50 text-red-700 rounded-lg border border-red-200 font-sans">
-            {!! session('error') !!}
-        </div>
-    @endif
-
     @if($pendingPostingFailures > 0)
         <div class="p-4 bg-red-50 border border-red-200 rounded-lg flex items-center justify-between">
             <div class="flex items-center gap-3">

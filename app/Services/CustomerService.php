@@ -3,6 +3,8 @@
 namespace App\Services;
 
 use App\Models\Customer;
+use App\Exceptions\BusinessLogicException;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use RuntimeException;
 
@@ -17,7 +19,7 @@ class CustomerService
             // تحقق من عدم وجود عميل بنفس الاسم أو الهاتف
             $this->ensureUniqueCustomer($data['name'], $data['phone'] ?? null);
 
-            return Customer::create([
+            $customer = Customer::create([
                 'name'         => $data['name'],
                 'phone'        => $data['phone'] ?? null,
                 'email'        => $data['email'] ?? null,
@@ -27,6 +29,11 @@ class CustomerService
                 'is_active'    => !empty($data['is_active']),
                 'code'         => $data['code'] ?? uniqid('cus-'),
             ]);
+
+            // ✅ PERF-02: إبطال كاش قائمة العملاء النشطين
+            Cache::forget('customers.active.list');
+
+            return $customer;
         } catch (\Illuminate\Database\QueryException $e) {
             \Log::error('Database error creating customer: ' . $e->getMessage());
             throw new RuntimeException('حدث خطأ أثناء حفظ العميل. يرجى المحاولة مرة أخرى.');
@@ -58,6 +65,9 @@ public function update(int $customerId, array $data): Customer
             'code'         => $data['code'] ?? $customer->code,
         ]);
 
+        // ✅ PERF-02: إبطال كاش قائمة العملاء النشطين (لو تغيّر الاسم أو الحالة)
+        Cache::forget('customers.active.list');
+
         return $customer->fresh();
     } catch (RuntimeException $e) {
         throw $e;
@@ -81,7 +91,7 @@ public function delete(int $customerId): bool
         $customer = Customer::findOrFail($customerId);
 
         if ($customer->salesInvoices()->exists()) {
-            throw new RuntimeException('لا يمكن حذف العميل - لديه فواتير مسجلة');
+            throw new BusinessLogicException('لا يمكن حذف العميل - لديه فواتير مسجلة', ['customer_id' => $customerId, 'invoices_count' => $customer->salesInvoices()->count()]);
         }
 
         $deleteResult = $customer->delete();
@@ -117,7 +127,7 @@ public function updateBalance(int $customerId, float $amount, string $type = 'ad
         return DB::transaction(function () use ($customerId, $amount, $type) {
 
             if ($amount < 0) {
-                throw new RuntimeException('القيمة غير صالحة');
+                throw new BusinessLogicException('القيمة غير صالحة', ['amount' => $amount]);
             }
 
             $customer = Customer::where('id', $customerId)
@@ -128,7 +138,7 @@ public function updateBalance(int $customerId, float $amount, string $type = 'ad
                 'add'      => $customer->balance + $amount,
                 'subtract' => $customer->balance - $amount,
                 'set'      => $amount,
-                default    => throw new RuntimeException('نوع التحديث غير صحيح'),
+                default    => throw new BusinessLogicException('نوع التحديث غير صحيح', ['type' => $type]),
             };
 
             $this->validateCreditLimit($customer, $newBalance);
@@ -168,17 +178,20 @@ public function updateBalance(int $customerId, float $amount, string $type = 'ad
  * منطق التحقق المحاسبي للـ Credit Limit
  */
 protected function validateCreditLimit(Customer $customer, float $newBalance): void
-{
-    if ($customer->credit_limit <= 0) {
-        return;
-    }
+    {
+        if ($customer->credit_limit <= 0) {
+            return; // لا حد ائتماني مضبوط
+        }
 
-    $debt = $newBalance < 0 ? abs($newBalance) : 0;
-
-    if ($debt > $customer->credit_limit) {
-        throw new RuntimeException('تجاوز الحد الائتماني المسموح للعميل');
+        // ✅ إصلاح المنطق: balance موجب = مبلغ مدين على العميل.
+        //    (الإصلاح السابق كان يعكس الإشارة بـ abs() بشكل خاطئ)
+        if ($newBalance > $customer->credit_limit) {
+            throw new BusinessLogicException(
+                "تجاوز الحد الائتماني. الحد: {$customer->credit_limit}، الرصيد المتوقع: {$newBalance}",
+                ['customer_id' => $customer->id, 'credit_limit' => $customer->credit_limit, 'new_balance' => $newBalance]
+            );
+        }
     }
-}
 
 /**
  * Helper موحّد لمعالجة أخطاء قاعدة البيانات.
@@ -230,7 +243,7 @@ protected function handleDbError(\Illuminate\Database\QueryException $e, string 
         }
 
         if ($query->exists()) {
-            throw new RuntimeException('هذا العميل موجود بالفعل بنفس الاسم أو رقم الهاتف');
+            throw new BusinessLogicException('هذا العميل موجود بالفعل بنفس الاسم أو رقم الهاتف', ['name' => $name, 'phone' => $phone ?? null]);
         }
     }
 }

@@ -246,19 +246,6 @@
 
 @section('content')
 <div class="tf-page" x-data="{ showFilters: false }">
-    @if(session('success'))
-    <div class="tf-alert tf-alert-success">
-        <i class="fas fa-check-circle"></i>
-        <span>{{ session('success') }}</span>
-    </div>
-    @endif
-
-    @if(session('error'))
-    <div class="tf-alert tf-alert-error">
-        <i class="fas fa-exclamation-circle"></i>
-        <span>{{ session('error') }}</span>
-    </div>
-    @endif
 
     <div class="tf-card tf-section">
         <div class="tf-card-head">

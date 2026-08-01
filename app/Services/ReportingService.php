@@ -278,20 +278,23 @@ public function profitLossReport($startDate, $endDate)
             $thisMonth = now()->startOfMonth()->toDateString();
             $thisYear = now()->startOfYear()->toDateString();
 
+            // ✅ PERF-03 + إصلاح منطق: فلتر 'cancelled' ليشمل فقط الفواتير المؤكدة
+            //   كانت الفواتير الملغاة تُحسب ضمن الإحصائيات، وهذا تشوّه الأرقام.
             return [
                 // مبيعات
-                'today_sales' => SalesInvoice::whereDate('invoice_date', $today)->sum('total'),
-                'month_sales' => SalesInvoice::whereDate('invoice_date', '>=', $thisMonth)->sum('total'),
-                'year_sales' => SalesInvoice::whereDate('invoice_date', '>=', $thisYear)->sum('total'),
-                'sales_total' => SalesInvoice::sum('total'),
+                'today_sales' => SalesInvoice::where('status', '!=', 'cancelled')->whereDate('invoice_date', $today)->sum('total'),
+                'month_sales' => SalesInvoice::where('status', '!=', 'cancelled')->whereDate('invoice_date', '>=', $thisMonth)->sum('total'),
+                'year_sales' => SalesInvoice::where('status', '!=', 'cancelled')->whereDate('invoice_date', '>=', $thisYear)->sum('total'),
+                'sales_total' => SalesInvoice::where('status', '!=', 'cancelled')->sum('total'),
 
                 // مشتريات
-                'today_purchases' => PurchaseInvoice::whereDate('invoice_date', $today)->sum('total'),
-                'month_purchases' => PurchaseInvoice::whereDate('invoice_date', '>=', $thisMonth)->sum('total'),
-                'purchases_total' => PurchaseInvoice::sum('total'),
+                'today_purchases' => PurchaseInvoice::where('status', '!=', 'cancelled')->whereDate('invoice_date', $today)->sum('total'),
+                'month_purchases' => PurchaseInvoice::where('status', '!=', 'cancelled')->whereDate('invoice_date', '>=', $thisMonth)->sum('total'),
+                'purchases_total' => PurchaseInvoice::where('status', '!=', 'cancelled')->sum('total'),
 
                 // أرباح تقريبية
-                'net_profit' => SalesInvoice::sum('total') - PurchaseInvoice::sum('total'),
+                'net_profit' => SalesInvoice::where('status', '!=', 'cancelled')->sum('total')
+                    - PurchaseInvoice::where('status', '!=', 'cancelled')->sum('total'),
 
                 // عدادات
                 'total_customers' => DB::table('customers')->count(),

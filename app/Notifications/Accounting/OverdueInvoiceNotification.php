@@ -27,19 +27,30 @@ class OverdueInvoiceNotification extends Notification implements ShouldQueue
         return (new MailMessage)
             ->subject("فاتورة متأخرة #{$this->invoice->invoice_number}")
             ->line("فاتورة العميل {$this->invoice->customer?->name} متأخرة {$this->daysOverdue} يوم.")
-            ->line("المبلغ المتبقي: " . number_format((float) $this->invoice->total - (float) $this->invoice->paid, 2))
-            ->action('عرض الفاتورة', url("/invoices/sales/{$this->invoice->id}"));
+            ->line('المبلغ المتبقي: '.number_format((float) $this->invoice->total - (float) $this->invoice->paid, 2))
+            ->action('عرض الفاتورة', route('invoices.sales.show', $this->invoice->id));
+    }
+
+    public function toDatabase(object $notifiable): array
+    {
+        $remaining = (float) $this->invoice->total - (float) $this->invoice->paid;
+
+        return [
+            'title' => 'فاتورة مبيعات متأخرة',
+            'message' => "الفاتورة رقم {$this->invoice->invoice_number} متأخرة {$this->daysOverdue} يوم",
+            'invoice_id' => $this->invoice->id,
+            'invoice_number' => $this->invoice->invoice_number,
+            'customer_name' => $this->invoice->customer?->name,
+            'days_overdue' => $this->daysOverdue,
+            'remaining' => $remaining,
+            'action_url' => route('invoices.sales.show', $this->invoice->id, false),
+            'icon' => 'clock',
+            'type' => 'warning',
+        ];
     }
 
     public function toArray(object $notifiable): array
     {
-        return [
-            'type'           => 'overdue_invoice',
-            'invoice_id'     => $this->invoice->id,
-            'invoice_number' => $this->invoice->invoice_number,
-            'customer_name'  => $this->invoice->customer?->name,
-            'days_overdue'   => $this->daysOverdue,
-            'remaining'      => (float) $this->invoice->total - (float) $this->invoice->paid,
-        ];
+        return $this->toDatabase($notifiable);
     }
 }

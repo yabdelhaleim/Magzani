@@ -297,31 +297,6 @@
 
 </div>
 
-<!-- ══ Alerts ══ -->
-@if(session('success'))
-    <div class="alert-toast success prod-section">
-        <div class="w-9 h-9 bg-emerald-100 rounded-xl flex items-center justify-center flex-shrink-0">
-            <i class="fas fa-check text-emerald-600 text-sm"></i>
-        </div>
-        <p class="font-bold text-emerald-800 text-sm flex-1">{{ session('success') }}</p>
-        <button type="button" class="text-emerald-400 hover:text-emerald-600" onclick="this.parentElement.remove()">
-            <i class="fas fa-times"></i>
-        </button>
-    </div>
-@endif
-
-@if(session('error'))
-    <div class="alert-toast error prod-section">
-        <div class="w-9 h-9 bg-red-100 rounded-xl flex items-center justify-center flex-shrink-0">
-            <i class="fas fa-exclamation-circle text-red-600 text-sm"></i>
-        </div>
-        <p class="font-bold text-red-800 text-sm flex-1">{{ session('error') }}</p>
-        <button type="button" class="text-red-400 hover:text-red-600" onclick="this.parentElement.remove()">
-            <i class="fas fa-times"></i>
-        </button>
-    </div>
-@endif
-
 <!-- ══ Products Table ══ -->
 <div class="section-card prod-section">
 
