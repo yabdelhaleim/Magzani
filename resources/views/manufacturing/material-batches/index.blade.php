@@ -10,7 +10,7 @@
             <i class="fas fa-boxes"></i>
             دفاتر المواد الخام (Batches)
         </h1>
-        <a href="{{ route('material-batches.create') }}" class="btn btn-primary" style="background-color: var(--tf-indigo); border: none; padding: 10px 20px; border-radius: 8px; font-weight: bold; color: white;">
+        <a href="{{ route('manufacturing.material-batches.create') }}" class="btn btn-primary" style="background-color: var(--tf-indigo); border: none; padding: 10px 20px; border-radius: 8px; font-weight: bold; color: white;">
             <i class="fas fa-plus"></i> تسجيل دفعة جديدة
         </a>
     </div>
@@ -52,7 +52,7 @@
                             <td style="padding: 14px 16px;">{{ $batch->received_at->format('Y-m-d') }}</td>
                             <td style="padding: 14px 16px; text-align: center;">
                                 @if($batch->remaining_qty > 0)
-                                    <a href="{{ route('material-dispensings.create', $batch->id) }}" class="btn btn-sm btn-outline-primary" style="border: 1px solid var(--tf-indigo); color: var(--tf-indigo); padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: bold; text-decoration: none;">
+                                    <a href="{{ route('manufacturing.material-dispensings.create', $batch->id) }}" class="btn btn-sm btn-outline-primary" style="border: 1px solid var(--tf-indigo); color: var(--tf-indigo); padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: bold; text-decoration: none;">
                                         <i class="fas fa-hand-holding"></i> صرف تصنيع
                                     </a>
                                 @else

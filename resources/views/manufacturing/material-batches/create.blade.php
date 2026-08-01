@@ -9,7 +9,7 @@
             <i class="fas fa-boxes-packing"></i>
             تسجيل دفعة مواد خام جديدة
         </h1>
-        <a href="{{ route('material-batches.index') }}" class="btn btn-outline" style="border: 1px solid var(--tf-border); padding: 10px 18px; border-radius: 8px; font-weight: bold; color: var(--tf-text-b); text-decoration: none;">
+        <a href="{{ route('manufacturing.material-batches.index') }}" class="btn btn-outline" style="border: 1px solid var(--tf-border); padding: 10px 18px; border-radius: 8px; font-weight: bold; color: var(--tf-text-b); text-decoration: none;">
             <i class="fas fa-arrow-right"></i> عودة للقائمة
         </a>
     </div>
@@ -25,7 +25,7 @@
     @endif
 
     <div class="mfg-card" style="padding: 24px;">
-        <form action="{{ route('material-batches.store') }}" method="POST">
+        <form action="{{ route('manufacturing.material-batches.store') }}" method="POST">
             @csrf
 
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">

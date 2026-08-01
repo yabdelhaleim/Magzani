@@ -10,7 +10,7 @@
             <i class="fas fa-hand-holding-hand"></i>
             حركات صرف المواد الخام للتصنيع
         </h1>
-        <a href="{{ route('material-batches.index') }}" class="btn btn-outline" style="border: 1px solid var(--tf-border); padding: 10px 18px; border-radius: 8px; font-weight: bold; color: var(--tf-text-b); text-decoration: none;">
+        <a href="{{ route('manufacturing.material-batches.index') }}" class="btn btn-outline" style="border: 1px solid var(--tf-border); padding: 10px 18px; border-radius: 8px; font-weight: bold; color: var(--tf-text-b); text-decoration: none;">
             <i class="fas fa-arrow-right"></i> الذهاب للمخزون المتاح للصرف
         </a>
     </div>
