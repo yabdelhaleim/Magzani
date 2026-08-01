@@ -159,7 +159,7 @@ class PlanSeeder extends Seeder
                 'price'        => 0.00,
                 'billing_period' => 'monthly',
                 'features'     => array_keys($allFeatures),
-                'is_active'    => true,
+                'is_active'    => false,
                 'features_data'=> $allFeatures,
             ],
         ];

@@ -31,7 +31,7 @@ use App\Http\Controllers\PricingController;
 
 Route::get('/pricing', [PricingController::class, 'index'])->name('pricing.public');
 
-Route::prefix('super-admin')->name('super-admin.')->group(function () {
+Route::prefix('super-admin')->name('super-admin.')->middleware(['auth', 'super.admin'])->group(function () {
     Route::get('/dashboard', [SuperAdminController::class, 'dashboard'])->name('dashboard');
 
     // Plans CRUD

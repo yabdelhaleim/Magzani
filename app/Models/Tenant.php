@@ -274,6 +274,10 @@ class Tenant extends BaseTenant implements TenantWithDatabase
             return $plan;
         }
 
+        // The central "custom" plan row is just a placeholder. The runtime
+        // feature list comes from the tenant's data.custom_features,
+        // normalized through FEATURE_KEYS so the sidebar, view composers
+        // and Plan::hasFeature() all see canonical keys.
         $featuresCollection = collect($this->customFeatureKeys())
             ->map(function (string $key) use ($plan) {
                 $feature = new PlanFeature;

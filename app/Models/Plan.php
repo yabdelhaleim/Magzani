@@ -63,17 +63,34 @@ class Plan extends Model
 
 
     /**
-     * Check if this plan has a specific feature enabled
+     * Check if this plan has a specific feature enabled.
+     *
+     * Looks up the canonical key (with alias fallback) in plan_features,
+     * then falls back to the legacy JSON column on the plan itself.
      */
     public function hasFeature(string $feature): bool
     {
+        $feature = \App\Models\Tenant::resolveFeatureKey($feature);
+
         $feat = $this->featuresList()->where('feature_key', $feature)->first();
         if ($feat) {
             return (bool) $feat->is_enabled;
         }
 
-        // Fallback to json columns if no db entry exists
-        return is_array($this->features) && in_array($feature, $this->features);
+        $raw = is_array($this->features) ? $this->features : (json_decode($plan->getRawOriginal('features') ?? '[]', true) ?: []);
+
+        $keys = collect($raw)
+            ->map(function ($item) {
+                if (is_array($item) && isset($item['feature_key'])) {
+                    return (string) $item['feature_key'];
+                }
+
+                return is_scalar($item) ? (string) $item : null;
+            })
+            ->filter()
+            ->map(fn (string $key) => \App\Models\Tenant::resolveFeatureKey($key));
+
+        return $keys->contains($feature);
     }
 
     /**

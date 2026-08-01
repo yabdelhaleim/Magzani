@@ -100,7 +100,7 @@ class SubscriptionFeatureTest extends TestCase
         $response = $this->actingAs($admin)
             ->get('http://'.$this->tenantId.'.localhost/manufacturing');
 
-        $response->assertForbidden();
+        $response->assertRedirect(route('plan.upgrade'));
     }
 
     public function test_tenant_with_manufacturing_feature_is_allowed(): void
@@ -179,17 +179,26 @@ class SubscriptionFeatureTest extends TestCase
             'is_active' => true,
         ]);
 
-        $response = $this->put(route('super-admin.plans.update', $plan), [
-            'name' => $plan->name,
-            'slug' => $plan->slug,
-            'price' => $plan->price,
-            'billing_period' => $plan->billing_period,
-            'description' => $plan->description,
-            'features' => ['sales', 'warehouses', 'accounting_advanced'],
-            'value_props' => [],
-            'display_label' => $plan->display_label,
-            'sort_order' => 0,
+        $superAdmin = new User([
+            'name' => 'سوبر أدمن',
+            'email' => 'superadmin@example.com',
+            'role' => 'super_admin',
+            'is_active' => true,
         ]);
+        $superAdmin->id = 1;
+
+        $response = $this->actingAs($superAdmin)
+            ->put(route('super-admin.plans.update', $plan), [
+                'name' => $plan->name,
+                'slug' => $plan->slug,
+                'price' => $plan->price,
+                'billing_period' => $plan->billing_period,
+                'description' => $plan->description,
+                'features' => ['sales', 'warehouses', 'accounting_advanced'],
+                'value_props' => [],
+                'display_label' => $plan->display_label,
+                'sort_order' => 0,
+            ]);
 
         $response->assertRedirect(route('super-admin.plans.index'));
         $this->assertDatabaseHas('plan_features', [

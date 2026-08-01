@@ -40,6 +40,18 @@ class User extends Authenticatable
     }
 
     /**
+     * Check if user is the platform super-admin (landlord scope only).
+     *
+     * The platform operator account is provisioned in the central database
+     * (outside the tenant context) and uses the dedicated 'super_admin'
+     * role so it can be distinguished from per-tenant admin accounts.
+     */
+    public function isSuperAdmin(): bool
+    {
+        return $this->role === 'super_admin';
+    }
+
+    /**
      * Check if user is employee
      */
     public function isEmployee(): bool
