@@ -16,6 +16,10 @@ use Illuminate\Support\Facades\Route;
 |
 | These central routes are accessible only via the central domains (localhost, 127.0.0.1).
 |
+| NOTE: GET/POST /login and POST /logout are intentionally NOT defined here.
+| They live in RouteServiceProvider::boot() so they can be registered per-central-domain
+| via Route::domain($domain), which avoids the route-key collision with routes/tenant.php
+| /login (which is intentionally registered with empty domain key for tenant hosts).
 */
 
 /*
@@ -39,15 +43,12 @@ Route::get('/pricing', [PricingController::class, 'index'])->name('pricing.publi
 | The login form and POST are only reachable from the central domains
 | (superdashboard / localhost). Tenant login continues to live in
 | routes/tenant.php.
+|
+| These routes are registered PER-CENTRAL-DOMAIN in RouteServiceProvider::boot()
+| (not here) so that their route key (method + domain + uri) is unique per host.
+| That avoids the historic silent overwrite of /login in this file by
+| routes/tenant.php /login (which uses an empty domain key).
 */
-Route::middleware('guest')->group(function () {
-    Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
-    Route::post('/login', [LoginController::class, 'login'])->middleware('throttle:5,1');
-});
-
-Route::middleware('auth')->group(function () {
-    Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
-});
 
 Route::prefix('super-admin')->name('super-admin.')->middleware(['auth', 'super.admin'])->group(function () {
     Route::get('/dashboard', [SuperAdminController::class, 'dashboard'])->name('dashboard');

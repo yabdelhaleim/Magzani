@@ -75,6 +75,12 @@ class LoginController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect()->route('login')->with('success', 'تم تسجيل الخروج بنجاح');
+        // Path-relative redirect — NOT redirect()->route('login'). The latter would resolve
+        // to the absolute URL of the FIRST-REGISTERED route named "login", which now lives on
+        // a per-central-domain registration and would bounce a tenant user (e.g. on
+        // kayan.remotelly1.site) over to superdashboard.remotelly1.site after logout. A
+        // relative "/login" lands each host on its own /login form: superdashboard (and the
+        // other central domains) hit the per-domain web route, kayan hit routes/tenant.php.
+        return redirect('/login')->with('success', 'تم تسجيل الخروج بنجاح');
     }
 }
