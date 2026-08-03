@@ -60,7 +60,12 @@ php artisan view:cache
 echo "🗄️  Running migrations..."
 php artisan migrate --force
 
-# 10) Exit maintenance mode
+# 10) Provision the central platform operator when credentials are configured
+#    SuperAdminSeeder is a no-op unless SUPER_ADMIN_EMAIL and SUPER_ADMIN_PASSWORD exist in .env.
+echo "👤 Provisioning super-admin account..."
+php artisan db:seed --class=SuperAdminSeeder --force
+
+# 11) Exit maintenance mode
 echo "🚀 Going live..."
 php artisan up
 

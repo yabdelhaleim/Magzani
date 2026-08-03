@@ -48,11 +48,10 @@ class LoginController extends Controller
         if (Auth::attempt($credentials, $request->filled('remember'))) {
             $request->session()->regenerate();
 
-            // Super-admin accounts land on the central dashboard; everyone
-            // else falls back to whatever the redirect target was, or the
-            // tenant dashboard.
+            // Super-admin accounts always land on the central dashboard. Do not honor
+            // an old tenant intended URL from a previous host/session.
             if ($user->isSuperAdmin()) {
-                return redirect()->intended(route('super-admin.dashboard'))
+                return redirect()->route('super-admin.dashboard')
                     ->with('success', 'مرحباً بك '.$user->name);
             }
 

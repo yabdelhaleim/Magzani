@@ -19,9 +19,10 @@ class DatabaseSeeder extends Seeder
                 TestDataSeeder::class,
             ]);
         } else {
-            // إذا كنا في قاعدة البيانات المركزية (السوبر أدمن): تلقيم الباقات فقط
+            // إذا كنا في قاعدة البيانات المركزية (السوبر أدمن): تلقيم الباقات وحساب المنصة
             $this->call([
                 PlanSeeder::class,
+                SuperAdminSeeder::class,
             ]);
         }
     }
