@@ -50,29 +50,25 @@ class RouteServiceProvider extends ServiceProvider
             // constraint, every central domain gets a unique key in the route table, while
             // tenants continue to match the empty-domain /login from routes/tenant.php.
             //
-            // The conditional naming trick: only the FIRST iteration gives the routes their
-            // canonical names "login" / "logout". Subsequent iterations register the same
-            // routes with null names, so Symfony's RouteCollection (used by route:cache) does
-            // not throw "Another route has already been assigned name [login]". All N
-            // registrations resolve to the same LoginController, so behaviour is identical.
-            // LoginController::logout uses a path-relative URL ("/login") to ensure both
-            // central and tenant logout flows end up on the correct /login form for their host.
-            foreach (array_values(config('tenancy.central_domains', ['localhost', '127.0.0.1'])) as $i => $domain) {
-                $loginName  = $i === 0 ? 'login'  : null;
-                $logoutName = $i === 0 ? 'logout' : null;
-
+            // The routes here are NOT named. The single source of truth for the "login" /
+            // "logout" route names is routes/tenant.php, where they live with empty domain
+            // constraint — so route('login') and route('logout') always resolve to a
+            // path-only URL (e.g. "/login"). Browsers navigate that URL on whatever host the
+            // user is on, and the router then dispatches to either this per-central-domain
+            // route (matching the host constraint) or routes/tenant.php /login (matching
+            // the empty-domain key). Both call the same LoginController.
+            foreach (array_values(config('tenancy.central_domains', ['localhost', '127.0.0.1'])) as $domain) {
                 Route::domain($domain)
                     ->middleware('web')
-                    ->group(function () use ($loginName, $logoutName) {
-                        Route::middleware('guest')->group(function () use ($loginName) {
-                            Route::get('/login', [LoginController::class, 'showLoginForm'])->name($loginName);
+                    ->group(function () {
+                        Route::middleware('guest')->group(function () {
+                            Route::get('/login', [LoginController::class, 'showLoginForm']);
                             Route::post('/login', [LoginController::class, 'login'])
                                 ->middleware('throttle:5,1');
                         });
 
-                        Route::middleware('auth')->group(function () use ($logoutName) {
-                            Route::post('/logout', [LoginController::class, 'logout'])
-                                ->name($logoutName);
+                        Route::middleware('auth')->group(function () {
+                            Route::post('/logout', [LoginController::class, 'logout']);
                         });
                     });
             }
