@@ -28,7 +28,7 @@ class SuperAdminSeeder extends Seeder
             return;
         }
 
-        $user = User::updateOrCreate(
+        $user = User::withTrashed()->updateOrCreate(
             ['email' => $email],
             [
                 'name' => config('super_admin.name', 'Platform Administrator'),
@@ -37,6 +37,10 @@ class SuperAdminSeeder extends Seeder
                 'is_active' => true,
             ]
         );
+
+        if ($user->trashed()) {
+            $user->restore();
+        }
 
         $this->command?->info("Super admin provisioned: {$user->email}");
     }

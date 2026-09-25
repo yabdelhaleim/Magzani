@@ -8,23 +8,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        if (!Schema::hasTable('users')) {
-            Schema::create('users', function (Blueprint $table) {
-                $table->id();
-                $table->string('name');
-                $table->string('email')->unique();
-                $table->string('password');
-                $table->string('phone', 20)->nullable();
-                $table->boolean('is_active')->default(true);
-                $table->string('role')->default('admin');
-                $table->rememberToken();
-                $table->timestamps();
-                $table->softDeletes();
-
-                $table->index('is_active');
-                $table->index('role');
-            });
-        } else {
+        if (Schema::hasTable('users')) {
             Schema::table('users', function (Blueprint $table) {
                 if (!Schema::hasColumn('users', 'phone')) {
                     $table->string('phone', 20)->nullable()->after('password');
@@ -46,6 +30,12 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::dropIfExists('users');
+        if (Schema::hasTable('users')) {
+            Schema::table('users', function (Blueprint $table) {
+                if (Schema::hasColumn('users', 'deleted_at')) {
+                    $table->dropSoftDeletes();
+                }
+            });
+        }
     }
 };

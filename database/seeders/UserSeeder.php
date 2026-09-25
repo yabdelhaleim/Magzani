@@ -15,7 +15,7 @@ class UserSeeder extends Seeder
     public function run(): void
     {
         // Create admin user
-        User::updateOrCreate(
+        $user = User::withTrashed()->updateOrCreate(
             ['email' => 'admin@makhzani.com'],
             [
                 'name' => 'مدير النظام',
@@ -24,8 +24,11 @@ class UserSeeder extends Seeder
                 'phone' => '',
                 'is_active' => true,
                 'role' => 'admin',
-
             ]
         );
+
+        if ($user->trashed()) {
+            $user->restore();
+        }
     }
 }
