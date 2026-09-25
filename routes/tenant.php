@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Http\Controllers\Accounting\AccountingDashboardController;
+use App\Http\Controllers\AtelierDashboardController;
 use App\Http\Controllers\Accounting\AccountingSettingsController;
 use App\Http\Controllers\Accounting\AccountingSetupController;
 use App\Http\Controllers\Accounting\ChartOfAccountsController;
@@ -88,10 +89,13 @@ Route::middleware([
 
     /*
     |--------------------------------------------------------------------------
-    | Dashboard
+    | Dashboard (Atelier Design System — Default since v3)
     |--------------------------------------------------------------------------
     */
-    Route::get('/', [DashboardController::class, 'index'])->name('dashboard')->middleware('auth', 'role');
+    Route::get('/', [AtelierDashboardController::class, 'index'])->name('dashboard')->middleware('auth', 'role');
+
+    // Legacy dashboard retained at /dashboard-legacy for rollback
+    Route::get('/dashboard-legacy', [DashboardController::class, 'index'])->name('dashboard.legacy')->middleware('auth', 'role');
 
     Route::prefix('notifications')->name('notifications.')->middleware('auth')->group(function () {
         Route::get('/', [NotificationController::class, 'index'])->name('index');

@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\AtelierDashboardController;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Foundation\Support\Providers\RouteServiceProvider as ServiceProvider;
 use Illuminate\Http\Request;
@@ -79,6 +80,15 @@ class RouteServiceProvider extends ServiceProvider
                 ->group(base_path('routes/web.php'));
 
             Route::group([], base_path('routes/tenant.php'));
+
+            // Atelier Design System Dashboard — central preview, no tenant context.
+            // Registered AFTER tenant.php so it wins route matching for the central
+            // domains (where Stancl\Tenancy\Middleware\PreventAccessFromCentralDomains
+            // would otherwise block the tenant route). The DashboardService handles
+            // cross-context safely (returns empty state when no tenant is set).
+            Route::middleware(['web'])
+                ->get('/atelier', [AtelierDashboardController::class, 'index'])
+                ->name('dashboard.atelier.preview');
         });
     }
 }

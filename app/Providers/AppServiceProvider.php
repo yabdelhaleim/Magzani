@@ -3,6 +3,8 @@
 namespace App\Providers;
 
 use App\Models\Tenant;
+use App\Navigation\BreadcrumbRegistry;
+use App\Navigation\NavRegistry;
 use App\Observers\TenantObserver;
 use App\Support\NotificationPresenter;
 use Illuminate\Notifications\DatabaseNotification;
@@ -17,7 +19,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->singleton(NavRegistry::class);
+        $this->app->singleton(BreadcrumbRegistry::class);
     }
 
     /**
@@ -76,6 +79,16 @@ class AppServiceProvider extends ServiceProvider
             }
 
             $view->with(compact('headerNotifications', 'headerUnreadCount'));
+        });
+
+        // Atelier Design System: force Vite assets to use the global (non-tenant)
+        // asset URL. Without this, Stancl Tenancy's `asset_helper_tenancy` rewrites
+        // Vite build URLs to `/tenancy/assets/{path}` which depends on a working
+        // tenant asset route. The global asset URL bypasses the tenancy asset
+        // abstraction and serves files directly from the public path.
+        \Illuminate\Support\Facades\Vite::createAssetPathsUsing(function (string $path, ?bool $secure = null) {
+            // stancl/tenancy global_asset helper — uses the original (non-tenant) URL generator.
+            return global_asset($path);
         });
     }
 }

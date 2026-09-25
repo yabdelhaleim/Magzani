@@ -1,0 +1,45 @@
+###############################################################################
+# Magzani ERP — Root web server rules (Apache)
+#
+# If the web server is configured to serve the project root (rather than
+# the public/ directory), this file forwards all requests to Laravel's
+# public/index.php while keeping the URL structure clean.
+#
+# This is the recommended setup for shared hosting where document root
+# cannot be changed to public/.
+#
+# Versions:
+#   - Laravel 12 supports this server-rewrite redirection natively.
+#   - Tested on Apache 2.4 with mod_rewrite.
+#   - For Nginx, use try_files $uri $uri/ /index.php?$query_string;
+###############################################################################
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # ---------------------------------------------------------------
+    # Force HTTPS — uncomment in production once SSL is configured.
+    # ---------------------------------------------------------------
+    # RewriteCond %{HTTPS} !=on
+    # RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+    # ---------------------------------------------------------------
+    # Forward all non-existing files/directories to public/index.php.
+    # This keeps the public/ structure invisible to the client.
+    # ---------------------------------------------------------------
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteRule ^ public/index.php [L]
+</IfModule>
+
+# Block access to sensitive files that may live in the project root.
+<FilesMatch "\.(env|env\.example|env\.production\.example|git|gitignore|md|json|lock|sh|bat|sql|log|sqlite|sqlite3)$">
+    Require all denied
+</FilesMatch>
+
+# Cache static assets.
+<IfModule mod_headers.c>
+    <FilesMatch "\.(css|js|jpg|jpeg|png|gif|ico|svg|woff|woff2|ttf|eot)$">
+        Header set Cache-Control "public, max-age=86400"
+    </FilesMatch>
+</IfModule>

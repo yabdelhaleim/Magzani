@@ -42,7 +42,13 @@ class Kernel extends HttpKernel
      * @var array<int, class-string|string>
      */
     protected $middleware = [
-        // \App\Http\Middleware\TrustHosts::class,
+        // TrustHosts is enabled below by default. Magzani uses host-based
+        // multi-tenancy (Stancl Tenancy), so the list of trusted hosts is
+        // built dynamically from config('tenancy.central_domains') plus the
+        // applicant env (TENANT_DOMAIN_SUFFIX). Override in SecurityHeaders
+        // if you need an explicit allow-list.
+        \App\Http\Middleware\TrustHosts::class,
+        \App\Http\Middleware\SecurityHeaders::class,
         TrustProxies::class,
         HandleCors::class,
         PreventRequestsDuringMaintenance::class,

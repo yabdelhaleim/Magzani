@@ -29,5 +29,12 @@ yarn-error.log
 /MANUFACTURING_ORDER_COMPLETION_FIX.md
 /QUICK_START_GUIDE.md
 /SYSTEM_AUDIT_REPORT.md
+/MAGZANI_BLUEPRINT_AND_FRONTEND_PLAN.md
+/PHASE_1_EXECUTION_REPORT.md
+/PRODUCTION_READINESS_AUDIT.md
 /add-tenants-hosts.bat
 /deploy.sh
+check_tenant.php
+.zcode/
+dashboard-mockups/
+

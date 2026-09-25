@@ -52,9 +52,12 @@ return [
     */
 
     'channels' => [
+        // NOTE: stack now uses the `daily` channel instead of `single` so
+        // that logs rotate automatically. Keeping `single` for emergency
+        // (unchanged) so critical failures still end up in laravel.log.
         'stack' => [
             'driver' => 'stack',
-            'channels' => ['single'],
+            'channels' => explode(',', (string) env('LOG_STACK_CHANNELS', 'daily,single')),
             'ignore_exceptions' => false,
         ],
 
@@ -69,7 +72,8 @@ return [
             'driver' => 'daily',
             'path' => storage_path('logs/laravel.log'),
             'level' => env('LOG_LEVEL', 'debug'),
-            'days' => 14,
+            // 14 days by default. Override with LOG_DAILY_DAYS.
+            'days' => (int) env('LOG_DAILY_DAYS', 14),
             'replace_placeholders' => true,
         ],
 
