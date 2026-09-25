@@ -58,9 +58,9 @@ php artisan config:cache
 php artisan route:cache
 php artisan view:cache
 
-# 9) Run migrations (fresh start — DB was cleared)
-echo "🗄️  Running migrations..."
-php artisan migrate --force
+# 9) Run migrations (fresh start — drops all tables first to avoid conflicts)
+echo "🗄️  Running migrations (fresh)..."
+php artisan migrate:fresh --force
 
 # 10) Seed default data
 echo "🌱 Seeding default data..."
