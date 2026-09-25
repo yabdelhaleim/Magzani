@@ -34,6 +34,7 @@ rm -f vendor/composer/platform_check.php 2>/dev/null
 # 4) Git — switch to local inventory branch (non-SaaS)
 echo "📥 Switching to local-inventory-version branch..."
 git fetch origin
+git checkout -- .
 git checkout local-inventory-version
 git pull origin local-inventory-version
 
