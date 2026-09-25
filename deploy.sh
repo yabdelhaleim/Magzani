@@ -5,11 +5,10 @@ cd /var/www/kayan.site
 
 echo "========================================"
 echo "🚀 Deploy started at $(date)"
+echo "🏠 Mode: Local Inventory (non-SaaS)"
 echo "========================================"
 
-# 0) PRE-CLEANUP (MUST BE FIRST — remove stale caches before any artisan command)
-#    This prevents the "CollisionServiceProvider not found" error that happens when
-#    packages.php cache references dev packages that are no longer in vendor/
+# 0) PRE-CLEANUP — remove stale caches before any artisan command
 echo "🧹 Pre-cleanup: removing stale caches..."
 rm -f bootstrap/cache/packages.php 2>/dev/null
 rm -f bootstrap/cache/services.php 2>/dev/null
@@ -17,36 +16,38 @@ rm -f bootstrap/cache/config.php 2>/dev/null
 rm -f bootstrap/cache/routes-v7.php 2>/dev/null
 rm -f bootstrap/cache/events.php 2>/dev/null
 
-# 1) Maintenance mode (now safe — no stale cache to crash on)
+# 1) Maintenance mode
 echo "🔒 Maintenance mode ON..."
 php artisan down --retry=60 || true
 
-# 2) Clear stale caches via artisan (safe now)
+# 2) Clear stale caches via artisan
 echo "🧹 Clearing stale caches via artisan..."
 php artisan config:clear 2>/dev/null || true
 php artisan route:clear 2>/dev/null || true
 php artisan view:clear 2>/dev/null || true
 
-# 3) Defensive: unlock platform_check.php if it was locked with chattr +i
+# 3) Defensive: unlock platform_check.php
 echo "🔓 Defensive: unlock platform_check.php..."
 chattr -i vendor/composer/platform_check.php 2>/dev/null || true
 rm -f vendor/composer/platform_check.php 2>/dev/null
 
-# 4) Git pull
-echo "📥 Pulling latest..."
-git pull origin main
+# 4) Git — switch to local inventory branch (non-SaaS)
+echo "📥 Switching to local-inventory-version branch..."
+git fetch origin
+git checkout local-inventory-version
+git pull origin local-inventory-version
 
 # 5) Composer install (--no-dev for production)
 echo "📦 Installing dependencies..."
 composer install --no-dev --optimize-autoloader --ignore-platform-reqs
 
-# 6) IMPORTANT: Write our workaround stub (NO chattr +i — keep file writable!)
+# 6) Write platform_check workaround stub
 echo "🔒 Writing platform_check workaround..."
 cat > vendor/composer/platform_check.php <<'STUB_EOF'
 <?php // PHP 8.2 workaround (composer platform-check disabled)
 STUB_EOF
 
-# 7) Regenerate package discovery cache (now without dev packages)
+# 7) Regenerate package discovery cache
 echo "🔍 Regenerating package discovery..."
 php artisan package:discover --ansi
 
@@ -56,14 +57,13 @@ php artisan config:cache
 php artisan route:cache
 php artisan view:cache
 
-# 9) Run migrations
+# 9) Run migrations (fresh start — DB was cleared)
 echo "🗄️  Running migrations..."
 php artisan migrate --force
 
-# 10) Provision the central platform operator when credentials are configured
-#    SuperAdminSeeder is a no-op unless SUPER_ADMIN_EMAIL and SUPER_ADMIN_PASSWORD exist in .env.
-echo "👤 Provisioning super-admin account..."
-php artisan db:seed --class=SuperAdminSeeder --force
+# 10) Seed default data
+echo "🌱 Seeding default data..."
+php artisan db:seed --force
 
 # 11) Exit maintenance mode
 echo "🚀 Going live..."
@@ -72,4 +72,5 @@ php artisan up
 echo ""
 echo "========================================"
 echo "✅ Deploy completed at $(date)"
+echo "🏠 Running: Local Inventory Version"
 echo "========================================"
